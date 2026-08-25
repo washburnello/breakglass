@@ -51,7 +51,7 @@
 <h1>Faith &amp; Bible</h1>
 <div class="callout callout-info">
 <h4>About this reader</h4>
-<p>The bundled translation is the <strong>World English Bible</strong> — public domain, sourced from eBible.org. More translations arrive as optional add-on packs; see Kit Admin for pack status.</p>
+<p>The reader bundles five public-domain translations — <strong>World English Bible, King James Version, American Standard Version, Young&rsquo;s Literal Translation, Douay-Rheims</strong> — sourced from eBible.org.</p>
 </div>
 <div id="bg-root">
 <div class="card bg-reader-card" id="bg-reader">
@@ -403,7 +403,7 @@ function runLocal(){
   resultsEl.innerHTML = "";
   if (!q) { statusEl.textContent = ""; return; }
   var bucket = { total: 0, rows: [] };
-  scanGroups(Object.keys(GMAP), q, bucket);
+  scanGroups(TMAP[cur.trans].gids, q, bucket);
   showResults(bucket, "Loaded sections only — use \u201CSearch whole Bible\u201D to cover everything.");
 }
 

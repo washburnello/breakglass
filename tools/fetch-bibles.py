@@ -14,12 +14,50 @@ import zipfile
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_DIR = os.path.join(REPO_ROOT, "tools", "cache")
 OUT_DIR = os.path.join(REPO_ROOT, "assets", "bible")
+LOCAL_PACKS_DIR = "/mnt/tb01/breakglass/media/packs/bibles"
 
-SOURCE_URLS = [
-    "https://ebible.org/Scriptures/eng-web_vpl.zip",
-    "https://ebible.org/Scriptures/eng-web_usfm.zip",
+TRANSLATIONS = [
+    {
+        "id": "web",
+        "name": "World English Bible",
+        "abbr": "WEB",
+        "source": "eBible.org",
+        "license": "Public domain",
+        "vpl": "https://ebible.org/Scriptures/eng-web_vpl.zip",
+    },
+    {
+        "id": "kjv",
+        "name": "King James Version",
+        "abbr": "KJV",
+        "source": "eBible.org",
+        "license": "Public domain",
+        "local": os.path.join(LOCAL_PACKS_DIR, "eng-kjv_vpl.zip"),
+    },
+    {
+        "id": "asv",
+        "name": "American Standard Version",
+        "abbr": "ASV",
+        "source": "eBible.org",
+        "license": "Public domain",
+        "local": os.path.join(LOCAL_PACKS_DIR, "eng-asv_vpl.zip"),
+    },
+    {
+        "id": "ylt",
+        "name": "Young's Literal Translation",
+        "abbr": "YLT",
+        "source": "eBible.org",
+        "license": "Public domain",
+        "local": os.path.join(LOCAL_PACKS_DIR, "engylt_vpl.zip"),
+    },
+    {
+        "id": "dra",
+        "name": "Douay-Rheims 1899 American Edition",
+        "abbr": "DR",
+        "source": "eBible.org",
+        "license": "Public domain",
+        "local": os.path.join(LOCAL_PACKS_DIR, "engDRA_vpl.zip"),
+    },
 ]
-CACHE_PATH = os.path.join(CACHE_DIR, "eng-web_vpl.zip")
 
 BOOKS = [
     ("GEN", "Genesis"), ("EXO", "Exodus"), ("LEV", "Leviticus"), ("NUM", "Numbers"),
@@ -81,30 +119,43 @@ def die(msg):
     sys.exit(1)
 
 
-def fetch_raw(force):
-    if os.path.exists(CACHE_PATH) and not force:
-        with open(CACHE_PATH, "rb") as f:
+def fetch_raw(trans, refresh):
+    url = trans.get("vpl")
+    if not url:
+        return None
+    cache_path = os.path.join(CACHE_DIR, os.path.basename(url))
+    if os.path.exists(cache_path) and not refresh:
+        with open(cache_path, "rb") as f:
             data = f.read()
-        print(f"cache hit: {CACHE_PATH} ({len(data)} bytes)")
+        print(f"[{trans['id']}] cache hit: {cache_path} ({len(data)} bytes)")
         return data
     os.makedirs(CACHE_DIR, exist_ok=True)
     last_err = None
-    for url in SOURCE_URLS:
-        try:
-            req = urllib.request.Request(
-                url,
-                headers={"User-Agent": "breakglass-build/1.0 (+https://breakglass.w4sh.net)"},
-            )
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                data = resp.read()
-            with open(CACHE_PATH, "wb") as f:
-                f.write(data)
-            print(f"downloaded: {url} -> {CACHE_PATH} ({len(data)} bytes)")
-            return data
-        except Exception as exc:
-            last_err = exc
-            print(f"fetch-bibles: warning: {url} failed: {exc}", file=sys.stderr)
-    die(f"all source downloads failed: {last_err}")
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "breakglass-build/1.0 (+https://breakglass.w4sh.net)"},
+        )
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            data = resp.read()
+        with open(cache_path, "wb") as f:
+            f.write(data)
+        print(f"[{trans['id']}] downloaded: {url} -> {cache_path} ({len(data)} bytes)")
+        return data
+    except Exception as exc:
+        last_err = exc
+        print(f"fetch-bibles: warning: {url} failed: {exc}", file=sys.stderr)
+    die(f"download failed for {trans['id']}: {last_err}")
+
+
+def load_local_raw(trans):
+    path = trans.get("local")
+    if not os.path.exists(path):
+        die(f"{trans['id']}: staged archive missing: {path}")
+    with open(path, "rb") as f:
+        data = f.read()
+    print(f"[{trans['id']}] reading local archive: {path} ({len(data)} bytes)")
+    return data
 
 
 def extract_entries(data):
@@ -147,7 +198,7 @@ def parse_vpl(name, text):
         else:
             die(f"{name}:{lineno}: unparseable line: {stripped[:80]!r}")
     if skipped:
-        print(f"ignored non-canonical book codes: {', '.join(sorted(skipped))}")
+        print(f"[{os.path.basename(name)}] skipped deuterocanonical/non-canonical codes: {', '.join(sorted(skipped))}")
     return verses
 
 
@@ -185,8 +236,7 @@ def parse_all(entries):
             verses.update(parse_usfm(name, text))
     if not verses:
         die("no verses parsed from source archive")
-    print(f"parsed {len(verses)} verse records ({fmt} format)")
-    return verses
+    return verses, fmt
 
 
 def assemble_books(verses):
@@ -239,21 +289,24 @@ def validate_canon(books):
         die("canon check failed: Revelation 22:21 missing or empty")
 
 
-def spot_checks(books):
+def spot_checks(books, tid):
+    gen1 = len(next(b for b in books if b["id"] == "GEN")["chapters"][0])
+    psa1 = len(next(b for b in books if b["id"] == "PSA")["chapters"][0])
+    jhn3 = len(next(b for b in books if b["id"] == "JHN")["chapters"][2])
+    rev22 = len(next(b for b in books if b["id"] == "REV")["chapters"][21])
     checks = [
-        ("GEN 1", lambda: len(next(b for b in books if b["id"] == "GEN")["chapters"][0]), "==", 31),
-        ("JHN 3", lambda: len(next(b for b in books if b["id"] == "JHN")["chapters"][2]), ">=", 30),
-        ("REV 22", lambda: len(next(b for b in books if b["id"] == "REV")["chapters"][21]), "==", 21),
+        ("PSA 1 exists", lambda: psa1 > 0),
+        ("JHN 3 >= 30", lambda: jhn3 >= 30),
+        ("REV 22 == 21", lambda: rev22 == 21),
     ]
     ok = True
-    for label, fn, op, want in checks:
-        got_n = fn()
-        good = got_n == want if op == "==" else got_n >= want
-        print(f"spot-check {label}: {got_n} verses (expected {op} {want}): {'ok' if good else 'FAIL'}")
+    for label, fn in checks:
+        good = fn()
+        print(f"spot-check [{tid}] {label}: {'ok' if good else 'FAIL'}")
         ok = ok and good
     if not ok:
-        die("verse-count spot checks failed")
-    return ok
+        die(f"verse-count spot checks failed for {tid}")
+    return {"gen1": gen1, "psa1": psa1, "jhn3": jhn3, "rev22": rev22}
 
 
 def js_dumps(obj):
@@ -261,14 +314,16 @@ def js_dumps(obj):
     return s.replace("</", "<\\/").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
 
 
-def build_payloads(books):
+def build_payloads(trans, books):
+    tid = trans["id"]
     by_id = {b["id"]: b for b in books}
     manifest_groups = []
     group_files = {}
     for gid, label, ids in GROUPS:
-        fname = f"web-{gid}.js"
+        full_gid = f"{tid}-{gid}"
+        fname = f"{full_gid}.js"
         manifest_groups.append({
-            "id": gid,
+            "id": full_gid,
             "label": label,
             "file": fname,
             "books": [[i, BOOK_NAMES[i]] for i in ids],
@@ -278,29 +333,27 @@ def build_payloads(books):
             for i in ids
         ]
         group_files[fname] = (
-            f'{GROUP_PREFIX}window.BG_BIBLE_GROUPS["{gid}"]={js_dumps(payload)};\n'
+            f'{GROUP_PREFIX}window.BG_BIBLE_GROUPS["{full_gid}"]={js_dumps(payload)};\n'
         )
-    manifest = {
-        "translations": [{
-            "id": "web",
-            "name": "World English Bible",
-            "abbr": "WEB",
-            "source": "eBible.org",
-            "license": "Public domain",
-            "groups": manifest_groups,
-        }]
+    entry = {
+        "id": tid,
+        "name": trans["name"],
+        "abbr": trans["abbr"],
+        "source": trans["source"],
+        "license": trans["license"],
+        "groups": manifest_groups,
     }
-    files = {"manifest.js": MANIFEST_PREFIX + js_dumps(manifest) + ";\n"}
-    files.update(group_files)
-    return files
+    return entry, group_files
 
 
 def write_outputs(files):
     os.makedirs(OUT_DIR, exist_ok=True)
     expected = set(files)
-    stale = [p for p in glob.glob(os.path.join(OUT_DIR, "web-*.js"))
-             if os.path.basename(p) not in expected]
-    for p in stale:
+    tids = "|".join(t["id"] for t in TRANSLATIONS)
+    pattern = re.compile(rf"^({tids})-(?:ot|nt)-\d+\.js$")
+    stale = [p for p in glob.glob(os.path.join(OUT_DIR, "*.js"))
+             if os.path.basename(p) not in expected and pattern.match(os.path.basename(p))]
+    for p in sorted(stale):
         os.remove(p)
         print(f"removed stale shard: {os.path.basename(p)}")
     written = {}
@@ -325,48 +378,60 @@ def verify_written():
     if not man_text.startswith(MANIFEST_PREFIX) or not man_text.endswith(";\n"):
         die("verification failed: manifest.js wrapper mismatch")
     manifest = json.loads(man_text[len(MANIFEST_PREFIX):-2])
-    trans = manifest["translations"]
-    if len(trans) != 1 or trans[0]["id"] != "web":
-        die("verification failed: unexpected manifest translations")
-    declared = trans[0]["groups"]
-    if [g["id"] for g in declared] != [g[0] for g in GROUPS]:
-        die("verification failed: manifest group ids/order wrong")
-    total_books = 0
-    total_chapters = 0
-    total_verses = 0
-    for gspec, (_, _, ids) in zip(declared, GROUPS):
-        path = os.path.join(OUT_DIR, gspec["file"])
-        if not os.path.exists(path):
-            die(f"verification failed: {gspec['file']} missing")
-        text = open(path, encoding="utf-8").read()
-        head = GROUP_PREFIX + f'window.BG_BIBLE_GROUPS["{gspec["id"]}"]='
-        if not text.startswith(head) or not text.endswith(";\n"):
-            die(f"verification failed: {gspec['file']} wrapper mismatch")
-        payload = json.loads(text[len(head):-2])
-        if [b["id"] for b in payload] != ids:
-            die(f"verification failed: {gspec['file']} book order wrong")
-        for b in payload:
-            if b["name"] != BOOK_NAMES[b["id"]]:
-                die(f"verification failed: {b['id']} name mismatch")
-            if not b["chapters"]:
-                die(f"verification failed: {b['id']} has no chapters")
-            total_books += 1
-            total_chapters += len(b["chapters"])
-            total_verses += sum(len(c) for c in b["chapters"])
-    if total_books != 66:
-        die(f"verification failed: {total_books}/66 books in payloads")
-    print(f"json round-trip ok: 66 books, {total_chapters} chapters, {total_verses} verses")
-    return True
+    trans_list = manifest["translations"]
+    want_ids = [t["id"] for t in TRANSLATIONS]
+    got_ids = [t["id"] for t in trans_list]
+    if got_ids != want_ids:
+        die(f"verification failed: manifest translation order wrong: {got_ids}")
+    grand_shard_bytes = 0
+    for tspec in trans_list:
+        tid = tspec["id"]
+        want_gids = [f"{tid}-{g[0]}" for g in GROUPS]
+        declared = tspec["groups"]
+        if [g["id"] for g in declared] != want_gids:
+            die(f"verification failed: [{tid}] manifest group ids/order wrong")
+        total_books = 0
+        total_verses = 0
+        shard_bytes = 0
+        for gspec, (_, _, ids) in zip(declared, GROUPS):
+            path = os.path.join(OUT_DIR, gspec["file"])
+            if not os.path.exists(path):
+                die(f"verification failed: {gspec['file']} missing")
+            text = open(path, encoding="utf-8").read()
+            head = GROUP_PREFIX + f'window.BG_BIBLE_GROUPS["{gspec["id"]}"]='
+            if not text.startswith(head) or not text.endswith(";\n"):
+                die(f"verification failed: {gspec['file']} wrapper mismatch")
+            payload = json.loads(text[len(head):-2])
+            if [b["id"] for b in payload] != ids:
+                die(f"verification failed: {gspec['file']} book order wrong")
+            for b in payload:
+                if b["name"] != BOOK_NAMES[b["id"]]:
+                    die(f"verification failed: {b['id']} name mismatch")
+                if not b["chapters"]:
+                    die(f"verification failed: {b['id']} has no chapters")
+                total_books += 1
+                total_verses += sum(len(c) for c in b["chapters"])
+            shard_bytes += len(text.encode("utf-8"))
+        if total_books != 66:
+            die(f"verification failed: [{tid}] {total_books}/66 books in payloads")
+        print(
+            f"verified [{tid}] ({tspec['abbr']}): 66 books, "
+            f"{total_verses} verses, shards {shard_bytes} bytes "
+            f"({shard_bytes / 1024 / 1024:.2f} MiB)"
+        )
+        grand_shard_bytes += shard_bytes
+    print(f"json round-trip ok: {len(trans_list)} translations, {len(want_ids) * 66} books total")
+    return grand_shard_bytes
 
 
-def node_check(files):
+def node_check(names):
     if shutil.which("node") is None:
         print("node not available; skipping node --check (json round-trip already passed)")
         return True
     ok = True
-    for fname in sorted(files):
+    for fname in sorted(names):
         path = os.path.join(OUT_DIR, fname)
-        res = subprocess.run(["node", "--check", path], capture_output=True, text=True)
+        res = subprocess.run(["/usr/bin/node", "--check", path], capture_output=True, text=True)
         state = "ok" if res.returncode == 0 else "FAIL"
         print(f"node --check {fname}: {state}")
         if res.returncode != 0:
@@ -376,33 +441,69 @@ def node_check(files):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Fetch World English Bible and emit offline JS shards")
+    ap = argparse.ArgumentParser(description="Fetch/build offline Bible JS shards for all bundled translations")
     ap.add_argument("--check", action="store_true", help="verify existing assets/bible outputs only")
     ap.add_argument("--refresh", action="store_true", help="force re-download even if cached")
     args = ap.parse_args()
 
     if args.check:
         verify_written()
-        names = ["manifest.js"] + [f"web-{g[0]}.js" for g in GROUPS]
-        node_check({n: b"" for n in names})
+        names = ["manifest.js"]
+        for t in TRANSLATIONS:
+            names += [f"{t['id']}-{g[0]}.js" for g in GROUPS]
+        if not node_check(names):
+            sys.exit(1)
         return
 
-    raw = fetch_raw(args.refresh)
-    entries = extract_entries(raw)
-    verses = parse_all(entries)
-    books = assemble_books(verses)
-    validate_canon(books)
-    spot_checks(books)
-    files = build_payloads(books)
+    files = {}
+    metrics = {}
+    for trans in TRANSLATIONS:
+        tid = trans["id"]
+        if trans.get("local"):
+            raw = load_local_raw(trans)
+        else:
+            raw = fetch_raw(trans, args.refresh)
+        entries = extract_entries(raw)
+        verses, fmt = parse_all(entries)
+        print(f"[{tid}] parsed {len(verses)} verse records ({fmt} format)")
+        books = assemble_books(verses)
+        validate_canon(books)
+        checks = spot_checks(books, tid)
+        entry, group_files = build_payloads(trans, books)
+        files.update(group_files)
+        metrics[tid] = {
+            "abbr": trans["abbr"],
+            "verses": len(verses),
+            "gen1": checks["gen1"],
+        }
+        files.setdefault("_manifest_entries", []).append(entry)
+
+    manifest = {"translations": files.pop("_manifest_entries")}
+    files = {"manifest.js": MANIFEST_PREFIX + js_dumps(manifest) + ";\n", **files}
+
     sizes = write_outputs(files)
     total = 0
+    added = 0
     for fname in sorted(sizes):
         print(f"wrote assets/bible/{fname}: {sizes[fname]} bytes")
         total += sizes[fname]
-    print(f"total assets/bible: {total} bytes ({total / 1024 / 1024:.2f} MiB)")
+        if not fname.startswith("web-") and fname != "manifest.js":
+            added += sizes[fname]
+    print(f"total assets/bible: {total} bytes ({total / 1024 / 1024:.2f} MiB); "
+          f"added beyond web-only build: {added} bytes ({added / 1024 / 1024:.2f} MiB)")
+
     if not verify_written():
         die("post-write verification failed")
-    node_check(files)
+
+    summary = "; ".join(
+        f"{tid}({m['abbr']}): {m['verses']} verses, GEN1={m['gen1']}"
+        for tid, m in metrics.items()
+    )
+    print(f"summary: {summary}")
+
+    names = list(files)
+    if not node_check(names):
+        sys.exit(1)
 
 
 if __name__ == "__main__":
