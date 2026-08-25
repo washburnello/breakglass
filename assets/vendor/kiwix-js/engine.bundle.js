@@ -139,6 +139,14 @@ function readFloatFrom4Bytes (byteArray, firstIndex, littleEndian) {
  * @returns {Promise<Uint8Array>} A Promise for an array buffer with the read data
  */
 function readFileSlice (file, begin, end) {
+    if (file.remoteUrl) {
+        return fetch(file.remoteUrl, { headers: { Range: 'bytes=' + begin + '-' + (end - 1) } })
+            .then(function (resp) {
+                if (!resp.ok && resp.status !== 206) throw new Error('HTTP ' + resp.status);
+                return resp.arrayBuffer();
+            })
+            .then(function (buffer) { return new Uint8Array(buffer); });
+    }
     if (file.slice && 'arrayBuffer' in Blob.prototype) {
         // DEV: This method uses the native arrayBuffer method of Blob, if available, as it eliminates
         // the need to use FileReader and set up event listeners; it also uses the method's native Promise

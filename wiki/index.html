@@ -27,7 +27,7 @@
 <p><strong>1 · Curated articles</strong> — a hand-picked emergency-core reading list ships as normal site pages in a later pass.</p>
 <p><strong>2 · This page</strong> — an embedded reader for full <code>.zim</code> packs placed in <code>media/zims/</code>. Pick or drop a ZIM below; everything stays on this machine.</p>
 <p><strong>3 · Phones &amp; tablets</strong> — browsers here can't hold big libraries well; the free <a href="https://kiwix.org" rel="noopener" target="_blank">Kiwix Reader app</a> is recommended instead (it remembers your library between opens).</p>
-<p><strong>4 · Hosted server</strong> — deep-linking into these archives from the network server arrives in a later phase.</p>
+<p><strong>4 · Hosted server</strong> — when served, this page streams the packs below directly from the kit over the network; permanent deep-links into archives arrive with a later server component.</p>
 <p>Note: contents inside ZIM files are searched separately from the global site search above.</p>
 </div>
 
@@ -243,21 +243,33 @@ assetCache.clear();
 }
 
 function openFile(file) {
-if (!file) return;
-resetForOpen();
-setBadge(el("archive-badge"), "Opening " + file.name + "…", true);
-el("load-badge").hidden = false;
-file.slice(0, 4).arrayBuffer().then(function (buf) {
-var magic = new Uint8Array(buf);
-if (!(magic[0] === 0x5A && magic[1] === 0x49 && magic[2] === 0x4D)) {
-throw new Error("not-zim");
+    if (!file) return;
+    resetForOpen();
+    setBadge(el("archive-badge"), "Opening " + file.name + "…", true);
+    el("load-badge").hidden = false;
+    file.slice(0, 4).arrayBuffer().then(function (buf) {
+        var magic = new Uint8Array(buf);
+        if (!(magic[0] === 0x5A && magic[1] === 0x49 && magic[2] === 0x4D)) {
+            throw new Error("not-zim");
+        }
+        ENGINE.zimArchiveLoader.loadArchiveFromFiles([file], onArchiveReady, function (msg) {
+            failOpen(file.name, msg);
+        });
+    }).catch(function () {
+        failOpen(file.name, "That file is not a readable ZIM archive (wrong file, truncated download, or corrupted copy).");
+    });
 }
-ENGINE.zimArchiveLoader.loadArchiveFromFiles([file], onArchiveReady, function (msg) {
-failOpen(file.name, msg);
-});
-}).catch(function () {
-failOpen(file.name, "That file is not a readable ZIM archive (wrong file, truncated download, or corrupted copy).");
-});
+
+function openRemote(z) {
+    if (!z || MODE !== "server") return;
+    resetForOpen();
+    setBadge(el("archive-badge"), "Loading " + z.file + " over the network…", true);
+    el("load-badge").hidden = false;
+    var url = new URL("../media/zims/" + encodeURIComponent(z.file), location.href).href;
+    ENGINE.zimArchiveLoader.loadArchiveFromFiles([{ name: z.file, size: z.bytes || 0, remoteUrl: url }], onArchiveReady, function (msg) {
+        el("load-badge").hidden = true;
+        showError('Could not load "' + z.file + '" from this server (' + (msg || "network error") + "). Check that the pack exists in media/zims/ and that the media pack is installed.");
+    });
 }
 
 function failOpen(name, detail) {
@@ -566,20 +578,26 @@ el("load-badge").hidden = true;
 }
 
 function renderKitList() {
-var list = el("kit-list");
-var zims = window.BG_ZIMS;
-if (!zims || !zims.length) {
-list.innerHTML = "<p>No pack list found in this copy of the kit. Use the drop zone below to open any <code>.zim</code> you have.</p>";
-el("kit-hint").hidden = true;
-return;
-}
-var html = "";
-zims.forEach(function (z) {
-html += '<div class="kit-entry"><div class="kit-meta"><strong>' + escapeHtml(z.title) + '</strong> <span class="badge">' + escapeHtml(z.size) + '</span><br><span class="kit-desc">' + escapeHtml(z.desc) + "</span></div>" +
-'<button class="btn btn-primary" type="button" data-open="' + escapeHtml(z.file) + '">Open ' + escapeHtml(z.title.split(" ")[0]) + "…</button></div>";
-});
-list.innerHTML = html;
-el("kit-hint").hidden = false;
+    var list = el("kit-list");
+    var zims = window.BG_ZIMS;
+    if (!zims || !zims.length) {
+        list.innerHTML = "<p>No pack list found in this copy of the kit. Use the drop zone below to open any <code>.zim</code> you have.</p>";
+        el("kit-hint").hidden = true;
+        return;
+    }
+    var html = "";
+    zims.forEach(function (z) {
+        var btn = MODE === "server"
+            ? '<button class="btn btn-primary" type="button" data-remote="' + escapeHtml(z.file) + '">Load ' + escapeHtml(z.title.split(" ")[0]) + "&hellip;</button>"
+            : '<button class="btn btn-primary" type="button" data-open="' + escapeHtml(z.file) + '">Open ' + escapeHtml(z.title.split(" ")[0]) + "&hellip;</button>";
+        html += '<div class="kit-entry"><div class="kit-meta"><strong>' + escapeHtml(z.title) + '</strong> <span class="badge">' + escapeHtml(z.size) + '</span><br><span class="kit-desc">' + escapeHtml(z.desc) + "</span></div>" + btn + "</div>";
+    });
+    list.innerHTML = html;
+    if (MODE === "server") {
+        el("kit-hint").innerHTML = "Served copies load these packs straight from the kit over the network &mdash; no file picking needed. Portable (file://) copies ask you to choose the matching file from <code>media/zims/</code>.";
+    } else {
+        el("kit-hint").hidden = false;
+    }
 }
 
 function escapeHtml(s) {
@@ -668,11 +686,15 @@ el("last-zim").textContent = "Last archive opened here: " + last + " (browsers c
 el("last-zim").hidden = false;
 }
 
-document.addEventListener("click", function (ev) {
-var btn = ev.target.closest("[data-open]");
-if (!btn) return;
-openPicker(btn.getAttribute("data-open"));
-});
+    document.addEventListener("click", function (ev) {
+        var open = ev.target.closest("[data-open]");
+        if (open) { openPicker(open.getAttribute("data-open")); return; }
+        var remote = ev.target.closest("[data-remote]");
+        if (remote) {
+            var z = (window.BG_ZIMS || []).filter(function (zz) { return zz.file === remote.getAttribute("data-remote"); })[0];
+            if (z) openRemote(z);
+        }
+    });
 
 el("zim-input").addEventListener("change", function () {
 if (this.files && this.files[0]) openFile(this.files[0]);

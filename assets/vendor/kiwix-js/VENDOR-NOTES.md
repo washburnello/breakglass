@@ -207,3 +207,13 @@ expects, a URL-rewriting wrapper around `window.Worker` so the document-relative
 `new Worker('js/lib/libzim-*.js')` call resolves to the vendored path, and
 hidden stub elements with IDs that `uiUtil.js` touches when imported outside
 the kiwix-js app shell).
+
+## Local patch (2026-08-25): HTTP-Range remote archives
+
+`readFileSlice` in `www/js/lib/util.js` (and the verbatim copy embedded in
+`engine.bundle.js`) gained a leading branch: entries carrying a
+`remoteUrl` property are read with `fetch` + `Range:` headers instead of
+Blob slicing. This lets served (http) copies of BreakGlass stream ZIM packs
+directly from `media/zims/` without downloading them whole; portable
+(file://) behavior is unchanged. Upstream equivalent functionality differs;
+do not silently overwrite this patch when upgrading kiwix-js.
