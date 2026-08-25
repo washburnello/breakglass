@@ -1,0 +1,6 @@
+media/
+node_modules/
+*.log
+.DS_Store
+._*
+server/data/
