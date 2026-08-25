@@ -318,3 +318,7 @@ deep content so the live URL shapes decisions.
 - Both runtime modes tested for every feature (existing visual-regression
   habits cover this).
 - System field-guide memory rules apply to any browser-heavy verification.
+
+## Todo adds by Wash the server maintainer
+- I want a clickable line of text in the footer called "How to use this site" that links to a page that describes how the site is designed and intended to be used.
+  - Done 2026-08-25: root `how-to-use.html` authored (modes, finding things, phases, printing, data ownership, safety framing); footer link swept across all pages.
