@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emergency Mode — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="assets/theme.css">
+<script src="assets/shell.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="EMERGENCY.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<div class="callout callout-danger">
+<h1>EMERGENCY MODE</h1>
+<p>If a life is in danger right now, call emergency services first, whenever it is possible to do so. This page is for guidance when help is delayed or unavailable. Stay calm, work step by step, and do the next clear thing.</p>
+</div>
+<h2 class="group-title">Quick actions</h2>
+<div class="tile-grid">
+<a class="tile" href="emergency/index.html"><i class="fa-solid fa-droplet tile-icon"></i><span class="tile-name">Severe bleeding</span><span class="tile-blurb">Stop the blood with firm, direct pressure.</span></a>
+<a class="tile" href="emergency/index.html"><i class="fa-solid fa-heart-pulse tile-icon"></i><span class="tile-name">CPR</span><span class="tile-blurb">Push hard and fast in the center of the chest.</span></a>
+<a class="tile" href="emergency/index.html"><i class="fa-solid fa-lungs tile-icon"></i><span class="tile-name">Choking</span><span class="tile-blurb">Back blows and abdominal thrusts to clear the airway.</span></a>
+<a class="tile" href="emergency/index.html"><i class="fa-solid fa-fire tile-icon"></i><span class="tile-name">Burns</span><span class="tile-blurb">Cool the burn with clean running water.</span></a>
+<a class="tile" href="emergency/index.html"><i class="fa-solid fa-bed-pulse tile-icon"></i><span class="tile-name">Shock</span><span class="tile-blurb">Lie the person down, keep them warm, monitor breathing.</span></a>
+</div>
+<p class="note">These are short reminders only. Open the <a href="index.html">full site home</a> for the complete Emergency Hub and every other section of this kit.</p>
+</main>
+<footer class="status-line"><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Style Guide — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="assets/theme.css">
+<script src="assets/shell.js" defer></script>
+<style>
+main{max-width:1040px;margin-inline:auto;padding:var(--space-6) var(--space-4) var(--space-8)}
+main>h1{font-size:var(--fs-3xl);margin-bottom:var(--space-2)}
+main section{margin-top:var(--space-7)}
+main h2{font-size:var(--fs-xl);margin-bottom:var(--space-4)}
+.sg-lede{color:var(--text-muted);max-width:60ch}
+.sg-label{font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:var(--space-2)}
+.sg-stack{display:grid;gap:var(--space-5)}
+.swatch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--space-3)}
+.swatch{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface)}
+.swatch-chip{height:64px;border-bottom:1px solid var(--border)}
+.swatch-name{display:block;padding:var(--space-2) var(--space-3);font-size:var(--fs-xs);color:var(--text-muted);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:var(--space-3)}
+.icon-cell{display:flex;flex-direction:column;align-items:center;gap:var(--space-2);padding:var(--space-4) var(--space-2);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.icon-cell i{color:var(--accent);font-size:var(--fs-2xl)}
+.icon-cell span{font-size:var(--fs-xs);color:var(--text-muted)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:var(--space-2);border-bottom:1px solid var(--border);text-align:left}
+.sg-input{padding:var(--space-2) var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text)}
+.sg-input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.sg-motion-card{transition:transform var(--dur-base) var(--ease-out),box-shadow var(--dur-base) var(--ease-out)}
+.sg-motion-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-2)}
+@media (prefers-reduced-motion:reduce){.sg-motion-card,.sg-motion-card:hover{transition:none;transform:none}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html"><i class="fa-solid fa-kit-medical brand-icon" aria-hidden="true"></i>BreakGlass</a>
+  <form class="searchbar" action="search.html" method="get" role="search">
+    <span class="searchbar-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+    <input type="search" name="q" placeholder="Search the kit…" aria-label="Search the kit">
+  </form>
+  <select class="phase-select" aria-label="Situation phase"></select>
+  <button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-label="Toggle light or dark theme"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i></button>
+</header>
+
+<main>
+  <h1>Style Guide</h1>
+  <p class="sg-lede">Every color, shape, word, and movement allowed in BreakGlass lives on this page. Copy patterns from here; do not invent new ones.</p>
+
+  <section id="colors">
+    <h2>Color tokens</h2>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch-chip" style="background:var(--bg)"></div><span class="swatch-name">--bg</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--surface)"></div><span class="swatch-name">--surface</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--surface-2)"></div><span class="swatch-name">--surface-2</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--text)"></div><span class="swatch-name">--text</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--text-muted)"></div><span class="swatch-name">--text-muted</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--border)"></div><span class="swatch-name">--border</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--accent)"></div><span class="swatch-name">--accent</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--accent-hover)"></div><span class="swatch-name">--accent-hover</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--accent-soft)"></div><span class="swatch-name">--accent-soft</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--ok)"></div><span class="swatch-name">--ok</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--warn)"></div><span class="swatch-name">--warn</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--danger)"></div><span class="swatch-name">--danger</span></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--info)"></div><span class="swatch-name">--info</span></div>
+    </div>
+    <p style="margin-top:var(--space-4)">Swatches respond to the theme toggle — flip the half-circle button in the header to compare light and dark. Printing swaps in an ink-safe palette automatically.</p>
+  </section>
+
+  <section id="typography">
+    <h2>Typography</h2>
+    <div class="card sg-stack">
+      <div>
+        <p class="sg-label">Heading 1 · --fs-3xl</p>
+        <h3 style="font-size:var(--fs-3xl)">Boil water before you drink it</h3>
+      </div>
+      <div>
+        <p class="sg-label">Heading 2 · --fs-2xl</p>
+        <h3 style="font-size:var(--fs-2xl)">Finding water in the field</h3>
+      </div>
+      <div>
+        <p class="sg-label">Heading 3 · --fs-lg</p>
+        <h4 style="font-size:var(--fs-lg)">Reading a compass at dusk</h4>
+      </div>
+      <div>
+        <p class="sg-label">Body · --fs-md</p>
+        <p style="font-size:var(--fs-md)">Clear water can still carry sickness. Boil every drop until you know better.</p>
+      </div>
+      <div>
+        <p class="sg-label">Small muted · --fs-sm + --text-muted</p>
+        <p style="font-size:var(--fs-sm);color:var(--text-muted)">Last checked before winter. Verify doses against the medical pages.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="buttons">
+    <h2>Buttons</h2>
+    <div class="sg-stack">
+      <div>
+        <p class="sg-label">Default .btn</p>
+        <button class="btn" type="button">Show checklist</button>
+      </div>
+      <div>
+        <p class="sg-label">Primary · .btn.btn-primary</p>
+        <button class="btn btn-primary" type="button">Start drill</button>
+      </div>
+      <div>
+        <p class="sg-label">Ghost · .btn.btn-ghost</p>
+        <button class="btn btn-ghost" type="button">Print this page</button>
+      </div>
+      <div>
+        <p class="sg-label">Disabled</p>
+        <button class="btn btn-primary" type="button" disabled>Sync to server</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="badges">
+    <h2>Badges</h2>
+    <div class="card sg-stack">
+      <div>
+        <p class="sg-label">Default .badge</p>
+        <span class="badge">Needs network mode</span>
+      </div>
+      <div>
+        <p class="sg-label">Warning · .badge.badge-warn</p>
+        <span class="badge badge-warn">Requires server</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="callouts">
+    <h2>Callouts</h2>
+    <div class="sg-stack">
+      <div class="callout callout-danger">
+        <h4>Danger</h4>
+        <p>Blood that soaks through the cloth means pressure now. Press hard, stack fresh cloth on top, and do not lift to peek.</p>
+      </div>
+      <div class="callout callout-warning">
+        <h4>Warning</h4>
+        <p>Generators, camp stoves, and charcoal make carbon monoxide. Run them outside, away from windows and doors.</p>
+      </div>
+      <div class="callout callout-caution">
+        <h4>Caution</h4>
+        <p>Treat any well, cistern, or tap that flooded as dirty until it is disinfected and tested.</p>
+      </div>
+      <div class="callout callout-info">
+        <h4>Info</h4>
+        <p>This kit grows in passes. Draft pages cover the safety basics first; polish arrives later.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="cards-tiles">
+    <h2>Cards &amp; tiles</h2>
+    <div class="tile-grid" style="margin-bottom:var(--space-4)">
+      <a class="tile" href="#">
+        <span class="tile-icon"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i></span>
+        <span class="tile-name">Medical &amp; Health</span>
+        <span class="tile-blurb">Bleeding control, burns, dosing by weight.</span>
+      </a>
+      <a class="tile" href="#">
+        <span class="tile-icon"><i class="fa-solid fa-droplet" aria-hidden="true"></i></span>
+        <span class="tile-name">Food &amp; Water</span>
+        <span class="tile-blurb">Find it, purify it, store it, stretch it.</span>
+      </a>
+      <a class="tile" href="#">
+        <span class="tile-icon"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span>
+        <span class="tile-name">Arcade</span>
+        <span class="tile-blurb">Morale is supplies too. Play something.</span>
+      </a>
+    </div>
+    <div class="card">
+      <p class="sg-label">Plain card</p>
+      <p>A card groups related content without asking for action. Tiles invite clicks; cards hold still. Reach for a card when the reader only needs to read.</p>
+    </div>
+  </section>
+
+  <section id="forms">
+    <h2>Forms</h2>
+    <form action="#" method="get" class="sg-stack" style="max-width:420px;margin-bottom:var(--space-4)">
+      <div>
+        <p class="sg-label">Search pair · .searchbar</p>
+        <div class="searchbar">
+          <span class="searchbar-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+          <input type="search" name="demo-q" placeholder="water, splints, radio channels…" aria-label="Demo site search">
+        </div>
+      </div>
+      <div>
+        <label class="sg-label" for="sg-text">Text input</label>
+        <input class="sg-input" type="text" id="sg-text" name="demo-text" placeholder="Your name or callsign">
+      </div>
+      <div>
+        <label class="sg-label" for="sg-phase">Phase select — shell fills the options</label>
+        <select class="phase-select" id="sg-phase"></select>
+      </div>
+    </form>
+    <div class="card">
+      <fieldset style="border:none;padding:0;margin:0 0 var(--space-4)">
+        <legend class="sg-label">Checkboxes</legend>
+        <label style="display:block;margin-bottom:var(--space-2)"><input type="checkbox" checked> Water stored and dated</label>
+        <label style="display:block"><input type="checkbox"> First aid restocked</label>
+      </fieldset>
+      <fieldset style="border:none;padding:0;margin:0">
+        <legend class="sg-label">Radios</legend>
+        <label style="display:block;margin-bottom:var(--space-2)"><input type="radio" name="sg-radio" checked> Watch NOAA weather radio</label>
+        <label style="display:block"><input type="radio" name="sg-radio"> Listen on FRS channel 1</label>
+      </fieldset>
+    </div>
+  </section>
+
+  <section id="tables">
+    <h2>Tables</h2>
+    <p style="margin-bottom:var(--space-3)"><span class="badge badge-warn">Sample data — not medical advice</span></p>
+    <table>
+      <caption style="text-align:left;color:var(--text-muted);font-size:var(--fs-sm);padding:var(--space-2) 0">Children's fever medicine, layout specimen only. Real dosing lives in medical/ and must be verified before use.</caption>
+      <thead>
+        <tr><th scope="col">Weight of person</th><th scope="col">Liquid (100 mg / 5 mL)</th><th scope="col">Tablets (200 mg)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>24–35 lb</td><td>5 mL</td><td>—</td></tr>
+        <tr><td>36–47 lb</td><td>7.5 mL</td><td>—</td></tr>
+        <tr><td>48–59 lb</td><td>10 mL</td><td>—</td></tr>
+        <tr><td>60–71 lb</td><td>12.5 mL</td><td>half tablet</td></tr>
+        <tr><td>72–95 lb</td><td>15 mL</td><td>one tablet</td></tr>
+        <tr><td>96 lb and up</td><td>20 mL</td><td>one tablet</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="phase-banners">
+    <h2>Phase banners</h2>
+    <div class="phase-banner">Survive — secure water, first aid, shelter.</div>
+    <p style="margin-top:var(--space-3)">The live banner recolors from body[data-phase] (Everyday · Survive · Stabilize · Rebuild · Thrive). Switch phases in the header to watch this one change; the copy shown here pins the Survive wording.</p>
+  </section>
+
+  <section id="icons">
+    <h2>Icon reference</h2>
+    <div class="icon-grid">
+      <div class="icon-cell"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>magnifying-glass</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-house" aria-hidden="true"></i><span>house</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-truck-medical" aria-hidden="true"></i><span>truck-medical</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i><span>user-doctor</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-hammer" aria-hidden="true"></i><span>hammer</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-droplet" aria-hidden="true"></i><span>droplet</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-paw" aria-hidden="true"></i><span>paw</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i><span>tower-broadcast</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-globe" aria-hidden="true"></i><span>globe</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-book" aria-hidden="true"></i><span>book</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-bible" aria-hidden="true"></i><span>bible</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><span>graduation-cap</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-robot" aria-hidden="true"></i><span>robot</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-leaf" aria-hidden="true"></i><span>leaf</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-city" aria-hidden="true"></i><span>city</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i><span>map-location-dot</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-table-list" aria-hidden="true"></i><span>table-list</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-toolbox" aria-hidden="true"></i><span>toolbox</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-calculator" aria-hidden="true"></i><span>calculator</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i><span>screwdriver-wrench</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-gamepad" aria-hidden="true"></i><span>gamepad</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i><span>circle-half-stroke</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-moon" aria-hidden="true"></i><span>moon</span></div>
+      <div class="icon-cell"><i class="fa-solid fa-sun" aria-hidden="true"></i><span>sun</span></div>
+    </div>
+  </section>
+
+  <section id="rules">
+    <h2>Hard rules</h2>
+    <ol>
+      <li>Tokens only. Every color, space, radius, shadow, duration, easing, and type size comes from a theme.css custom property.</li>
+      <li>Functional without JS. Reading, navigation, search fallback, and print all work with scripts off.</li>
+      <li>Styleguide-first components. New UI pieces land on this page before any page uses them.</li>
+      <li>No external requests, ever. Fonts, icons, code, and data ride inside the kit folder.</li>
+      <li>Print styles required. Survival pages get printed and taped to walls; assume paper.</li>
+      <li>Plain voice. Calm authority, short sentences, zero hype.</li>
+    </ol>
+  </section>
+
+  <section id="motion">
+    <h2>Motion</h2>
+    <div class="card sg-motion-card" style="margin-bottom:var(--space-4)">Hover me — the lift runs on --dur-base + --ease-out with --shadow-2.</div>
+    <p>The whole motion budget is three durations (--dur-fast, --dur-base, --dur-slow) and two easings (--ease-out, --ease-spring). Nothing else moves. Under prefers-reduced-motion every animation freezes site-wide while the kit stays fully usable.</p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="status-line">
+    <span data-media-state>Media pack: status shows once scripts load</span>
+    <span>BreakGlass · © <span data-year>2026</span></span>
+  </div>
+</footer>
+
+</body>
+</html>

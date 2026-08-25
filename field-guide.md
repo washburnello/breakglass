@@ -67,10 +67,9 @@ Changes to this map require editing this file first.
 
 | Location | Holds |
 |---|---|
-| repo tree | committed static site + tools/docs (tools/docs not distributed) |
-| `media/` (gitignored) | images, diagrams, ROMs, PICO/Picotron exports, ZIMs, map tiles — optional companion folder |
-| `/mnt/sd256` | master vault: maxi Wikipedia, WikiHow, WikiMed, iFixit ZIMs (~175GB); master source for fat kits; read by kiwix-serve/Kolibri on cedar |
-| cedar containers | kiwix-serve · kolibri (videos) · ai-proxy |
+| repo tree (`~/projects/breakglass`) | committed static site + tools/docs (tools/docs not distributed) |
+| `/mnt/tb01/breakglass` | deploy tree nginx serves (:8019); its `media/` holds images/diagrams/ROMs/PICO exports/map tiles (repo `media/` symlinks here); future `vault/` will hold ZIMs for kiwix-serve/Kolibri |
+| `/mnt/sd256` | reserved — future test bed for the copy-to-another-drive / share-with-a-friend workflow |
 
 ## Authoring conventions
 

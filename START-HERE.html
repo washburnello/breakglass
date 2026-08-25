@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start Here — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="assets/theme.css">
+<script src="assets/shell.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="START-HERE.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<h1>Welcome to BreakGlass</h1>
+<p>This is an offline knowledge kit. Everything inside works without the internet — browse anything you like, whenever you like.</p>
+<div class="card">
+<h2><i class="fa-solid fa-house"></i> Open the full library</h2>
+<p>The home page is where everything lives: survival guides, medical knowledge, books, maps, lessons and more.</p>
+<p><a class="btn" href="index.html">Open BreakGlass</a></p>
+</div>
+<div class="card">
+<h2><i class="fa-solid fa-truck-medical"></i> In an emergency</h2>
+<p>If something has gone wrong right now, go straight to Emergency Mode. It shows life-safety steps first — no hunting through menus.</p>
+<p><a class="btn btn-danger" href="EMERGENCY.html">Emergency Mode</a></p>
+</div>
+<div class="card">
+<h2><i class="fa-solid fa-gamepad"></i> Want the games &amp; extra media?</h2>
+<p>A few features need this folder to be served by a small helper program. Run <strong>START-SERVER</strong> <span class="badge badge-warn">coming soon</span>, or visit <a href="https://breakglass.w4sh.net">breakglass.w4sh.net</a> whenever you have internet.</p>
+</div>
+</main>
+<footer class="status-line"><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+</body>
+</html>

@@ -229,10 +229,11 @@ bundled. Survipedia is structural inspiration only (CC BY-NC-ND, no reuse).
   + restorecon on served tree. Cloudflared hostname route → restart tunnel.
   **Deploy root:** `/mnt/tb01/breakglass` (per owner: run from tb01 so sd256 copy
   behavior can be tested); canonical git repo stays `~/projects/breakglass`.
-- **sd256 vault** (dedicated 238GB exFAT drive): maxi English Wikipedia
+- **tb01 vault** (deploy tree `/mnt/tb01/breakglass`): maxi English Wikipedia
   (~108GB) + WikiHow (~25–30GB) + WikiMed (~3GB) + iFixit (~10GB) + growth
-  ≈ 175GB used / ~60GB free. Read by kiwix-serve + Kolibri containers; also
-  the master source for cloning fat kits.
+  ≈ 175GB planned under `vault/` (tb01 has ~478GB free). Read by kiwix-serve +
+  Kolibri containers. `/mnt/sd256` is RESERVED for future testing of the
+  copy-to-another-drive / share-with-a-friend workflow — not active infra.
 - **Containers on cedar:** `kiwix-serve`, `kolibri` (channels on sd256),
   `ai-proxy`.
 - **lando_pageo resilience:** verify project vhosts bind all interfaces; add
@@ -275,7 +276,7 @@ attribution block.
 | 5 | Content core | medical, howto, food, pets, town, faith+Bible, books |
 | 6 | Apps suite | five single-file apps |
 | 7 | Arcade | console emus + wrappers; PICO-8 export pipeline (spike first) |
-| 8 | sd256 vault | ZIM downloads, kiwix-serve, embedded-reader spike |
+| 8 | ZIM vault (tb01) | ZIM downloads into tb01 vault/, kiwix-serve, embedded-reader spike |
 | 9 | Schoolhouse | curriculum skeleton, tracker, Kolibri container |
 | 10 | Ask-the-Kit + Phases | proxy service, chat UI, phase tagging sweep |
 | 11 | Usability extras | Emergency Hub drills, Quick Ref, ID Browser, map tiers |

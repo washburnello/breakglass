@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BreakGlass — Offline Survival Knowledge</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="assets/theme.css">
+<script src="assets/shell.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<section>
+<h2 class="group-title">SURVIVAL</h2>
+<div class="tile-grid">
+<a class="tile" href="emergency/index.html"><i class="fa-solid fa-truck-medical tile-icon"></i><span class="tile-name">Emergency Hub</span><span class="tile-blurb">Life-safety procedures, triage trees and drills.</span></a>
+<a class="tile" href="medical/index.html"><i class="fa-solid fa-user-doctor tile-icon"></i><span class="tile-name">Medical &amp; Health</span><span class="tile-blurb">First aid, wounds, illness and herbal medicine.</span></a>
+<a class="tile" href="howto/index.html"><i class="fa-solid fa-hammer tile-icon"></i><span class="tile-name">How-To &amp; Skills</span><span class="tile-blurb">Water, shelter, power and practical repairs.</span></a>
+<a class="tile" href="food/index.html"><i class="fa-solid fa-droplet tile-icon"></i><span class="tile-name">Food &amp; Water</span><span class="tile-blurb">Purify water, grow and preserve food.</span></a>
+<a class="tile" href="comms/index.html"><i class="fa-solid fa-tower-broadcast tile-icon"></i><span class="tile-name">Comms &amp; Radio</span><span class="tile-blurb">Radios, frequencies and staying in contact.</span></a>
+</div>
+</section>
+<section>
+<h2 class="group-title">KNOWLEDGE</h2>
+<div class="tile-grid">
+<a class="tile" href="wiki/index.html"><i class="fa-solid fa-globe tile-icon"></i><span class="tile-name">Offline Wiki</span><span class="tile-blurb">The encyclopedia, offline and searchable.</span></a>
+<a class="tile" href="books/index.html"><i class="fa-solid fa-book tile-icon"></i><span class="tile-name">Book Library</span><span class="tile-blurb">Classic and practical texts, fully readable.</span></a>
+<a class="tile" href="faith/index.html"><i class="fa-solid fa-bible tile-icon"></i><span class="tile-name">Faith &amp; Bible</span><span class="tile-blurb">Scripture in multiple translations with search.</span></a>
+<a class="tile" href="education/index.html"><i class="fa-solid fa-graduation-cap tile-icon"></i><span class="tile-name">Education</span><span class="tile-blurb">Schoolhouse: K-12 lessons with progress tracking.</span></a>
+<a class="tile" href="ask/index.html"><i class="fa-solid fa-robot tile-icon"></i><span class="tile-name">Ask-the-Kit</span><span class="tile-blurb">An AI guide for everything in this kit.</span></a>
+<a class="tile" href="id/index.html"><i class="fa-solid fa-leaf tile-icon"></i><span class="tile-name">ID Browser</span><span class="tile-blurb">Identify plants, wildlife and hazards.</span></a>
+</div>
+</section>
+<section>
+<h2 class="group-title">REBUILD</h2>
+<div class="tile-grid">
+<a class="tile" href="town/index.html"><i class="fa-solid fa-city tile-icon"></i><span class="tile-name">Town Builder</span><span class="tile-blurb">Start a settlement from scratch.</span></a>
+<a class="tile" href="maps/index.html"><i class="fa-solid fa-map-location-dot tile-icon"></i><span class="tile-name">Maps &amp; Navigation</span><span class="tile-blurb">Offline maps, compass and routes.</span></a>
+<a class="tile" href="pets/index.html"><i class="fa-solid fa-paw tile-icon"></i><span class="tile-name">Pets &amp; Animals</span><span class="tile-blurb">Care, training and feeding of animals.</span></a>
+</div>
+</section>
+<section>
+<h2 class="group-title">TOOLS</h2>
+<div class="tile-grid">
+<a class="tile" href="reference/index.html"><i class="fa-solid fa-table-list tile-icon"></i><span class="tile-name">Quick Reference</span><span class="tile-blurb">Ratios, dosages and conversions at a glance.</span></a>
+<a class="tile" href="apps/index.html"><i class="fa-solid fa-toolbox tile-icon"></i><span class="tile-name">Pocket Apps</span><span class="tile-blurb">Notepad, paint, spreadsheet, todo, calendar.</span></a>
+<a class="tile" href="calc/index.html"><i class="fa-solid fa-calculator tile-icon"></i><span class="tile-name">Calculators</span><span class="tile-blurb">Water, food and power math.</span></a>
+<a class="tile" href="admin/index.html"><i class="fa-solid fa-screwdriver-wrench tile-icon"></i><span class="tile-name">Kit Admin</span><span class="tile-blurb">Copy this kit, host it, configure things.</span></a>
+</div>
+</section>
+<section>
+<h2 class="group-title">MORALE</h2>
+<div class="tile-grid">
+<a class="tile" href="arcade/index.html"><i class="fa-solid fa-gamepad tile-icon"></i><span class="tile-name">Arcade</span><span class="tile-blurb">Retro console and fantasy-console games.</span></a>
+</div>
+</section>
+</main>
+<footer class="status-line"><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+</body>
+</html>
