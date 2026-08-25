@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="rebuild thrive">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Progress Tracker — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<style>
+.tr-head{display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-4);margin-bottom:var(--space-3);font-size:var(--fs-2xl);}
+.tr-head i{color:var(--accent);}
+.tr-h2{font-size:var(--fs-lg);margin-bottom:var(--space-3);}
+#tr-add-card{margin-bottom:var(--space-4);}
+.tr-add{display:flex;align-items:flex-end;flex-wrap:wrap;gap:var(--space-2);padding-bottom:var(--space-3);border-bottom:1px solid var(--border);}
+.tr-field{display:flex;flex-direction:column;gap:var(--space-1);}
+.tr-field label{font-size:var(--fs-xs);font-weight:600;color:var(--text-muted);}
+.tr-input,.tr-select{padding:var(--space-2) var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);}
+.tr-input:focus,.tr-select:focus,.tr-notes-area:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft);}
+.tr-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);padding-top:var(--space-3);}
+.tr-spacer{flex:1 1 auto;}
+.tr-status{color:var(--text-muted);font-size:var(--fs-sm);}
+.grid-card{overflow:hidden;}
+.tr-legend{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-4);margin-bottom:var(--space-3);font-size:var(--fs-sm);color:var(--text-muted);}
+.tr-legend-item{display:inline-flex;align-items:center;gap:var(--space-2);}
+.tr-tabs{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-4);}
+.tr-tab[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--text-on-accent);}
+.tr-cell{display:inline-flex;align-items:center;justify-content:center;width:var(--space-8);height:var(--space-7);padding:0;border:1px solid var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--text-muted);font-weight:700;font-size:var(--fs-md);line-height:1;}
+button.tr-cell:hover{border-color:var(--accent);}
+.tr-cell.s-learning{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent);}
+.tr-cell.s-mastered{background:color-mix(in srgb,var(--ok) 20%,transparent);border-color:color-mix(in srgb,var(--ok) 50%,transparent);color:var(--ok);}
+.tr-demo{cursor:default;}
+.grid-wrap{overflow-x:auto;}
+table.mastery{min-width:100%;}
+.mastery th,.mastery td{border:1px solid var(--border);}
+.mastery thead th{font-size:var(--fs-xs);font-weight:600;color:var(--text-muted);text-align:center;vertical-align:bottom;min-width:var(--space-7);}
+.mastery .stu-cell{text-align:left;min-width:220px;padding:var(--space-2);}
+.mastery td.cell-td{text-align:center;vertical-align:middle;}
+.stu-top{margin-bottom:var(--space-1);}
+.stu-name{background:none;border:none;padding:0;font-weight:600;font-size:var(--fs-md);color:var(--text);text-align:left;cursor:pointer;}
+.stu-name:hover{color:var(--accent);}
+.tr-rename{width:100%;max-width:240px;font-weight:600;}
+.stu-badges{margin-bottom:var(--space-2);}
+.tr-badge-done{border-color:color-mix(in srgb,var(--ok) 40%,transparent);background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok);}
+.stu-tools{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-1);}
+.tr-mini{padding:var(--space-1) var(--space-2);font-size:var(--fs-xs);}
+.tr-band-select{max-width:110px;padding:var(--space-1) var(--space-2);font-size:var(--fs-xs);}
+.tr-del:hover{background:color-mix(in srgb,var(--danger) 12%,transparent);border-color:color-mix(in srgb,var(--danger) 45%,transparent);color:var(--danger);}
+.mastery tr.selected th,.mastery tr.selected td{background:color-mix(in srgb,var(--accent) 7%,transparent);}
+.tr-band-title{margin:var(--space-5) 0 var(--space-2);font-size:var(--fs-md);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);}
+section.tr-band:first-child .tr-band-title{margin-top:0;}
+.tr-emptyband{color:var(--text-muted);font-size:var(--fs-sm);}
+.tr-empty{text-align:center;padding:var(--space-7) var(--space-4);}
+.tr-empty-big{font-size:var(--fs-lg);font-weight:700;margin-bottom:var(--space-2);}
+.tr-empty p{margin-inline:auto;}
+#tr-notes-card{margin-top:var(--space-4);}
+.tr-notes-area{width:100%;min-height:140px;padding:var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);line-height:1.6;resize:vertical;}
+.tr-hint{margin-top:var(--space-2);font-size:var(--fs-xs);color:var(--text-muted);}
+@media print{
+.tr-callout,#tr-add-card,.tr-tabs,#tr-notes-card,.stu-tools{display:none;}
+.tr-cell,.mastery tr.selected th,.mastery tr.selected td{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.tr-cell{width:34px;height:30px;font-size:var(--fs-sm);}
+.mastery .stu-cell{min-width:130px;}
+.card{box-shadow:none;}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<h1 class="tr-head"><i class="fa-solid fa-user-graduation" aria-hidden="true"></i> Progress Tracker</h1>
+<div class="callout callout-info tr-callout"><p>Tap any cell to cycle that subject for that student: not started → learning → mastered. Progress autosaves to this browser; use <strong>Save file</strong> to write a portable <code>breakglass-students.json</code> backup — saved files are the source of truth.</p></div>
+<section class="card" id="tr-add-card">
+<h2 class="tr-h2">Students</h2>
+<form id="tr-add" class="tr-add">
+<div class="tr-field"><label for="tr-new-name">Name</label><input id="tr-new-name" class="tr-input" type="text" maxlength="60" placeholder="Student name" autocomplete="off"></div>
+<div class="tr-field"><label for="tr-new-band">Band</label><select id="tr-new-band" class="tr-select"></select></div>
+<button id="tr-add-btn" class="btn btn-primary" type="submit"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add student</button>
+</form>
+<div class="tr-toolbar">
+<button id="tr-save" class="btn btn-primary" type="button" title="Save every student to breakglass-students.json"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save file</button>
+<button id="tr-open" class="btn btn-ghost" type="button" title="Open a saved tracker or student JSON file"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Open</button>
+<input id="tr-file" type="file" accept=".json,application/json,text/json" hidden>
+<span class="tr-spacer"></span>
+<span id="tr-warn" class="badge badge-warn" hidden><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Autosave unavailable — use Save/Open</span>
+<span id="tr-status" class="tr-status" role="status" aria-live="polite">Ready</span>
+</div>
+</section>
+<section class="card grid-card">
+<h2 class="tr-h2">Mastery grid</h2>
+<div class="tr-legend">
+<span class="tr-legend-item"><span class="tr-cell tr-demo" aria-hidden="true"></span> Not started</span>
+<span class="tr-legend-item"><span class="tr-cell tr-demo s-learning" aria-hidden="true">L</span> Learning</span>
+<span class="tr-legend-item"><span class="tr-cell tr-demo s-mastered" aria-hidden="true">✓</span> Mastered</span>
+</div>
+<div class="tr-tabs" role="group" aria-label="Band filter">
+<button class="btn btn-ghost tr-tab" type="button" data-tab="all" aria-pressed="true">All</button>
+<button class="btn btn-ghost tr-tab" type="button" data-tab="k2" aria-pressed="false">K–2</button>
+<button class="btn btn-ghost tr-tab" type="button" data-tab="35" aria-pressed="false">3–5</button>
+<button class="btn btn-ghost tr-tab" type="button" data-tab="68" aria-pressed="false">6–8</button>
+<button class="btn btn-ghost tr-tab" type="button" data-tab="912" aria-pressed="false">9–12</button>
+</div>
+<div id="tr-grid"></div>
+</section>
+<section class="card" id="tr-notes-card" hidden>
+<h2 class="tr-h2" id="tr-notes-name"></h2>
+<textarea id="tr-notes" class="tr-notes-area" spellcheck="false" aria-label="Student notes"></textarea>
+<p class="tr-hint">Notes save as you type (browser autosave) and ride along in saved files.</p>
+</section>
+</main>
+<footer class="status-line"><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function(){
+"use strict";
+var APP_ID="breakglass-tracker";
+var VERSION=1;
+var STORE_KEY="bg.apps.tracker.store";
+var STATUSES=["not-started","learning","mastered"];
+var BANDS=[["k2","K–2"],["35","3–5"],["68","6–8"],["912","9–12"]];
+var BAND_IDS=["k2","35","68","912"];
+var SUBJECTS={
+"k2":["Reading Readiness","Phonics","Handwriting","Early Math","Nature Study","Bible Stories & Character"],
+"35":["Reading Fluency","Composition","Arithmetic","Science Basics","Geography & Map Skills","Bible & Character"],
+"68":["Literature","Writing & Grammar","Pre-Algebra & Algebra","Earth & Life Science","World History","Logic & Study Skills","Bible & Worldview"],
+"912":["Literature & Rhetoric","Composition","Mathematics (Alg→Geo→Adv)","Laboratory Sciences","History & Civics","Economics & Life Skills","Bible & Apologetics"]
+};
+var store=null;
+var selectedId=null;
+var activeTab="all";
+var saveTimer=0;
+var notesTimer=0;
+var storageOk=true;
+
+function lsGet(k){
+try{return window.localStorage.getItem(k);}catch(e){return null;}
+}
+function lsSet(k,v){
+try{window.localStorage.setItem(k,v);return true;}catch(e){return false;}
+}
+function bandLabel(id){
+for(var i=0;i<BANDS.length;i++){if(BANDS[i][0]===id)return BANDS[i][1];}
+return id;
+}
+function bandSubjects(id){
+return SUBJECTS[BAND_IDS.indexOf(id)!==-1?id:"k2"]||SUBJECTS.k2;
+}
+function normStatus(v){
+return STATUSES.indexOf(v)!==-1?v:"not-started";
+}
+function freshStore(){
+return {app:APP_ID,version:VERSION,saved:new Date().toISOString(),students:[]};
+}
+function uid(){
+var max=0,m;
+(store.students||[]).forEach(function(s){
+m=/^s(\d+)$/.exec(String(s&&s.id||""));
+if(m)max=Math.max(max,parseInt(m[1],10));
+});
+var n=max+1,id="s"+n;
+while((store.students||[]).some(function(s){return s.id===id;})){n++;id="s"+n;}
+return id;
+}
+function sanitizeStudent(raw,idHint){
+var s=(raw&&typeof raw==="object")?raw:{};
+var band=BAND_IDS.indexOf(s.band)!==-1?s.band:"k2";
+var subs={};
+var src=(s.subjects&&typeof s.subjects==="object")?s.subjects:{};
+bandSubjects(band).forEach(function(name){
+subs[name]={status:normStatus(src[name]&&typeof src[name]==="object"?src[name].status:src[name])};
+});
+var name=String(s.name==null?"":s.name).trim();
+if(!name)name="Student";
+if(name.length>60)name=name.slice(0,60);
+var id=(typeof s.id==="string"&&s.id)?s.id:(idHint||uid());
+return {id:id,name:name,band:band,notes:String(s.notes==null?"":s.notes),subjects:subs};
+}
+function payloadStudents(parsed){
+if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed)&&parsed.app===APP_ID&&Array.isArray(parsed.students))return parsed.students;
+if(Array.isArray(parsed))return parsed;
+return null;
+}
+function cycleStatus(st){
+var i=STATUSES.indexOf(st);
+if(i===-1)i=STATUSES.length-1;
+return STATUSES[(i+1)%STATUSES.length];
+}
+function changeBand(stu,newBand){
+var oldSubs=(stu&&stu.subjects&&typeof stu.subjects==="object")?stu.subjects:{};
+var subs={};
+bandSubjects(newBand).forEach(function(name){
+var prev=oldSubs[name];
+var st=prev&&typeof prev==="object"?prev.status:prev;
+subs[name]={status:normStatus(st)};
+});
+return {id:stu.id,name:stu.name,band:newBand,notes:stu.notes||"",subjects:subs};
+}
+function mergeStudents(current,incoming){
+var out=(current||[]).slice();
+(incoming||[]).forEach(function(stu){
+var idx=-1,i;
+for(i=0;i<out.length;i++){if(out[i].id===stu.id){idx=i;break;}}
+if(idx===-1)out.push(stu);else out[idx]=stu;
+});
+return out;
+}
+function countsFor(stu){
+var list=bandSubjects(stu.band);
+var mastered=0,learning=0;
+list.forEach(function(k){
+var s=stu.subjects[k];
+s=s&&typeof s==="object"?s.status:s;
+if(s==="mastered")mastered++;
+else if(s==="learning")learning++;
+});
+return {mastered:mastered,learning:learning,total:list.length};
+}
+function formatProgress(c){
+var s=c.mastered+"/"+c.total+" mastered";
+if(c.learning)s+=" · "+c.learning+" learning";
+return s;
+}
+function snapshot(){
+return {app:APP_ID,version:VERSION,saved:new Date().toISOString(),students:JSON.parse(JSON.stringify(store.students))};
+}
+function findStudent(id){
+for(var i=0;i<store.students.length;i++){if(store.students[i].id===id)return store.students[i];}
+return null;
+}
+function markStorageBroken(){
+if(storageOk){
+storageOk=false;
+warnEl.hidden=false;
+setStatus("Browser storage refused — changes live until you Save file");
+}
+}
+function persistNow(){
+store.saved=new Date().toISOString();
+if(lsSet(STORE_KEY,JSON.stringify(snapshot())))return true;
+markStorageBroken();
+return false;
+}
+function schedulePersist(){
+if(saveTimer)window.clearTimeout(saveTimer);
+saveTimer=window.setTimeout(function(){
+saveTimer=0;
+persistNow();
+},400);
+}
+function markDirty(){
+schedulePersist();
+}
+function setStatus(msg){
+statusEl.textContent=msg;
+}
+function closestTag(el,tag){
+while(el&&el.tagName!==tag)el=el.parentNode;
+return el;
+}
+function downloadJSON(obj,filename){
+try{
+var blob=new Blob([JSON.stringify(obj,null,2)],{type:"application/json"});
+var url=URL.createObjectURL(blob);
+var a=document.createElement("a");
+a.href=url;
+a.download=filename;
+document.body.appendChild(a);
+a.click();
+a.remove();
+window.setTimeout(function(){URL.revokeObjectURL(url);},1000);
+return true;
+}catch(e){
+return false;
+}
+}
+function selectStudent(id){
+selectedId=id;
+renderGrid();
+openNotes();
+}
+function openNotes(){
+var stu=findStudent(selectedId);
+if(!stu){
+notesCard.hidden=true;
+notesArea.value="";
+notesName.textContent="";
+return;
+}
+notesName.textContent=stu.name+" — "+bandLabel(stu.band)+" notes";
+notesArea.value=stu.notes||"";
+notesCard.hidden=false;
+}
+function refreshRowBadge(tr,stu){
+if(!tr)return;
+var badges=null,kids=tr.cells||[],i;
+for(i=0;i<kids.length;i++){
+badges=kids[i].querySelector?kids[i].querySelector(".stu-badges"):null;
+if(badges)break;
+}
+if(!badges)return;
+var c=countsFor(stu);
+var b=badges.firstChild;
+b.textContent=formatProgress(c);
+if(c.total>0&&c.mastered===c.total)b.classList.add("tr-badge-done");
+else b.classList.remove("tr-badge-done");
+}
+function updateCell(btn,stu,key){
+var st=normStatus(stu.subjects[key]&&stu.subjects[key].status);
+btn.textContent=st==="mastered"?"✓":(st==="learning"?"L":"");
+btn.className="tr-cell"+(st==="learning"?" s-learning":(st==="mastered"?" s-mastered":""));
+btn.title=key+" — "+stu.name+": "+st;
+}
+function buildCell(td,stu,key){
+var btn=document.createElement("button");
+btn.type="button";
+updateCell(btn,stu,key);
+btn.addEventListener("click",function(){
+var cur=findStudent(stu.id);
+if(!cur)return;
+cur.subjects[key]={status:cycleStatus(normStatus(cur.subjects[key]&&cur.subjects[key].status))};
+updateCell(btn,cur,key);
+refreshRowBadge(closestTag(btn,"TR"),cur);
+markDirty();
+});
+td.appendChild(btn);
+}
+function startRename(nameBtn,stu){
+var input=document.createElement("input");
+input.type="text";
+input.className="tr-input tr-rename";
+input.maxLength=60;
+input.value=stu.name;
+nameBtn.parentNode.replaceChild(input,nameBtn);
+input.focus();
+input.select();
+var done=false;
+function commit(keep){
+if(done)return;
+done=true;
+var cur=findStudent(stu.id);
+var v=input.value.trim().slice(0,60);
+if(keep&&cur&&v)cur.name=v;
+markDirty();
+renderGrid();
+openNotes();
+}
+input.addEventListener("keydown",function(ev){
+if(ev.key==="Enter"){ev.preventDefault();commit(true);}
+else if(ev.key==="Escape"){commit(false);}
+});
+input.addEventListener("blur",function(){commit(true);});
+}
+function buildRow(stu){
+var tr=document.createElement("tr");
+tr.className=stu.id===selectedId?"selected":"";
+var th=document.createElement("th");
+th.setAttribute("scope","row");
+th.className="stu-cell";
+var top=document.createElement("div");
+top.className="stu-top";
+var nameBtn=document.createElement("button");
+nameBtn.type="button";
+nameBtn.className="stu-name";
+nameBtn.textContent=stu.name;
+nameBtn.title="Click to open notes · double-click to rename";
+nameBtn.addEventListener("click",function(){selectStudent(stu.id);});
+nameBtn.addEventListener("dblclick",function(){startRename(nameBtn,findStudent(stu.id)||stu);});
+top.appendChild(nameBtn);
+th.appendChild(top);
+var badges=document.createElement("div");
+badges.className="stu-badges";
+var badge=document.createElement("span");
+badge.className="badge";
+badge.textContent=formatProgress(countsFor(stu));
+badges.appendChild(badge);
+th.appendChild(badges);
+var tools=document.createElement("div");
+tools.className="stu-tools";
+var sel=document.createElement("select");
+sel.className="tr-select tr-band-select";
+sel.title="Change grade band — shared subjects keep their status";
+sel.setAttribute("aria-label","Band for "+stu.name);
+BANDS.forEach(function(b){
+var o=document.createElement("option");
+o.value=b[0];
+o.textContent=b[1];
+sel.appendChild(o);
+});
+sel.value=stu.band;
+sel.addEventListener("change",function(){
+var cur=findStudent(stu.id);
+if(!cur)return;
+store.students[store.students.indexOf(cur)]=changeBand(cur,sel.value);
+markDirty();
+renderGrid();
+openNotes();
+setStatus("Moved "+cur.name+" to "+bandLabel(sel.value)+" — shared subjects kept");
+});
+tools.appendChild(sel);
+var notesBtn=document.createElement("button");
+notesBtn.type="button";
+notesBtn.className="btn btn-ghost tr-mini";
+notesBtn.title="Notes for "+stu.name;
+notesBtn.setAttribute("aria-label","Notes for "+stu.name);
+notesBtn.innerHTML='<i class="fa-solid fa-note-sticky" aria-hidden="true"></i>';
+notesBtn.addEventListener("click",function(){selectStudent(stu.id);});
+tools.appendChild(notesBtn);
+var expBtn=document.createElement("button");
+expBtn.type="button";
+expBtn.className="btn btn-ghost tr-mini";
+expBtn.title="Export local student file";
+expBtn.setAttribute("aria-label","Export local student file for "+stu.name);
+expBtn.innerHTML='<i class="fa-solid fa-file-export" aria-hidden="true"></i>';
+expBtn.addEventListener("click",function(){
+var cur=findStudent(stu.id);
+if(!cur)return;
+var one=freshStore();
+one.students=[JSON.parse(JSON.stringify(cur))];
+setStatus(downloadJSON(one,"breakglass-student-"+cur.id+".json")?"Exported "+cur.name+" to a student file":"Export failed");
+});
+tools.appendChild(expBtn);
+var delBtn=document.createElement("button");
+delBtn.type="button";
+delBtn.className="btn btn-ghost tr-mini tr-del";
+delBtn.title="Delete "+stu.name;
+delBtn.setAttribute("aria-label","Delete "+stu.name);
+delBtn.innerHTML='<i class="fa-solid fa-trash-can" aria-hidden="true"></i>';
+delBtn.addEventListener("click",function(){
+var cur=findStudent(stu.id);
+if(!cur)return;
+if(!window.confirm("Delete "+cur.name+" and all their progress?\nExport or Save file first if you want a backup."))return;
+store.students.splice(store.students.indexOf(cur),1);
+if(selectedId===cur.id){selectedId=null;openNotes();}
+markDirty();
+renderGrid();
+setStatus("Deleted "+cur.name);
+});
+tools.appendChild(delBtn);
+th.appendChild(tools);
+tr.appendChild(th);
+var subjList=bandSubjects(stu.band);
+subjList.forEach(function(key){
+var td=document.createElement("td");
+td.className="cell-td";
+buildCell(td,stu,key);
+tr.appendChild(td);
+});
+return tr;
+}
+function buildBandSection(bandId){
+var sec=document.createElement("section");
+sec.className="tr-band";
+var h=document.createElement("h3");
+h.className="tr-band-title";
+h.textContent=bandLabel(bandId);
+sec.appendChild(h);
+var rows=store.students.filter(function(s){return s.band===bandId;});
+if(!rows.length){
+var p=document.createElement("p");
+p.className="tr-emptyband";
+p.textContent="No "+bandLabel(bandId)+" students yet.";
+sec.appendChild(p);
+return sec;
+}
+var wrap=document.createElement("div");
+wrap.className="grid-wrap";
+var table=document.createElement("table");
+table.className="mastery";
+var thead=document.createElement("thead");
+var hr=document.createElement("tr");
+var nameTh=document.createElement("th");
+nameTh.setAttribute("scope","col");
+nameTh.textContent="Student";
+hr.appendChild(nameTh);
+bandSubjects(bandId).forEach(function(subj){
+var th=document.createElement("th");
+th.setAttribute("scope","col");
+th.textContent=subj;
+hr.appendChild(th);
+});
+thead.appendChild(hr);
+table.appendChild(thead);
+var tbody=document.createElement("tbody");
+rows.forEach(function(stu){tbody.appendChild(buildRow(stu));});
+table.appendChild(tbody);
+wrap.appendChild(table);
+sec.appendChild(wrap);
+return sec;
+}
+function renderGrid(){
+gridHost.textContent="";
+if(!store.students.length){
+var card=document.createElement("div");
+card.className="tr-empty";
+var big=document.createElement("p");
+big.className="tr-empty-big";
+big.textContent="No students yet — add one above.";
+card.appendChild(big);
+var sub=document.createElement("p");
+sub.className="tr-status";
+sub.textContent="Add a student, then tap cells to track each subject: not started → learning → mastered.";
+card.appendChild(sub);
+gridHost.appendChild(card);
+return;
+}
+var groups=activeTab==="all"?BAND_IDS.slice():[activeTab];
+groups.forEach(function(bandId){gridHost.appendChild(buildBandSection(bandId));});
+}
+function loadLocal(){
+var raw=lsGet(STORE_KEY);
+if(raw){
+try{
+var arr=payloadStudents(JSON.parse(raw));
+if(arr){
+store=freshStore();
+store.students=arr.map(function(s){return sanitizeStudent(s);});
+return true;
+}
+}catch(e){}
+}
+store=freshStore();
+return false;
+}
+var gridHost=document.getElementById("tr-grid");
+var statusEl=document.getElementById("tr-status");
+var warnEl=document.getElementById("tr-warn");
+var addForm=document.getElementById("tr-add");
+var nameInput=document.getElementById("tr-new-name");
+var bandSelect=document.getElementById("tr-new-band");
+var saveBtn=document.getElementById("tr-save");
+var openBtn=document.getElementById("tr-open");
+var fileInput=document.getElementById("tr-file");
+var notesCard=document.getElementById("tr-notes-card");
+var notesName=document.getElementById("tr-notes-name");
+var notesArea=document.getElementById("tr-notes");
+
+BANDS.forEach(function(b){
+var o=document.createElement("option");
+o.value=b[0];
+o.textContent=b[1]+" ("+bandSubjects(b[0]).length+" subjects)";
+bandSelect.appendChild(o);
+});
+
+addForm.addEventListener("submit",function(ev){
+ev.preventDefault();
+var stu=sanitizeStudent({name:nameInput.value,band:bandSelect.value});
+store.students.push(stu);
+selectedId=stu.id;
+nameInput.value="";
+markDirty();
+renderGrid();
+openNotes();
+setStatus("Added "+stu.name);
+nameInput.focus();
+});
+saveBtn.addEventListener("click",function(){
+persistNow();
+setStatus(downloadJSON(snapshot(),"breakglass-students.json")?"Saved breakglass-students.json ("+store.students.length+" students)":"Save failed — try another browser");
+});
+openBtn.addEventListener("click",function(){fileInput.click();});
+fileInput.addEventListener("change",function(){
+var f=fileInput.files&&fileInput.files[0];
+fileInput.value="";
+if(!f)return;
+var reader=new FileReader();
+reader.onload=function(){
+var text=String(reader.result||"").replace(/^\uFEFF/," ");
+var arr=null;
+try{arr=payloadStudents(JSON.parse(text));}catch(e){arr=null;}
+if(!arr){
+setStatus("That file is not a BreakGlass tracker file");
+return;
+}
+var merge=window.confirm("Found "+arr.length+" student(s) in "+f.name+".\n\nOK = merge into your current roster (matching IDs update).\nCancel = replace the entire roster with the file.");
+var cleaned=arr.map(function(s){return sanitizeStudent(s);});
+if(merge)store.students=mergeStudents(store.students,cleaned);
+else store.students=cleaned;
+if(selectedId&&!findStudent(selectedId))selectedId=null;
+markDirty();
+renderGrid();
+openNotes();
+setStatus((merge?"Merged ":"Loaded ")+cleaned.length+" student(s) from "+f.name);
+};
+reader.onerror=function(){setStatus("Could not read that file");};
+reader.readAsText(f);
+});
+notesArea.addEventListener("input",function(){
+if(notesTimer)window.clearTimeout(notesTimer);
+notesTimer=window.setTimeout(function(){
+notesTimer=0;
+var cur=findStudent(selectedId);
+if(!cur)return;
+cur.notes=notesArea.value;
+markDirty();
+},400);
+});
+Array.prototype.forEach.call(document.querySelectorAll(".tr-tab"),function(btn){
+btn.addEventListener("click",function(){
+activeTab=btn.getAttribute("data-tab");
+Array.prototype.forEach.call(document.querySelectorAll(".tr-tab"),function(b){
+b.setAttribute("aria-pressed",b===btn?"true":"false");
+});
+renderGrid();
+});
+});
+
+window.BGTracker={
+APP_ID:APP_ID,
+STORE_KEY:STORE_KEY,
+STATUSES:STATUSES,
+BANDS:BANDS,
+BAND_IDS:BAND_IDS,
+SUBJECTS:SUBJECTS,
+cycleStatus:cycleStatus,
+changeBand:changeBand,
+mergeStudents:mergeStudents,
+countsFor:countsFor,
+formatProgress:formatProgress,
+sanitizeStudent:sanitizeStudent,
+payloadStudents:payloadStudents
+};
+
+var restored=loadLocal();
+try{
+window.localStorage.setItem("__bg_tracker_probe","1");
+window.localStorage.removeItem("__bg_tracker_probe");
+}catch(e){markStorageBroken();}
+renderGrid();
+setStatus(restored?("Restored "+store.students.length+" student(s) from last visit"):("Ready — "+store.students.length+" student(s)"));
+})();
+</script>
+</body>
+</html>

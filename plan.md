@@ -301,7 +301,7 @@ attribution block.
 | 6 | Apps suite | five single-file apps ✅ (notepad/paint/spreadsheet/todo/calendar) |
 | 7 | Arcade | console emus + wrappers; PICO-8 export pipeline (spike first) |
 | 8 | ZIM vault (tb01) | ZIM downloads into tb01 vault/, kiwix-serve, embedded-reader spike |
-| 9 | Schoolhouse | curriculum skeleton, tracker, Kolibri container |
+| 9 | Schoolhouse | curriculum skeleton, tracker, Kolibri container ← **skeleton+tracker done** (hub, 4 daily plans, one-room primer, adult literacy, mastery-grid tracker w/ local student files; remaining: bundled OER integration, Kolibri container when sd256/vault work resumes) |
 | 10 | Ask-the-Kit + Phases | proxy service, chat UI, phase tagging sweep |
 | 11 | Usability extras | Emergency Hub drills, Quick Ref, ID Browser, map tiers |
 | 12 | Packaging | pack.sh, kits, START-HERE |
