@@ -33,6 +33,8 @@ SHELL_HEAD = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="everyday survive stabilize rebuild thrive">
+<meta name="bg-priority" content="normal">
 <title>A\u2013Z Index \u2014 BreakGlass</title>
 <script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
 <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
