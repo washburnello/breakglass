@@ -20,10 +20,265 @@
 <button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
 </header>
 <main>
+<style>
+.arcade-intro{margin-bottom:var(--space-5)}
+.fav-wrap{margin-bottom:var(--space-5)}
+.sys-crumb{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-4)}
+.filter-box{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-pill);max-width:420px;margin-bottom:var(--space-4)}
+.filter-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.filter-box i{color:var(--text-muted)}
+.filter-box input{flex:1;min-width:0;border:none;background:transparent;outline:none;color:var(--text)}
+.game-list{padding:0}
+.game-row{display:flex;width:100%;align-items:center;gap:var(--space-3);padding:var(--space-2) var(--space-3);border:none;border-bottom:1px solid var(--border);background:transparent;text-align:left;color:inherit}
+.game-list .game-row:last-child{border-bottom:none}
+.game-row:hover{background:var(--surface-2)}
+.star-btn{flex:none;border:none;background:transparent;color:var(--text-muted);padding:var(--space-1) var(--space-2)}
+.star-btn:hover{color:var(--accent)}
+.star-btn[aria-pressed="true"]{color:var(--accent)}
+.row-main{flex:1;min-width:0;display:flex;align-items:center;gap:var(--space-3);border:none;background:transparent;padding:0;color:inherit;text-align:left;font:inherit}
+.row-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.play-head{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-4)}
+.play-head h2{margin:0}
+.player-shell{width:100%;aspect-ratio:4/3;background:#000000;border-radius:var(--radius-md);overflow:hidden}
+.player-shell #game{width:100%;height:100%}
+.empty-state{text-align:center;padding:var(--space-7) var(--space-5)}
+.empty-state i{font-size:var(--fs-3xl);color:var(--text-muted);margin-bottom:var(--space-3)}
+.count-note{font-size:var(--fs-sm);color:var(--text-muted)}
+</style>
+
+<section id="view-home">
 <h1>Arcade</h1>
-<div class="callout callout-info"><p>This section is under construction. Content ships in phases — see plan.md.</p></div>
-<div class="card"><p>The Arcade offers retro console and fantasy-console games for a dose of morale during long, hard days.</p></div>
+<p class="arcade-intro count-note">A shelf of games for long evenings and low batteries. Pick a system to browse its library.</p>
+<div class="fav-wrap" id="fav-wrap" hidden>
+<h2 class="group-title">Favorites</h2>
+<div class="tile-grid" id="fav-strip"></div>
+</div>
+<h2 class="group-title">Systems</h2>
+<div class="tile-grid" id="sys-grid"></div>
+<div class="callout callout-warning" id="no-library" hidden>
+<h3>Game library not found</h3>
+<p>No games were found in <code>media/roms/</code>. The Arcade reads your personal game files from the media pack — copy your own ROM folders into <code>media/roms/</code> (nes, gb, gbc, snes, gba) and they will appear here. Games are never distributed with the kit.</p>
+</div>
+<div class="callout callout-info">
+<h3>About this library</h3>
+<p>Games live in <code>media/roms/</code> — personal copies for this household, kept private and never distributed with the kit.</p>
+<p id="mode-note"></p>
+</div>
+<noscript><div class="callout callout-warning"><p>The Arcade needs JavaScript to browse and run games.</p></div></noscript>
+</section>
+
+<section id="view-sys" hidden>
+<div class="sys-crumb">
+<a class="btn btn-ghost" href="#/"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All systems</a>
+<h2 id="sys-title"></h2>
+<span class="badge" id="sys-count"></span>
+</div>
+<div class="filter-box"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="sys-filter" placeholder="Filter this list…" aria-label="Filter games"></div>
+<div class="card game-list" id="game-list"></div>
+<div class="card empty-state" id="sys-empty" hidden><i class="fa-solid fa-gamepad" aria-hidden="true"></i><p>No games match that filter.</p></div>
+</section>
+
+<section id="view-play" hidden>
+<div class="play-head">
+<a class="btn btn-ghost" id="play-back" href="#/"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back</a>
+<h2 id="play-title"></h2>
+<span id="play-badges"></span>
+</div>
+<div id="player-mount"></div>
+<div id="play-card" hidden></div>
+</section>
 </main>
 <footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script src="../assets/roms-manifest.js?v=1"></script>
+<script>
+(function(){
+"use strict";
+var CORES={nes:"fceumm",gb:"gambatte",gbc:"gambatte",snes:"snes9x",gba:"mgba"};
+var SYSTEMS=[
+{id:"nes",label:"NES",icon:"fa-gamepad"},
+{id:"gb",label:"Game Boy",icon:"fa-mobile-screen"},
+{id:"gbc",label:"Game Boy Color",icon:"fa-mobile-screen-button"},
+{id:"snes",label:"SNES",icon:"fa-display"},
+{id:"gba",label:"GBA",icon:"fa-tablet-screen-button"},
+{id:"pico8",label:"PICO-8",icon:"fa-microchip"}
+];
+var FILE_MODE=location.protocol==="file:";
+var ROMS=Array.isArray(window.BG_ROMS)?window.BG_ROMS:[];
+var currentSys=null;
+function bySys(sys){return ROMS.filter(function(e){return e.sys===sys})}
+function findEntry(sys,file){return ROMS.find(function(e){return e.sys===sys&&e.file===file})}
+function humanSize(n){if(n>=1048576)return (n/1048576).toFixed(1)+" MB";if(n>=1024)return Math.round(n/1024)+" KB";return n+" B"}
+function el(tag,cls,text){var d=document.createElement(tag);if(cls)d.className=cls;if(text!==undefined)d.textContent=text;return d}
+function icon(name){var i=document.createElement("i");i.className="fa-solid "+name;i.setAttribute("aria-hidden","true");return i}
+function getFavs(){try{return JSON.parse(localStorage.getItem("bg.arcade.favorites")||"[]")}catch(x){return[]}}
+function saveFavs(a){try{localStorage.setItem("bg.arcade.favorites",JSON.stringify(a))}catch(x){}}
+function isFav(k){return getFavs().indexOf(k)!==-1}
+function toggleFav(k){var a=getFavs();var i=a.indexOf(k);if(i===-1)a.push(k);else a.splice(i,1);saveFavs(a);return i===-1}
+function favKey(e){return e.sys+"/"+e.file}
+function sysLabel(id){var s=SYSTEMS.find(function(x){return x.id===id});return s?s.label:id}
+function teardownPlayer(){
+window.EJS_player=undefined;window.EJS_core=undefined;window.EJS_gameUrl=undefined;
+window.EJS_gameName=undefined;window.EJS_pathtodata=undefined;window.EJS_startOnLoaded=undefined;
+window.EJS_emulator=undefined;
+var mount=document.getElementById("player-mount");
+mount.innerHTML="";
+}
+function showView(name){
+document.getElementById("view-home").hidden=name!=="home";
+document.getElementById("view-sys").hidden=name!=="sys";
+document.getElementById("view-play").hidden=name!=="play";
+}
+function buildHome(){
+var grid=document.getElementById("sys-grid");
+grid.innerHTML="";
+document.getElementById("no-library").hidden=ROMS.length>0;
+SYSTEMS.forEach(function(s){
+var count=bySys(s.id).length;
+var a=document.createElement("a");
+a.className="tile";a.href="#/sys/"+s.id;
+a.appendChild(el("span","tile-icon"));
+a.lastChild.appendChild(icon(s.icon));
+a.appendChild(el("span","tile-name",s.label));
+var blurb=el("span","tile-blurb");
+blurb.appendChild(el("span","badge",count+(count===1?" game":" games")));
+if(s.id==="pico8"){blurb.appendChild(el("span","badge badge-warn","Needs PICO-8 export"));}
+else if(FILE_MODE){blurb.appendChild(el("span","badge badge-warn","Needs served kit"));}
+a.appendChild(blurb);
+grid.appendChild(a);
+});
+var note=document.getElementById("mode-note");
+note.innerHTML="";
+if(FILE_MODE){
+note.appendChild(el("strong",null,"You are viewing the portable (file) copy. "));
+note.appendChild(document.createTextNode("Emulators need the kit served over HTTP — run START-SERVER in the kit folder (or any static server) and open the served address."));
+}else{
+note.appendChild(document.createTextNode("Everything here runs locally on this machine — no internet needed once the kit is open."));
+}
+buildFavStrip();
+}
+function gameTile(entry){
+var a=document.createElement("a");
+a.className="tile";a.href="#/play/"+entry.sys+"/"+encodeURIComponent(entry.file);
+a.appendChild(el("span","tile-icon"));
+a.lastChild.appendChild(icon(SYSTEMS.find(function(x){return x.id===entry.sys}).icon));
+a.appendChild(el("span","tile-name",entry.title));
+var blurb=el("span","tile-blurb");
+blurb.appendChild(el("span","badge",humanSize(entry.size)));
+if(!entry.playable)blurb.appendChild(el("span","badge badge-warn","Needs PICO-8 export"));
+a.appendChild(blurb);
+return a;
+}
+function buildFavStrip(){
+var strip=document.getElementById("fav-strip");
+strip.innerHTML="";
+var favs=getFavs().map(function(k){var i=k.indexOf("/");return findEntry(k.slice(0,i),k.slice(i+1))}).filter(Boolean);
+document.getElementById("fav-wrap").hidden=favs.length===0;
+favs.forEach(function(e){strip.appendChild(gameTile(e))});
+}
+function renderSys(sys){
+currentSys=sys;
+var list=bySys(sys);
+document.getElementById("sys-title").textContent=sysLabel(sys);
+document.getElementById("sys-count").textContent=list.length+" games";
+var box=document.getElementById("sys-filter");
+box.value="";
+renderList(sys,"");
+showView("sys");
+box.oninput=function(){renderList(sys,box.value)};
+}
+function renderList(sys,query){
+var list=bySys(sys).filter(function(e){return e.title.toLowerCase().indexOf(query.toLowerCase())!==-1});
+var wrap=document.getElementById("game-list");
+wrap.innerHTML="";
+document.getElementById("sys-empty").hidden=list.length>0;
+list.forEach(function(e){
+var row=el("div","game-row");
+var star=el("button","star-btn");
+star.type="button";
+star.setAttribute("aria-pressed",isFav(favKey(e))?"true":"false");
+star.title=isFav(favKey(e))?"Remove from favorites":"Add to favorites";
+star.setAttribute("aria-label",star.title+" — "+e.title);
+star.appendChild(icon("fa-star"));
+star.onclick=function(){var on=toggleFav(favKey(e));star.setAttribute("aria-pressed",on?"true":"false");star.title=on?"Remove from favorites":"Add to favorites"};
+row.appendChild(star);
+var main=el("button","row-main");
+main.type="button";
+main.appendChild(el("span","row-title",e.title));
+main.appendChild(el("span","badge",humanSize(e.size)));
+if(!e.playable)main.appendChild(el("span","badge badge-warn","Needs PICO-8 export"));
+else if(FILE_MODE)main.appendChild(el("span","badge badge-warn","Needs served kit"));
+main.onclick=function(){location.hash="#/play/"+e.sys+"/"+encodeURIComponent(e.file)};
+row.appendChild(main);
+wrap.appendChild(row);
+});
+}
+function explainCard(kind,heading,body){
+var card=document.getElementById("play-card");
+card.className="callout "+kind;
+card.innerHTML="";
+card.appendChild(el("h3",null,heading));
+card.appendChild(el("p",null,body));
+card.hidden=false;
+document.getElementById("player-mount").innerHTML="";
+}
+function renderPlay(sys,file){
+var entry=findEntry(sys,file);
+var badges=document.getElementById("play-badges");
+badges.innerHTML="";
+var card=document.getElementById("play-card");
+card.hidden=true;
+document.getElementById("play-back").setAttribute("href","#/sys/"+sys);
+if(!entry){
+document.getElementById("play-title").textContent="Game not found";
+explainCard("callout-warning","Not in the library","That game isn't listed in this kit's library. It may have been moved or renamed — browse the list for "+sysLabel(sys)+".");
+return;
+}
+document.getElementById("play-title").textContent=entry.title;
+badges.appendChild(el("span","badge",sysLabel(sys)));
+badges.appendChild(el("span","badge",humanSize(entry.size)));
+if(!entry.playable){
+explainCard("callout-info","Needs PICO-8 export","PICO-8 games can't run directly from cart files in a browser. This kit's export pipeline turns them into self-contained web games in a later phase — check back after that update.");
+return;
+}
+if(FILE_MODE){
+explainCard("callout-warning","Needs the served kit","Emulator cores can't be fetched when the kit is opened as plain files (file://). To play \""+entry.title+"\", serve this kit: run the bundled START-SERVER wrapper in the kit folder, or copy it to any web server, then open this page from that address.");
+return;
+}
+teardownPlayer();
+card.hidden=true;
+var mount=document.getElementById("player-mount");
+var shell=el("div","player-shell");
+var stage=el("div");stage.id="game";
+shell.appendChild(stage);mount.appendChild(shell);
+window.EJS_player="#game";
+window.EJS_core=CORES[entry.sys];
+window.EJS_gameUrl=entry.path;
+window.EJS_gameName=entry.title;
+window.EJS_pathtodata="../assets/vendor/emulatorjs/data/";
+window.EJS_startOnLoaded=true;
+var loader=document.createElement("script");
+loader.src="../assets/vendor/emulatorjs/data/loader.js";
+mount.appendChild(loader);
+}
+function parseRoute(){
+var h=location.hash.replace(/^#/,"");
+var m=h.match(/^\/play\/([^/]+)\/(.+)$/);
+if(m)return{view:"play",sys:m[1],file:decodeURIComponent(m[2])};
+m=h.match(/^\/sys\/([^/]+)$/);
+if(m)return{view:"sys",sys:m[1]};
+return{view:"home"};
+}
+function render(){
+var r=parseRoute();
+teardownPlayer();
+if(r.view==="home"){buildHome();showView("home")}
+else if(r.view==="sys"){renderSys(r.sys);showView("sys")}
+else{renderPlay(r.sys,r.file);showView("play")}
+window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",render);
+render();
+})();
+</script>
 </body>
 </html>

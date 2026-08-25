@@ -1,0 +1,39 @@
+EmulatorJS vendored runtime
+Source: https://github.com/EmulatorJS/EmulatorJS/releases/tag/v4.2.3
+Asset: 4.2.3.7z (sha-size 303554683 bytes), release date 2025-07-05
+License: GPL-3.0 (upstream LICENSE kept at ../LICENSE)
+
+Included (runtime-required only):
+  data/loader.js            bootstrap; loads emulator.min.js/.css from EJS_pathtodata
+  data/emulator.min.js      frontend bundle
+  data/emulator.min.css     frontend styles
+  data/compression/*        client-side archive workers: extractzip.js (zip),
+                            extract7z.js (7z), libunrar.js + libunrar.wasm (rar)
+  data/cores/<core>-*.data  fceumm (NES), gambatte (GB/GBC), snes9x (SNES),
+                            mgba (GBA); all four build variants per core
+                            (-wasm, -legacy-wasm, -thread-wasm, -thread-legacy-wasm)
+  data/cores/reports/*.json per-core report JSON (core caching + WebGL2 default)
+
+Deliberately excluded (verified unused at runtime by reading v4.2.3 source):
+  data/src/*                unminified dev sources bundled inside emulator.min.js
+  data/localization/*       localization() uses inline langJson config only;
+                            no localization/*.json fetch exists
+  data/emulator.css         unminified stylesheet fallback
+  data/cores/cores.json     build tooling only; runtime fetches reports/<core>.json
+  other ~50 cores           not needed for NES/GB/GBC/SNES/GBA
+
+Local patch applied to data/emulator.min.js:
+  The constructor guard calling checkForUpdates()
+    (this.debug||window.location&&["localhost","127.0.0.1"].includes(location.hostname))&&this.checkForUpdates()
+  was replaced by
+    !1&&this.checkForUpdates()
+  Reason: checkForUpdates() fetches https://cdn.emulatorjs.org/stable/data/version.json
+  whenever the page is served from localhost/127.0.0.1 (which includes the bundled
+  START-SERVER offline mode), violating the project zero-external-request directive.
+  The function body remains but is now unreachable. Re-apply after any upgrade.
+
+External-request audit of remaining upstream code:
+  cdn.emulatorjs.org/<ver>/data/ core failsafe: reached only when a local core
+    file 404s; all four variants of every needed core are vendored.
+  netplay.emulatorjs.org: requires EJS_DEBUG_XX && EJS_EXPERIMENTAL_NETPLAY.
+  Everything else is comments/UI strings/svg xmlns identifiers.
