@@ -38,6 +38,15 @@
     return location.protocol === "file:" ? "file" : "http";
   }
 
+  function siteRoot() {
+    var scripts = document.querySelectorAll("script[src]");
+    for (var i = 0; i < scripts.length; i++) {
+      var s = scripts[i].getAttribute("src") || "";
+      if (/assets\/shell\.js/.test(s)) return s.replace(/assets\/shell\.js.*$/, "");
+    }
+    return "";
+  }
+
   function probeMedia() {
     var img = new Image();
     img.onload = function () {
@@ -54,7 +63,7 @@
         el.textContent = "Media pack: not found";
       });
     };
-    img.src = "media/probe.png";
+    img.src = siteRoot() + "media/probe.png";
   }
 
   function applyPhase(id) {
