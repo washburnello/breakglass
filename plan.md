@@ -324,4 +324,10 @@ deep content so the live URL shapes decisions.
   - Done 2026-08-25: root `how-to-use.html` authored (modes, finding things, phases, printing, data ownership, safety framing); footer link swept across all pages.
 - The iFixit repair guides ZIM has an error when loading
 - IT looks like much of the pages we've added are geared towards printing out and using offline. What if the user has access to a computer and not a printer or paper? Let's make the pages web/PC first and printable second. I want robust interaction and data ingestion that is easy to read understand an interact with on a web browser.
-- Browsing the wikipedia pages in the ZIM reader is a painful experience. I wonder if we need to consider converting these to html pages or better integrate the reader into the page. Propose a timeframe for conversion or downloading html versions. I only have 1 day left to finish this site so we need to get a move on.
+- Browsing the wikipedia pages in the ZIM reader is a painful experience. I wonder if we need to consider converting these to html pages or better integrate the reader into the page. Propose a timeframe for conversion or downloading html versions. I only have 1 day left to finish this site so we need to get a move on.- 2026-08-25 — kiwix-serve deployed: docker container `breakglass-kiwix`
+  (compose in ~/projects/breakglass-infra/) serving tb01 vault/ ZIMs on
+  127.0.0.1:31020; nginx vhost wiki.w4sh.net.conf on port 8020 (http_port_t);
+  cloudflared ingress + CNAME added — full native reader at
+  https://wiki.w4sh.net (WikiMed, iFixit, Wikipedia maxi). Incident note:
+  a failed sudo chain truncated cloudflared config.yml to 0 bytes; repaired
+  in place from config.yml.bak-wiki and all vhosts verified post-restart.
