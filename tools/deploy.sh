@@ -7,6 +7,8 @@ rsync -a --delete \
   --exclude 'tools/' \
   --exclude 'docs/' \
   --exclude 'media' \
+  --exclude 'vault/' \
+  --exclude 'var/' \
   --exclude '.DS_Store' \
   --exclude '._*' \
   "$SRC/" "$DST/"
