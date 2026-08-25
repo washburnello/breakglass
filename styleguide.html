@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="everyday">
+<meta name="bg-priority" content="low">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <title>Style Guide — BreakGlass</title>
 <script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
@@ -209,6 +211,37 @@ th,td{padding:var(--space-2);border-bottom:1px solid var(--border);text-align:le
         <label style="display:block;margin-bottom:var(--space-2)"><input type="radio" name="sg-radio" checked> Watch NOAA weather radio</label>
         <label style="display:block"><input type="radio" name="sg-radio"> Listen on FRS channel 1</label>
       </fieldset>
+    </div>
+  </section>
+
+  <section id="checklists">
+    <h2>Checklists</h2>
+    <div class="card" style="max-width:480px">
+      <p class="sg-label">.checklist — printable tick-boxes</p>
+      <ul class="checklist">
+        <li><label><input type="checkbox"> Water stored, dated, and rotated</label></li>
+        <li><label><input type="checkbox"> First aid kit stocked and checked</label></li>
+        <li><label><input type="checkbox"> Flashlight batteries tested</label></li>
+      </ul>
+      <p style="margin-top:var(--space-3);font-size:var(--fs-sm);color:var(--text-muted)">Boxes print as empty squares so a printed page works as a pen-and-paper checklist. Use for anything a reader ticks off under stress.</p>
+    </div>
+  </section>
+
+  <section id="article-prose">
+    <h2>Article prose</h2>
+    <p class="sg-lede" style="margin-bottom:var(--space-3)">Wrap long-form page content in <code>.article</code> — it restores vertical rhythm (the site reset zeroes all margins) using only spacing tokens. Headings, lists, tables, and paragraphs space themselves; no inline margins.</p>
+    <div class="card article" style="max-width:60ch">
+      <h3 style="font-size:var(--fs-lg)">Cool the burn first</h3>
+      <p>Hold the burned skin under cool running water for ten to twenty minutes. This does more good than any cream.</p>
+      <ol>
+        <li>Remove jewelry near the burn now, before swelling starts.</li>
+        <li>Cover loosely with clean, non-stick cloth.</li>
+      </ol>
+      <table>
+        <caption>Specimen table inside .article</caption>
+        <thead><tr><th>Degree</th><th>Skin looks like</th></tr></thead>
+        <tbody><tr><td>First</td><td>Red, dry, painful</td></tr><tr><td>Second</td><td>Blisters, wet-looking</td></tr></tbody>
+      </table>
     </div>
   </section>
 

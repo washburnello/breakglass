@@ -51,7 +51,7 @@
       document.body.classList.add("media-missing");
       document.body.classList.remove("media-ok");
       document.querySelectorAll("[data-media-state]").forEach(function (el) {
-        el.textContent = "Media pack: not found (optional content unavailable)";
+        el.textContent = "Media pack: not found";
       });
     };
     img.src = "media/probe.png";
