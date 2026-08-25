@@ -20,10 +20,398 @@
 <button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
 </header>
 <main>
-<h1>Kit Admin</h1>
-<div class="callout callout-info"><p>This section is under construction. Content ships in phases — see plan.md.</p></div>
-<div class="card"><p>Kit Admin holds the tools to copy this kit, host it yourself and configure how it behaves.</p></div>
+<style>
+.ka-page{display:flex;flex-direction:column;gap:var(--space-5);margin-block:var(--space-4)}
+.ka-page h2{display:flex;align-items:center;gap:var(--space-2);font-size:var(--fs-lg);margin-bottom:var(--space-2)}
+.ka-page h2 i{color:var(--accent)}
+.ka-intro p{color:var(--text-muted)}
+.ka-check{display:flex;align-items:center;gap:var(--space-2);cursor:pointer;font-weight:600;margin-top:var(--space-3)}
+.ka-check input{width:1em;height:1em;accent-color:var(--accent)}
+.ka-field{margin-top:var(--space-4)}
+.ka-label{display:block;font-size:var(--fs-sm);font-weight:600;margin-bottom:var(--space-1)}
+.ka-input{width:100%;padding:var(--space-2) var(--space-3);background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text)}
+.ka-input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.ka-help{margin-top:var(--space-1);font-size:var(--fs-xs);color:var(--text-muted)}
+.ka-row{display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-2)}
+.ka-row .ka-input{flex:1 1 auto;min-width:0;width:auto}
+.ka-row .btn{flex:none}
+.ka-actions{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-5)}
+.ka-status{margin-top:var(--space-3);font-size:var(--fs-sm);overflow-wrap:anywhere}
+.ka-status:empty{display:none}
+.ka-ok{color:var(--ok)}
+.ka-bad{color:var(--danger)}
+.ka-mut{color:var(--text-muted)}
+.ka-table th{width:11rem;font-weight:600;color:var(--text-muted)}
+.ka-badges{display:flex;flex-wrap:wrap;gap:var(--space-1)}
+.ka-danger-list{padding-left:1.3em;margin-top:var(--space-2)}
+.ka-danger-list li+li{margin-top:var(--space-1)}
+@media print{.ka-actions,.ka-row .btn,.ka-callout-btns{display:none}}
+</style>
+<div class="ka-page">
+<header class="ka-intro">
+<h1><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Kit Admin</h1>
+<p>Maintain this copy of BreakGlass: configure the Ask-the-Kit guide, review what ships in the kit, and manage what this browser remembers. Nothing here edits the kit files themselves.</p>
+</header>
+<section class="card" aria-labelledby="ai-h">
+<h2 id="ai-h"><i class="fa-solid fa-robot" aria-hidden="true"></i> Ask-the-Kit connection</h2>
+<p>Point Ask-the-Kit at an OpenAI-compatible endpoint — typically a small language model on your own network. Settings are saved in this browser only.</p>
+<label class="ka-check"><input type="checkbox" id="ai-enabled"> Enabled</label>
+<div class="ka-field">
+<label class="ka-label" for="ai-baseurl">Base URL</label>
+<input class="ka-input" id="ai-baseurl" type="text" placeholder="https://townbox:11434/v1" autocomplete="off" spellcheck="false">
+<p class="ka-help">OpenAI-compatible base, includes /v1 where applicable</p>
+</div>
+<div class="ka-field">
+<label class="ka-label" for="ai-key">API key</label>
+<div class="ka-row">
+<input class="ka-input" id="ai-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="ai-key-help">
+<button class="btn btn-ghost" type="button" id="ai-eye" aria-pressed="false" aria-label="Show API key"><i class="fa-solid fa-eye" id="ai-eye-icon" aria-hidden="true"></i></button>
+</div>
+<p class="ka-help" id="ai-key-help">Leave empty for endpoints that need no key.</p>
+</div>
+<div class="ka-field">
+<label class="ka-label" for="ai-model-select">Model</label>
+<div class="ka-row">
+<select class="ka-input" id="ai-model-select"><option value="">Models not loaded</option></select>
+<button class="btn btn-ghost" type="button" id="ai-models-refresh"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Refresh</button>
+</div>
+<div class="ka-row">
+<input class="ka-input" id="ai-model-override" type="text" placeholder="Or type a model name (endpoints without /models)" autocomplete="off" spellcheck="false" aria-label="Manual model name">
+</div>
+<p class="ka-help">A typed name overrides the dropdown.</p>
+</div>
+<div class="ka-actions">
+<button class="btn btn-primary" type="button" id="ai-save"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save</button>
+<button class="btn btn-ghost" type="button" id="ai-test"><i class="fa-solid fa-plug" aria-hidden="true"></i> Test</button>
+</div>
+<p class="ka-status" id="ai-status" role="status" aria-live="polite"></p>
+</section>
+<div class="callout callout-warning" role="note">
+<h3>Where your API key lives</h3>
+<p>Portable kits have no server to hold secrets: the key is stored <strong>in this browser's localStorage on this device only</strong>. It is never written into kit files and never synced anywhere.</p>
+<ul class="ka-danger-list">
+<li>Prefer a LAN or local endpoint, e.g. <code>http://townbox:11434/v1</code>.</li>
+<li>The local model service must allow browser calls (cross-origin); for Ollama set <code>OLLAMA_ORIGINS</code> accordingly.</li>
+<li>Browsers block plain <code>http://</code> endpoints from <code>https://</code> pages — test LAN boxes from the portable <code>file://</code> copy.</li>
+<li>Anyone at this machine can read the key out of the browser — use Forget (below) on shared computers.</li>
+<li>Served kits should eventually use a server-side proxy instead of browser-held keys (planned in plan.md).</li>
+</ul>
+</div>
+<section class="card" aria-labelledby="info-h">
+<h2 id="info-h"><i class="fa-solid fa-box-open" aria-hidden="true"></i> This kit</h2>
+<table class="ka-table">
+<tbody>
+<tr><th scope="row">Mode</th><td><span class="ka-badges"><span class="badge" id="info-mode">Detecting…</span></span></td></tr>
+<tr><th scope="row">Phase</th><td id="info-phase">Everyday</td></tr>
+<tr><th scope="row">Media pack</th><td><span class="ka-badges"><span class="badge" id="info-media">Checking…</span></span></td></tr>
+<tr><th scope="row">Content packs</th><td id="info-packs">Counting…</td></tr>
+<tr><th scope="row">Browser storage</th><td id="info-storage">Measuring…</td></tr>
+</tbody>
+</table>
+</section>
+<section class="card" aria-labelledby="dz-h">
+<h2 id="dz-h"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Danger zone</h2>
+<p>Erase what this kit remembers in this browser. Kit files, media packs and downloaded content are never touched.</p>
+<div class="ka-actions">
+<button class="btn btn-ghost" type="button" id="dz-forget"><i class="fa-solid fa-key" aria-hidden="true"></i> Forget API key</button>
+<button class="btn btn-danger" type="button" id="dz-reset"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Reset all kit settings</button>
+</div>
+<p class="ka-status" id="dz-status" role="status" aria-live="polite"></p>
+</section>
+</div>
 </main>
 <footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script src="../assets/zims-manifest.js?v=2"></script>
+<script>
+(function(){
+"use strict";
+var KEY="bg.ai.config";
+var enChk,baseIn,keyIn,eyeBtn,eyeIcon,modelSel,refreshBtn,overrideIn,saveBtn,testBtn,statusEl,dzStatus;
+var infoMode,infoPhase,infoMedia,infoPacks,infoStorage;
+
+function el(id){return document.getElementById(id);}
+
+function readCfg(){
+  try{
+    var raw=localStorage.getItem(KEY);
+    if(!raw)return null;
+    var c=JSON.parse(raw);
+    return c&&typeof c==="object"?c:null;
+  }catch(e){return null;}
+}
+function writeCfg(c){
+  try{localStorage.setItem(KEY,JSON.stringify(c));return true;}
+  catch(e){return false;}
+}
+function norm(c){
+  c=c||{};
+  return{
+    enabled:c.enabled===true,
+    baseUrl:typeof c.baseUrl==="string"?c.baseUrl:"",
+    apiKey:typeof c.apiKey==="string"?c.apiKey:"",
+    model:typeof c.model==="string"?c.model:""
+  };
+}
+function setStatus(node,msg,tone){
+  node.textContent=msg||"";
+  node.className="ka-status"+(tone?" ka-"+tone:"");
+}
+function join(base,suffix){return base.replace(/\/+$/,"")+suffix;}
+function authHeaders(extra){
+  var h=extra||{};
+  var k=keyIn.value.trim();
+  if(k)h.Authorization="Bearer "+k;
+  return h;
+}
+function resolveModel(){
+  var o=overrideIn.value.trim();
+  return o||modelSel.value||"";
+}
+function fmtBytes(n){
+  if(typeof n!=="number"||!isFinite(n)||n<0)return"";
+  var units=["B","KB","MB","GB","TB"];
+  var i=0;
+  while(n>=1024&&i<units.length-1){n/=1024;i++;}
+  var v=(i===0||n>=100)?Math.round(n):Math.round(n*10)/10;
+  return v+" "+units[i];
+}
+function request(url,opts,ms){
+  return new Promise(function(resolve,reject){
+    var timer=null;
+    var ctl=null;
+    if(typeof AbortController==="function"){
+      ctl=new AbortController();
+      timer=setTimeout(function(){
+        try{ctl.abort();}catch(e){}
+        reject(new Error("timed out after "+Math.round(ms/1000)+" s"));
+      },ms);
+    }
+    if(ctl)opts.signal=ctl.signal;
+    fetch(url,opts).then(
+      function(r){if(timer)clearTimeout(timer);resolve(r);},
+      function(e){if(timer)clearTimeout(timer);reject(e);}
+    );
+  });
+}
+
+function populateForm(){
+  var c=norm(readCfg());
+  enChk.checked=c.enabled;
+  baseIn.value=c.baseUrl;
+  keyIn.value=c.apiKey;
+  if(c.model)overrideIn.value=c.model;
+}
+function saveConfig(){
+  var base=baseIn.value.trim();
+  if(enChk.checked&&!base){
+    setStatus(statusEl,"Enter a Base URL before enabling Ask-the-Kit.","bad");
+    return;
+  }
+  var cfg={enabled:enChk.checked,baseUrl:base,apiKey:keyIn.value,model:resolveModel()};
+  if(writeCfg(cfg)){
+    setStatus(statusEl,"Saved in this browser."+(!cfg.model&&cfg.enabled?" No model chosen yet.":""),"ok");
+  }else{
+    setStatus(statusEl,"Could not save — localStorage appears blocked.","bad");
+  }
+}
+function loadModels(){
+  var base=baseIn.value.trim();
+  if(!base){
+    setStatus(statusEl,"Enter a Base URL first, then refresh the model list.","bad");
+    return;
+  }
+  refreshBtn.disabled=true;
+  setStatus(statusEl,"Listing models at "+join(base,"/models")+" …","mut");
+  var finish=function(){refreshBtn.disabled=false;};
+  request(join(base,"/models"),{method:"GET",headers:authHeaders()},10000).then(async function(res){
+    var text=await res.text();
+    var data=null;
+    try{data=JSON.parse(text);}catch(e){}
+    if(!res.ok){
+      var d=(data&&data.error&&(data.error.message||data.error.type))||String(text||"").slice(0,120);
+      throw new Error("HTTP "+res.status+(d?" · "+d:""));
+    }
+    var ids=(data&&Array.isArray(data.data)?data.data:[]).map(function(m){return m&&m.id;}).filter(function(x){return typeof x==="string"&&x;});
+    while(modelSel.options.length)modelSel.remove(0);
+    if(!ids.length){
+      var ph=document.createElement("option");
+      ph.value="";
+      ph.textContent="No models listed — type one below";
+      modelSel.appendChild(ph);
+      setStatus(statusEl,"Endpoint answered but listed no models. Type the model name below.","bad");
+      return;
+    }
+    ids.forEach(function(id){
+      var o=document.createElement("option");
+      o.value=id;o.textContent=id;
+      modelSel.appendChild(o);
+    });
+    var typed=overrideIn.value.trim();
+    if(typed&&ids.indexOf(typed)!==-1){
+      modelSel.value=typed;
+      overrideIn.value="";
+    }else if(ids.indexOf(resolveModel())===-1){
+      modelSel.selectedIndex=0;
+    }
+    setStatus(statusEl,"Loaded "+ids.length+" model"+(ids.length===1?"":"s")+" from this endpoint.","ok");
+  }).catch(function(err){
+    setStatus(statusEl,"Could not list models · "+((err&&err.message)||err)+". You can still type the model name below.","bad");
+  }).then(finish,finish);
+}
+async function runTest(){
+  var base=baseIn.value.trim();
+  var model=resolveModel();
+  if(!base){setStatus(statusEl,"Enter a Base URL to test.","bad");return;}
+  if(!model){setStatus(statusEl,"Pick a model from the list or type one to test.","bad");return;}
+  testBtn.disabled=true;
+  setStatus(statusEl,"Pinging "+model+" …","mut");
+  var t0=performance.now();
+  try{
+    var res=await request(
+      join(base,"/chat/completions"),
+      {
+        method:"POST",
+        headers:authHeaders({"Content-Type":"application/json"}),
+        body:JSON.stringify({model:model,messages:[{role:"user",content:"ping"}],max_tokens:5})
+      },
+      20000
+    );
+    var ms=Math.round(performance.now()-t0);
+    var text=await res.text();
+    var data=null;
+    try{data=JSON.parse(text);}catch(e){}
+    if(res.ok){
+      var reply="";
+      if(data&&Array.isArray(data.choices)&&data.choices[0]){
+        var ch=data.choices[0];
+        reply=(ch.message&&ch.message.content)||ch.text||"";
+      }
+      reply=String(reply).replace(/\s+/g," ").trim().slice(0,80);
+      setStatus(statusEl,"OK · HTTP "+res.status+" · "+ms+" ms · model "+model+(reply?' · replied "'+reply+'"':" · empty reply"),"ok");
+    }else{
+      var detail=(data&&data.error&&(data.error.message||data.error.type))||String(text||"").trim().slice(0,140)||(res.statusText||"no detail");
+      setStatus(statusEl,"Failed · HTTP "+res.status+" · "+ms+" ms · "+detail,"bad");
+    }
+  }catch(err){
+    setStatus(statusEl,"Failed · "+((err&&err.message)||err)+". Check the address, that the box is reachable, and that it allows browser calls.","bad");
+  }
+  testBtn.disabled=false;
+}
+function forgetKey(){
+  var c=readCfg();
+  if(!c||typeof c.apiKey!=="string"||!c.apiKey){
+    setStatus(dzStatus,"No API key is stored right now.","mut");
+    return;
+  }
+  if(!confirm("Forget the stored API key?\n\nIt disappears from this browser only — the key itself stays valid on the service until you revoke it there."))return;
+  delete c.apiKey;
+  writeCfg(c);
+  keyIn.value="";
+  setStatus(dzStatus,"API key removed from this browser.","ok");
+}
+function resetAll(){
+  var keys=[];
+  for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(k&&k.lastIndexOf("bg.",0)===0)keys.push(k);
+  }
+  if(!keys.length){
+    setStatus(dzStatus,"Nothing to reset — no kit settings are stored.","mut");
+    return;
+  }
+  if(!confirm("Remove these "+keys.length+" kit setting(s) from this browser?\n\n"+keys.join("\n")+"\n\nKit files are untouched. Theme and phase return to defaults on the next visit."))return;
+  keys.forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  enChk.checked=false;
+  baseIn.value="";
+  keyIn.value="";
+  overrideIn.value="";
+  while(modelSel.options.length)modelSel.remove(0);
+  var ph=document.createElement("option");
+  ph.value="";
+  ph.textContent="Models not loaded";
+  modelSel.appendChild(ph);
+  setStatus(dzStatus,"Removed "+keys.length+" setting(s): "+keys.join(", "),"ok");
+}
+function phaseLabel(){
+  var id=document.body.getAttribute("data-phase")||"everyday";
+  var list=(window.BG&&window.BG.phases)||[];
+  for(var i=0;i<list.length;i++){if(list[i]&&list[i].id===id)return list[i].label;}
+  return id.charAt(0).toUpperCase()+id.slice(1);
+}
+function refreshLive(){
+  if(infoPhase)infoPhase.textContent=phaseLabel();
+  if(infoMedia){
+    var cls=document.body.classList;
+    if(cls.contains("media-ok")){infoMedia.textContent="Detected";infoMedia.className="badge";}
+    else if(cls.contains("media-missing")){infoMedia.textContent="Not found";infoMedia.className="badge badge-warn";}
+    else{infoMedia.textContent="Checking…";infoMedia.className="badge";}
+  }
+}
+function renderMode(){
+  if(!infoMode)return;
+  var proto=location.protocol.replace(":","");
+  infoMode.textContent=proto==="file:"?"file:// — portable":proto+" — served";
+  infoMode.className="badge";
+}
+function renderPacks(){
+  if(!infoPacks)return;
+  var bits=[];
+  if(Array.isArray(window.BG_ZIMS)&&window.BG_ZIMS.length)bits.push(window.BG_ZIMS.length+" ZIM pack"+(window.BG_ZIMS.length===1?"":"s"));
+  if(Array.isArray(window.BG_ROMS)&&window.BG_ROMS.length)bits.push(window.BG_ROMS.length+" ROM title"+(window.BG_ROMS.length===1?"":"s"));
+  infoPacks.textContent=bits.length?bits.join(" · "):"No pack manifests loaded on this page";
+}
+function renderStorage(){
+  if(!infoStorage)return;
+  var est=null;
+  try{est=navigator.storage&&navigator.storage.estimate;}catch(e){est=null;}
+  if(typeof est!=="function"){
+    infoStorage.textContent="Not reported by this browser.";
+    return;
+  }
+  navigator.storage.estimate().then(function(bag){
+    var used=fmtBytes(bag.usage);
+    var quota=fmtBytes(bag.quota);
+    infoStorage.textContent=used?("about "+used+" used"+(quota?" of "+quota+" budget":"")):"not reported";
+  },function(){
+    infoStorage.textContent="not reported";
+  });
+}
+function toggleEye(){
+  var showing=keyIn.type==="text";
+  keyIn.type=showing?"password":"text";
+  eyeBtn.setAttribute("aria-pressed",showing?"false":"true");
+  eyeBtn.setAttribute("aria-label",showing?"Show API key":"Hide API key");
+  eyeIcon.className="fa-solid fa-"+(showing?"eye":"eye-slash");
+}
+function init(){
+  enChk=el("ai-enabled");baseIn=el("ai-baseurl");keyIn=el("ai-key");
+  eyeBtn=el("ai-eye");eyeIcon=el("ai-eye-icon");
+  modelSel=el("ai-model-select");refreshBtn=el("ai-models-refresh");overrideIn=el("ai-model-override");
+  saveBtn=el("ai-save");testBtn=el("ai-test");statusEl=el("ai-status");
+  dzStatus=el("dz-status");
+  infoMode=el("info-mode");infoPhase=el("info-phase");infoMedia=el("info-media");
+  infoPacks=el("info-packs");infoStorage=el("info-storage");
+  eyeBtn.addEventListener("click",toggleEye);
+  refreshBtn.addEventListener("click",loadModels);
+  saveBtn.addEventListener("click",saveConfig);
+  testBtn.addEventListener("click",runTest);
+  el("dz-forget").addEventListener("click",forgetKey);
+  el("dz-reset").addEventListener("click",resetAll);
+  populateForm();
+  renderMode();
+  renderPacks();
+  renderStorage();
+  refreshLive();
+  if(typeof MutationObserver==="function"){
+    new MutationObserver(refreshLive).observe(document.body,{attributes:true,attributeFilter:["class","data-phase"]});
+  }
+}
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",init);
+}else{
+  init();
+}
+})();
+</script>
 </body>
 </html>

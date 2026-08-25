@@ -13,6 +13,54 @@
 <script src="../assets/shell.js?v=2" defer></script>
 </head>
 <body>
+<style>
+.ask-hero{display:flex;align-items:flex-start;gap:var(--space-4);margin-bottom:var(--space-5)}
+.hero-icon{font-size:2rem;color:var(--accent)}
+.ask-hero h1{margin-bottom:var(--space-1)}
+.hero-pitch{color:var(--text-muted);font-size:var(--fs-lg);margin-bottom:var(--space-3)}
+.hero-meta{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.badge-ok{border-color:color-mix(in srgb,var(--ok) 40%,transparent);background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok)}
+#setup-card{margin-bottom:var(--space-5)}
+#setup-card h2{margin-bottom:var(--space-2)}
+.setup-callout p + p{margin-top:var(--space-2)}
+#setup-form{display:grid;gap:var(--space-3);max-width:460px;margin-top:var(--space-4)}
+#setup-form label{display:block;font-size:var(--fs-sm);font-weight:600}
+#setup-form input{width:100%;margin-top:var(--space-1);padding:var(--space-2) var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm)}
+#setup-form input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.setup-actions{display:flex;align-items:center;gap:var(--space-3)}
+.setup-note{font-size:var(--fs-sm)}
+.setup-note.err{color:var(--danger)}
+.setup-note.okc{color:var(--ok)}
+.chat-toolbar{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-4)}
+.chat-thread{display:flex;flex-direction:column;gap:var(--space-4);margin-bottom:var(--space-4)}
+.msg{max-width:min(720px,100%)}
+.msg-user{align-self:flex-end;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:var(--radius-md) var(--radius-md) var(--radius-sm) var(--radius-md);padding:var(--space-3) var(--space-4)}
+.msg-bot{align-self:flex-start;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4)}
+.msg-bot.error-card{border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+.msg-tag{display:block;font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:var(--space-1)}
+.msg-body p + p{margin-top:var(--space-2)}
+.msg-body code{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 var(--space-1);font-size:var(--fs-sm)}
+.msg-stopped{margin-top:var(--space-2)}
+.citations{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3);padding-top:var(--space-2);border-top:1px dashed var(--border)}
+.cite-chip{display:inline-flex;align-items:center;padding:var(--space-1) var(--space-2);border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--surface-2);color:var(--text);font-size:var(--fs-xs);font-weight:600;text-decoration:none}
+.cite-chip:hover{border-color:var(--accent);color:var(--accent-hover)}
+.typing{display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-1) 0}
+.typing i{width:6px;height:6px;border-radius:var(--radius-pill);background:var(--text-muted);animation:typing-blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}
+.typing i:nth-child(3){animation-delay:.3s}
+@keyframes typing-blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.suggest-row{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)}
+#composer{display:flex;align-items:flex-end;gap:var(--space-2)}
+#composer-input{flex:1;resize:vertical;padding:var(--space-2) var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md)}
+#composer-input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.chat-footnote{margin-top:var(--space-3);font-size:var(--fs-xs);color:var(--text-muted)}
+@media print{
+#setup-card,.chat-toolbar,#composer,.chat-footnote{display:none!important}
+.msg{max-width:100%;break-inside:avoid}
+.msg-user{background:none!important;border:1px solid var(--border)!important}
+.cite-chip::after{content:" — " attr(data-url);font-weight:400}
+}
+</style>
 <header class="topbar">
 <a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
 <form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
@@ -20,10 +68,433 @@
 <button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
 </header>
 <main>
+<section class="card ask-hero">
+<i class="fa-solid fa-robot hero-icon" aria-hidden="true"></i>
+<div>
 <h1>Ask-the-Kit</h1>
-<div class="callout callout-info"><p>This section is under construction. Content ships in phases — see plan.md.</p></div>
-<div class="card"><p>Ask-the-Kit is an AI guide that answers questions about everything stored in this kit, pointing you to the right section when you need it.</p></div>
+<p class="hero-pitch">Ask a question in plain words and get an answer grounded in this kit’s own pages, with citations you can open.</p>
+<div class="hero-meta">
+<span class="badge" id="phase-chip"><i class="fa-solid fa-location-arrow" aria-hidden="true"></i> Context: Everyday phase</span>
+<span class="badge badge-ok" id="conn-chip" hidden></span>
+</div>
+</div>
+</section>
+<section id="setup-card" class="card" hidden>
+<h2>Connect an AI assistant</h2>
+<div class="callout callout-info setup-callout">
+<p>Ask-the-Kit answers through an OpenAI-compatible AI endpoint, so it needs a connection before it can chat. The recommended way to set one up is under <a href="../admin/index.html">Kit Admin</a>.</p>
+<p>No connection configured yet? You can use the quick form below instead — it saves the same settings locally and exists only so this page also works standalone, duplicating what Kit Admin does.</p>
+</div>
+<form id="setup-form">
+<label>Base URL
+<input id="cfg-base" type="text" placeholder="https://host/v1" autocomplete="off" required>
+</label>
+<label>API key
+<input id="cfg-key" type="password" placeholder="sk-… (leave empty if your endpoint needs none)" autocomplete="off">
+</label>
+<label>Model
+<input id="cfg-model" type="text" placeholder="model-id" autocomplete="off" required>
+</label>
+<div class="setup-actions">
+<button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save connection</button>
+<span class="setup-note" id="setup-msg" role="status"></span>
+</div>
+</form>
+</section>
+<section id="chat-shell" hidden>
+<div class="chat-toolbar">
+<button id="btn-new" class="btn btn-ghost" type="button"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> New conversation</button>
+<button id="btn-export" class="btn btn-ghost" type="button"><i class="fa-solid fa-download" aria-hidden="true"></i> Export .txt</button>
+<button id="btn-edit-cfg" class="btn btn-ghost" type="button"><i class="fa-solid fa-plug" aria-hidden="true"></i> Connection</button>
+</div>
+<div id="thread" class="chat-thread" aria-live="polite" aria-label="Conversation with Ask-the-Kit"></div>
+<form id="composer">
+<textarea id="composer-input" rows="2" placeholder="Ask the kit anything — e.g. how do I make water safe to drink?" aria-label="Your question"></textarea>
+<button id="btn-send" class="btn btn-primary" type="submit"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send</button>
+<button id="btn-stop" class="btn btn-danger" type="button" hidden><i class="fa-solid fa-stop" aria-hidden="true"></i> Stop</button>
+</form>
+<p class="chat-footnote">Answers come from your configured AI endpoint using short excerpts of kit pages. For safety-critical steps, always verify against the cited kit page itself.</p>
+</section>
 </main>
 <footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script src="../assets/retrieval.js?v=1"></script>
+<script>
+(function () {
+  "use strict";
+
+  var PHASE_LABELS = { everyday: "Everyday", survive: "Survive", stabilize: "Stabilize", rebuild: "Rebuild", thrive: "Thrive" };
+  var EXCERPT_CHARS = 360;
+
+  function $(id) { return document.getElementById(id); }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function mdLite(src) {
+    var t = esc(String(src || ""));
+    t = t.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+    t = t.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+    t = t.replace(/\[([^\]]+)\]\(((?:https?:\/\/|\.\/|\.\.\/)[^)\s]+)\)/g, '<a href="$2">$1</a>');
+    return t.split(/\n{2,}/).map(function (p) {
+      return "<p>" + p.replace(/\n/g, "<br>") + "</p>";
+    }).join("");
+  }
+
+  function readCfg() {
+    try {
+      var raw = localStorage.getItem("bg.ai.config");
+      if (!raw) return null;
+      var c = JSON.parse(raw);
+      return c && typeof c === "object" ? c : null;
+    } catch (e) { return null; }
+  }
+
+  function cfgOk(c) { return !!(c && c.enabled && c.baseUrl && c.model); }
+
+  function writeCfg(c) {
+    try { localStorage.setItem("bg.ai.config", JSON.stringify(c)); } catch (e) {}
+  }
+
+  function phaseId() {
+    return (document.body && document.body.dataset && document.body.dataset.phase) || "everyday";
+  }
+
+  function phaseLabel() { return PHASE_LABELS[phaseId()] || "Everyday"; }
+
+  var chip = $("phase-chip");
+
+  function updatePhaseChip() {
+    chip.innerHTML = '<i class="fa-solid fa-location-arrow" aria-hidden="true"></i> Context: ' + esc(phaseLabel()) + " phase";
+  }
+
+  if (window.MutationObserver) {
+    new MutationObserver(updatePhaseChip).observe(document.body, { attributes: true, attributeFilter: ["data-phase"] });
+  }
+  updatePhaseChip();
+
+  var thread = $("thread");
+  var input = $("composer-input");
+  var btnSend = $("btn-send");
+  var btnStop = $("btn-stop");
+  var btnNew = $("btn-new");
+  var btnExport = $("btn-export");
+  var btnEditCfg = $("btn-edit-cfg");
+  var setupCard = $("setup-card");
+  var chatShell = $("chat-shell");
+  var connChip = $("conn-chip");
+
+  var turns = [];
+  var busy = false;
+  var ctrl = null;
+
+  function setBusy(v) {
+    busy = v;
+    btnSend.hidden = v;
+    btnStop.hidden = !v;
+    btnNew.disabled = v;
+    btnExport.disabled = v;
+  }
+
+  function showSetup(prefill) {
+    var c = prefill || readCfg() || {};
+    $("cfg-base").value = c.baseUrl || "";
+    $("cfg-key").value = c.apiKey || "";
+    $("cfg-model").value = c.model || "";
+    setupCard.hidden = false;
+  }
+
+  function enterChat(cfg) {
+    setupCard.hidden = true;
+    chatShell.hidden = false;
+    connChip.textContent = "Connected · " + cfg.model;
+    connChip.hidden = false;
+    if (!turns.length) renderWelcome();
+  }
+
+  $("setup-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var note = $("setup-msg");
+    var baseUrl = $("cfg-base").value.trim().replace(/\/+$/, "");
+    var apiKey = $("cfg-key").value.trim();
+    var model = $("cfg-model").value.trim();
+    if (!baseUrl || !model) {
+      note.textContent = "Base URL and model are required.";
+      note.className = "setup-note err";
+      return;
+    }
+    var cfg = { enabled: true, baseUrl: baseUrl, apiKey: apiKey, model: model };
+    writeCfg(cfg);
+    note.textContent = "Saved.";
+    note.className = "setup-note okc";
+    enterChat(cfg);
+  });
+
+  btnEditCfg.addEventListener("click", function () { showSetup(); });
+
+  function botShell(tagText) {
+    var d = document.createElement("div");
+    d.className = "msg msg-bot";
+    d.innerHTML = '<span class="msg-tag">' + esc(tagText) + "</span>" +
+      '<div class="msg-body"></div>' +
+      '<div class="citations" hidden></div>';
+    thread.appendChild(d);
+    return d;
+  }
+
+  function userBubble(text) {
+    var d = document.createElement("div");
+    d.className = "msg msg-user";
+    d.innerHTML = '<div class="msg-body">' + mdLite(text) + "</div>";
+    thread.appendChild(d);
+    window.scrollTo(0, document.body.scrollHeight);
+  }
+
+  function typingBubble() {
+    var d = botShell("Kit");
+    d.querySelector(".msg-body").innerHTML =
+      '<span class="typing"><i></i><i></i><i></i></span>';
+    return d;
+  }
+
+  function renderWelcome() {
+    var d = botShell("Kit");
+    d.querySelector(".msg-body").innerHTML =
+      "<p>Hello. I answer questions using the pages of this kit and point you to them.</p>" +
+      "<p>Try one of these, or ask your own below:</p>";
+    var row = document.createElement("div");
+    row.className = "suggest-row";
+    ["How do I make water safe to drink?",
+     "What should go in a first aid kit?",
+     "How much bleach do I use to purify water?"].forEach(function (q) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "badge cite-chip";
+      b.textContent = q;
+      b.addEventListener("click", function () {
+        input.value = q;
+        input.focus();
+      });
+      row.appendChild(b);
+    });
+    d.appendChild(row);
+  }
+
+  function errorCard(text) {
+    var d = botShell("Kit");
+    d.classList.add("error-card");
+    d.querySelector(".msg-body").innerHTML = "<p>" + text + "</p>";
+  }
+
+  function stoppedBadge(container) {
+    var s = document.createElement("span");
+    s.className = "badge badge-warn msg-stopped";
+    s.textContent = "(stopped)";
+    container.appendChild(s);
+  }
+
+  function renderCitations(container, excerpts) {
+    if (!excerpts.length) return;
+    var box = container.querySelector(".citations");
+    box.hidden = false;
+    excerpts.forEach(function (e, i) {
+      var href = "../" + e.u.replace(/^\.\//, "");
+      var a = document.createElement("a");
+      a.className = "cite-chip";
+      a.href = href;
+      a.setAttribute("data-url", href);
+      a.textContent = "[" + (i + 1) + "] " + e.t;
+      box.appendChild(a);
+    });
+  }
+
+  function trimExcerpt(x) {
+    x = String(x || "").replace(/\s+/g, " ").trim();
+    return x.length > EXCERPT_CHARS ? x.slice(0, EXCERPT_CHARS) + "…" : x;
+  }
+
+  function buildSystemPrompt(excerpts) {
+    var sys = "You are Ask-the-Kit for BreakGlass, an offline survival-knowledge kit. Situation phase: " + phaseLabel() + ". Prefer the provided kit excerpts; cite as [1]..[n].";
+    if (excerpts.length) {
+      sys += "\n\nKit excerpts:\n";
+      excerpts.forEach(function (e, i) {
+        sys += "\n[" + (i + 1) + "] " + e.t + "\n" + e.u + "\n" + trimExcerpt(e.x) + "\n";
+      });
+    } else {
+      sys += "\n\nNo kit excerpts matched this question. Answer from general knowledge and say plainly when the kit has no page on it.";
+    }
+    return sys;
+  }
+
+  function extractServerError(bodyText) {
+    try {
+      var j = JSON.parse(bodyText);
+      var m = j && j.error && j.error.message ? String(j.error.message) : "";
+      m = m.replace(/\s+/g, " ").trim();
+      if (m) return " — " + esc(m.slice(0, 200));
+    } catch (e) {}
+    return "";
+  }
+
+  async function streamAnswer(url, key, model, messages, signal, onPiece) {
+    var res = await fetch(url + "/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+      body: JSON.stringify({ model: model, messages: messages, stream: true }),
+      signal: signal
+    });
+    if (!res.ok) {
+      var body = "";
+      try { body = await res.text(); } catch (e) {}
+      throw { kind: "http", status: res.status, detail: extractServerError(body) };
+    }
+    if (!res.body || !res.body.getReader) {
+      var j = await res.json();
+      var c = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+      onPiece(typeof c === "string" ? c : "");
+      return;
+    }
+    var reader = res.body.getReader();
+    var dec = new TextDecoder();
+    var buf = "";
+    while (true) {
+      var chunk = await reader.read();
+      if (chunk.done) break;
+      buf += dec.decode(chunk.value, { stream: true });
+      var lines = buf.split("\n");
+      buf = lines.pop();
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].replace(/\r$/, "");
+        if (line.slice(0, 5) !== "data:") continue;
+        var payload = line.slice(5).trim();
+        if (payload === "[DONE]") return;
+        try {
+          var obj = JSON.parse(payload);
+          var delta = obj && obj.choices && obj.choices[0] && obj.choices[0].delta;
+          if (delta && typeof delta.content === "string" && delta.content) onPiece(delta.content);
+        } catch (e) {}
+      }
+    }
+  }
+
+  async function send(q) {
+    setBusy(true);
+    ctrl = new AbortController();
+    userBubble(q);
+    var turn = { q: q };
+    turns.push(turn);
+    var pending = typingBubble();
+
+    var excerpts = await new Promise(function (resolve) {
+      window.BGRetrieve.search(q, 4, resolve);
+    });
+    turn.excerpts = excerpts;
+
+    var messages = [{ role: "system", content: buildSystemPrompt(excerpts) }];
+    turns.forEach(function (t) {
+      messages.push({ role: "user", content: t.q });
+      if (t.a) messages.push({ role: "assistant", content: t.a });
+    });
+
+    var cfg = readCfg();
+    var acc = "";
+    var aborted = false;
+    var bodyEl = pending.querySelector(".msg-body");
+    var first = true;
+
+    try {
+      await streamAnswer(cfg.baseUrl, cfg.apiKey || "", cfg.model, messages, ctrl.signal, function (piece) {
+        if (first) { bodyEl.innerHTML = ""; first = false; }
+        acc += piece;
+        bodyEl.innerHTML = mdLite(acc);
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+    } catch (err) {
+      if (err && err.name === "AbortError") {
+        aborted = true;
+      } else if (err && err.kind === "http") {
+        errorCard("The endpoint answered with HTTP " + err.status + err.detail +
+          ". Check the Base URL, API key and model name under Connection.");
+      } else {
+        errorCard("Couldn’t reach the endpoint. Check the Base URL under Connection, and that the endpoint is online and allows browser calls (CORS). Nothing was sent outside the endpoint you configured.");
+      }
+    }
+
+    if (acc || first) {
+      if (first && aborted) bodyEl.innerHTML = mdLite("");
+      else if (first) bodyEl.innerHTML = "<p>(no answer returned)</p>";
+    }
+    turn.a = acc;
+    turn.stopped = aborted;
+    if (aborted) stoppedBadge(pending);
+    renderCitations(pending, excerpts);
+
+    ctrl = null;
+    setBusy(false);
+    input.focus();
+  }
+
+  $("composer").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (busy) return;
+    var q = input.value.trim();
+    if (!q) return;
+    input.value = "";
+    send(q);
+  });
+
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      $("composer").requestSubmit ? $("composer").requestSubmit() : $("composer").dispatchEvent(new Event("submit", { cancelable: true }));
+    }
+  });
+
+  btnStop.addEventListener("click", function () {
+    if (ctrl) ctrl.abort();
+  });
+
+  btnNew.addEventListener("click", function () {
+    turns = [];
+    thread.innerHTML = "";
+    renderWelcome();
+    input.focus();
+  });
+
+  btnExport.addEventListener("click", function () {
+    var lines = ["BreakGlass Ask-the-Kit transcript", "Exported: " + new Date().toISOString(), "Context phase: " + phaseLabel(), ""];
+    if (!turns.length) lines.push("(no questions asked yet)");
+    turns.forEach(function (t, i) {
+      lines.push("--- Q" + (i + 1) + " ---");
+      lines.push("You: " + t.q);
+      lines.push("");
+      lines.push("Kit: " + (t.a || "(no answer)"));
+      if (t.stopped) lines.push("[stopped]");
+      if (t.excerpts && t.excerpts.length) {
+        lines.push("Sources:");
+        t.excerpts.forEach(function (e, k) {
+          lines.push("  [" + (k + 1) + "] " + e.t + " — ../" + e.u);
+        });
+      }
+      lines.push("");
+    });
+    var blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "ask-the-kit-transcript.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  });
+
+  var boot = readCfg();
+  if (cfgOk(boot)) enterChat(boot);
+  else showSetup(null);
+})();
+</script>
 </body>
 </html>
