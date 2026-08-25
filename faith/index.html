@@ -19,11 +19,498 @@
 <select class="phase-select" aria-label="Situation phase"></select>
 <button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
 </header>
+<style>
+.bg-input,.bg-select{padding:var(--space-2) var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:var(--fs-sm);line-height:1.4;cursor:pointer;}
+.bg-input{cursor:text;}
+.bg-input:hover,.bg-select:hover{border-color:var(--accent);}
+.bg-input:focus-visible,.bg-select:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.bg-controls{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:flex-end;}
+.bg-field{display:flex;flex-direction:column;gap:var(--space-1);font-size:var(--fs-xs);font-weight:600;color:var(--text-muted);}
+.bg-nav{display:flex;gap:var(--space-2);}
+.bg-heading{margin-top:var(--space-4);padding-bottom:var(--space-2);border-bottom:1px solid var(--border);}
+.bg-verses{margin-top:var(--space-4);}
+.bg-verses p{max-width:none;margin:0 0 var(--space-3);}
+.bg-vnum{color:var(--accent);font-size:var(--fs-xs);font-weight:700;line-height:1;vertical-align:super;margin-right:var(--space-1);user-select:none;}
+.bg-note{color:var(--text-muted);font-size:var(--fs-sm);font-style:italic;}
+.bg-searchrow{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;}
+.bg-searchrow .bg-input{flex:1 1 14rem;min-width:0;}
+.bg-status{min-height:1.5em;color:var(--text-muted);font-size:var(--fs-sm);margin-top:var(--space-2);}
+.bg-results{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-2);}
+.bg-result{display:block;width:100%;text-align:left;padding:var(--space-2) var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:var(--fs-sm);cursor:pointer;}
+.bg-result:hover{border-color:var(--accent);background:var(--surface-2);}
+.bg-result strong{display:block;color:var(--accent);margin-bottom:var(--space-1);}
+#bg-root mark{background:var(--accent-soft);color:inherit;padding:0 var(--space-1);border-radius:var(--radius-sm);}
+@keyframes bg-flash{from{background-color:var(--accent-soft);}to{background-color:transparent;}}
+.bg-hit{animation:bg-flash var(--dur-slow) var(--ease-out);}
+@media print{
+.bg-controls,.bg-search-card,.bg-results,.bg-status{display:none!important;}
+.bg-verses p{break-inside:avoid;}
+}
+</style>
 <main>
 <h1>Faith &amp; Bible</h1>
-<div class="callout callout-info"><p>This section is under construction. Content ships in phases — see plan.md.</p></div>
-<div class="card"><p>Faith &amp; Bible offers scripture in multiple translations with search tools for study and comfort in difficult times.</p></div>
+<div class="callout callout-info">
+<h4>About this reader</h4>
+<p>The bundled translation is the <strong>World English Bible</strong> — public domain, sourced from eBible.org. More translations arrive as optional add-on packs; see Kit Admin for pack status.</p>
+</div>
+<div id="bg-root">
+<div class="card bg-reader-card" id="bg-reader">
+<div class="bg-controls">
+<label class="bg-field">Translation
+<select id="bg-trans" class="bg-select"><option value="">…</option></select>
+</label>
+<label class="bg-field">Book
+<select id="bg-book" class="bg-select"><option value="">…</option></select>
+</label>
+<label class="bg-field">Chapter
+<select id="bg-chapter" class="bg-select"><option value="">…</option></select>
+</label>
+<div class="bg-nav">
+<button id="bg-prev" class="btn btn-ghost" type="button"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Prev</button>
+<button id="bg-next" class="btn btn-ghost" type="button">Next <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+</div>
+</div>
+<h2 id="bg-heading" class="bg-heading">…</h2>
+<div id="bg-verses" class="article bg-verses">
+<p class="bg-note">Loading…</p>
+</div>
+</div>
+<div class="card bg-search-card">
+<h3><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Search</h3>
+<p class="bg-note">Typing searches the chapters loaded so far. The button below loads every remaining section and searches all of it.</p>
+<form id="bg-form" class="bg-searchrow">
+<input id="bg-q" class="bg-input" type="search" placeholder="Search the Bible…" aria-label="Search the Bible">
+<button id="bg-deep" class="btn btn-primary" type="submit">Search whole Bible</button>
+</form>
+<p id="bg-status" class="bg-status" role="status" aria-live="polite"></p>
+<div id="bg-results" class="bg-results"></div>
+</div>
+</div>
 </main>
 <footer class="status-line"><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function(){
+"use strict";
+
+var BASE = "../assets/bible/";
+var POS_KEY = "bg.bible.pos";
+var MAX_RESULTS = 50;
+
+var OT_IDS = {GEN:1,EXO:1,LEV:1,NUM:1,DEU:1,JOS:1,JDG:1,RUT:1,"1SA":1,"2SA":1,"1KI":1,"2KI":1,"1CH":1,"2CH":1,EZR:1,NEH:1,EST:1,JOB:1,PSA:1,PRO:1,ECC:1,SNG:1,ISA:1,JER:1,LAM:1,EZK:1,DAN:1,HOS:1,JOL:1,AMO:1,OBA:1,JON:1,MIC:1,NAM:1,HAB:1,ZEP:1,HAG:1,ZEC:1,MAL:1};
+var NT_IDS = {MAT:1,MRK:1,LUK:1,JHN:1,ACT:1,ROM:1,"1CO":1,"2CO":1,GAL:1,EPH:1,PHP:1,COL:1,"1TH":1,"2TH":1,"1TI":1,"2TI":1,TIT:1,PHM:1,HEB:1,JAS:1,"1PE":1,"2PE":1,"1JN":1,"2JN":1,"3JN":1,JUD:1,REV:1};
+
+function $(id){ return document.getElementById(id); }
+
+function store(key, val){
+  try {
+    if (val === undefined) return localStorage.getItem(key);
+    if (val === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, val);
+  } catch(e) { return null; }
+  return null;
+}
+
+function loadPos(){
+  var raw = store(POS_KEY), p = null;
+  try { p = raw ? JSON.parse(raw) : null; } catch(e) { p = null; }
+  return (p && typeof p === "object") ? p : {};
+}
+
+function savePos(){
+  var p = loadPos();
+  p[cur.trans] = { book: cur.book, chapter: cur.chapter };
+  store(POS_KEY, JSON.stringify(p));
+}
+
+function loadScript(src){
+  return new Promise(function(resolve, reject){
+    var s = document.createElement("script");
+    s.src = src;
+    s.onload = function(){ resolve(); };
+    s.onerror = function(){ reject(new Error("could not load " + src)); };
+    document.head.appendChild(s);
+  });
+}
+
+var man = null;
+var cur = { trans: null, book: null, chapter: 1 };
+var seq = 0;
+var searching = false;
+var pendingShards = {};
+var knownCount = 0;
+var GMAP = {};
+var TMAP = {};
+
+var transSel = $("bg-trans"), bookSel = $("bg-book"), chapSel = $("bg-chapter");
+var prevBtn = $("bg-prev"), nextBtn = $("bg-next");
+var heading = $("bg-heading"), verses = $("bg-verses"), root = $("bg-root");
+var searchForm = $("bg-form"), qInput = $("bg-q"), deepBtn = $("bg-deep");
+var statusEl = $("bg-status"), resultsEl = $("bg-results");
+
+function groupReady(gid){
+  return !!(window.BG_BIBLE_GROUPS && Object.prototype.hasOwnProperty.call(window.BG_BIBLE_GROUPS, gid));
+}
+
+function loadGroup(gid){
+  if (groupReady(gid)) return Promise.resolve();
+  var meta = GMAP[gid];
+  if (!meta) return Promise.reject(new Error("unknown group " + gid));
+  if (pendingShards[gid]) return pendingShards[gid];
+  pendingShards[gid] = loadScript(BASE + meta.file).then(function(){
+    delete pendingShards[gid];
+    if (!groupReady(gid)) throw new Error("shard did not register " + gid);
+  }, function(err){
+    delete pendingShards[gid];
+    throw err;
+  });
+  return pendingShards[gid];
+}
+
+function transById(id){
+  for (var i = 0; i < man.translations.length; i++) {
+    if (man.translations[i].id === id) return man.translations[i];
+  }
+  return null;
+}
+
+function buildIndex(){
+  man.translations.forEach(function(t){
+    var byId = {}, gids = [];
+    (t.groups || []).forEach(function(g){
+      gids.push(g.id);
+      GMAP[g.id] = { file: g.file, trans: t.id };
+      (g.books || []).forEach(function(b){
+        if (!byId[b[0]]) byId[b[0]] = { name: b[1], groupId: g.id };
+      });
+    });
+    TMAP[t.id] = { byId: byId, gids: gids };
+  });
+}
+
+function buildBooks(){
+  var t = TMAP[cur.trans];
+  var ot = document.createElement("optgroup"); ot.label = "Old Testament";
+  var nt = document.createElement("optgroup"); nt.label = "New Testament";
+  var other = document.createElement("optgroup"); other.label = "Other";
+  bookSel.innerHTML = "";
+  Object.keys(t.byId).forEach(function(id){
+    var o = document.createElement("option");
+    o.value = id;
+    o.textContent = t.byId[id].name;
+    if (OT_IDS[id]) ot.appendChild(o);
+    else if (NT_IDS[id]) nt.appendChild(o);
+    else other.appendChild(o);
+  });
+  [ot, nt, other].forEach(function(grp){
+    if (grp.children.length) bookSel.appendChild(grp);
+  });
+}
+
+function resetChapters(){
+  knownCount = 0;
+  chapSel.innerHTML = "";
+  var o = document.createElement("option");
+  o.value = "";
+  o.textContent = "…";
+  chapSel.appendChild(o);
+}
+
+function fillChapters(count){
+  knownCount = count;
+  chapSel.innerHTML = "";
+  for (var i = 1; i <= count; i++) {
+    var o = document.createElement("option");
+    o.value = String(i);
+    o.textContent = String(i);
+    chapSel.appendChild(o);
+  }
+  chapSel.value = String(cur.chapter);
+}
+
+function note(msg){
+  var p = document.createElement("p");
+  p.className = "bg-note";
+  p.textContent = msg;
+  return p;
+}
+
+function findBookEntry(groupId, bookId){
+  var books = groupReady(groupId) ? (window.BG_BIBLE_GROUPS[groupId] || []) : [];
+  for (var i = 0; i < books.length; i++) {
+    if (books[i].id === bookId) return books[i];
+  }
+  return null;
+}
+
+function paint(my, done){
+  if (my !== seq) return;
+  var bi = TMAP[cur.trans].byId[cur.book];
+  var entry = findBookEntry(bi.groupId, cur.book);
+  if (!entry) {
+    verses.innerHTML = "";
+    verses.appendChild(note("\u201C" + bi.name + "\u201D is listed in this translation but its text is not part of the installed pack."));
+    resetChapters();
+    updateNav();
+    if (done) done(false);
+    return;
+  }
+  var chs = entry.chapters || [];
+  if (!chs.length || !chs[cur.chapter - 1]) {
+    verses.innerHTML = "";
+    verses.appendChild(note("That chapter is not present in the installed pack."));
+    resetChapters();
+    updateNav();
+    if (done) done(false);
+    return;
+  }
+  fillChapters(chs.length);
+  heading.textContent = (entry.name || bi.name) + " " + cur.chapter;
+  verses.innerHTML = "";
+  chs[cur.chapter - 1].forEach(function(text, i){
+    var p = document.createElement("p");
+    p.id = "bg-v-" + cur.book + "-" + cur.chapter + "-" + (i + 1);
+    var n = document.createElement("span");
+    n.className = "bg-vnum";
+    n.textContent = String(i + 1);
+    p.appendChild(n);
+    p.appendChild(document.createTextNode(" " + text));
+    verses.appendChild(p);
+  });
+  savePos();
+  updateNav();
+  if (done) done(true);
+}
+
+function updateNav(){
+  var t = TMAP[cur.trans], bi = t ? t.byId[cur.book] : null;
+  prevBtn.disabled = !bi || cur.chapter <= 1;
+  nextBtn.disabled = !(bi && knownCount && cur.chapter < knownCount);
+}
+
+function renderChapter(done){
+  var my = ++seq;
+  var t = TMAP[cur.trans];
+  var bi = t.byId[cur.book];
+  if (!bi) {
+    verses.innerHTML = "";
+    verses.appendChild(note("Choose a book to begin reading."));
+    heading.textContent = "…";
+    resetChapters();
+    updateNav();
+    if (done) done(false);
+    return;
+  }
+  heading.textContent = bi.name + " " + cur.chapter;
+  if (groupReady(bi.groupId)) {
+    paint(my, done);
+    return;
+  }
+  verses.innerHTML = "";
+  verses.appendChild(note("Loading " + bi.name + "…"));
+  loadGroup(bi.groupId).then(function(){
+    paint(my, done);
+  }).catch(function(){
+    if (my !== seq) return;
+    verses.innerHTML = "";
+    var f = GMAP[bi.groupId] ? GMAP[bi.groupId].file : bi.groupId;
+    verses.appendChild(note("This portion (" + f + ") of the Bible pack could not be loaded. The pack may be missing or incomplete."));
+    resetChapters();
+    updateNav();
+    if (done) done(false);
+  });
+}
+
+function goto(bookId, chapter, cb){
+  cur.book = bookId;
+  cur.chapter = chapter;
+  bookSel.value = bookId;
+  resetChapters();
+  renderChapter(cb);
+}
+
+function restoreTrans(transId){
+  cur.trans = transId;
+  transSel.value = transId;
+  buildBooks();
+  var pos = loadPos()[transId];
+  var byId = TMAP[transId].byId;
+  var keys = Object.keys(byId);
+  var b = (pos && byId[pos.book]) ? pos.book : keys[0];
+  var c = (pos && parseInt(pos.chapter, 10) >= 1) ? parseInt(pos.chapter, 10) : 1;
+  goto(b, c);
+}
+
+function snippetNodes(text, idx, qlen){
+  var frag = document.createDocumentFragment();
+  var start = Math.max(0, idx - 45), end = Math.min(text.length, idx + qlen + 75);
+  if (start > 0) frag.appendChild(document.createTextNode("…"));
+  frag.appendChild(document.createTextNode(text.slice(start, idx)));
+  var m = document.createElement("mark");
+  m.textContent = text.slice(idx, idx + qlen);
+  frag.appendChild(m);
+  frag.appendChild(document.createTextNode(text.slice(idx + qlen, end)));
+  if (end < text.length) frag.appendChild(document.createTextNode("…"));
+  return frag;
+}
+
+function resultRow(transId, bookId, bookName, ch, vs, text, idx, qlen){
+  var b = document.createElement("button");
+  b.type = "button";
+  b.className = "bg-result";
+  var r = document.createElement("strong");
+  r.textContent = bookName + " " + ch + ":" + vs;
+  var s = document.createElement("span");
+  s.appendChild(snippetNodes(text, idx, qlen));
+  b.appendChild(r);
+  b.appendChild(s);
+  b.addEventListener("click", function(){ jumpTo(transId, bookId, ch, vs); });
+  return b;
+}
+
+function scanGroups(gids, q, bucket){
+  gids.forEach(function(gid){
+    if (!groupReady(gid)) return;
+    (window.BG_BIBLE_GROUPS[gid] || []).forEach(function(bk){
+      (bk.chapters || []).forEach(function(chs, ci){
+        chs.forEach(function(text, vi){
+          var idx = String(text).toLowerCase().indexOf(q);
+          if (idx === -1) return;
+          bucket.total++;
+          if (bucket.rows.length < MAX_RESULTS) {
+            bucket.rows.push(resultRow(GMAP[gid].trans, bk.id, bk.name || bk.id, ci + 1, vi + 1, String(text), idx, q.length));
+          }
+        });
+      });
+    });
+  });
+}
+
+function showResults(bucket, tailMsg){
+  resultsEl.innerHTML = "";
+  bucket.rows.forEach(function(row){ resultsEl.appendChild(row); });
+  if (!bucket.total) {
+    statusEl.textContent = "No matches." + (tailMsg ? " " + tailMsg : "");
+  } else if (bucket.total > bucket.rows.length) {
+    statusEl.textContent = bucket.total + " matches — showing the first " + MAX_RESULTS + "." + (tailMsg ? " " + tailMsg : "");
+  } else {
+    statusEl.textContent = bucket.total + " match" + (bucket.total === 1 ? "" : "es") + "." + (tailMsg ? " " + tailMsg : "");
+  }
+}
+
+function runLocal(){
+  if (searching) return;
+  var q = qInput.value.trim().toLowerCase();
+  resultsEl.innerHTML = "";
+  if (!q) { statusEl.textContent = ""; return; }
+  var bucket = { total: 0, rows: [] };
+  scanGroups(Object.keys(GMAP), q, bucket);
+  showResults(bucket, "Loaded sections only — use \u201CSearch whole Bible\u201D to cover everything.");
+}
+
+function runDeep(){
+  if (searching) return;
+  var q = qInput.value.trim().toLowerCase();
+  if (!q) { statusEl.textContent = "Type something to search for."; return; }
+  searching = true;
+  deepBtn.disabled = true;
+  resultsEl.innerHTML = "";
+  var gids = TMAP[cur.trans].gids.slice();
+  var bucket = { total: 0, rows: [] };
+  var i = 0;
+  statusEl.textContent = "Searching the whole Bible…";
+  (function step(){
+    if (i < gids.length) {
+      statusEl.textContent = "searching " + (i + 1) + "/" + gids.length + " groups…";
+      var gid = gids[i++];
+      var p = groupReady(gid) ? Promise.resolve() : loadGroup(gid).catch(function(){ return null; });
+      Promise.resolve(p).then(function(){
+        scanGroups([gid], q, bucket);
+        setTimeout(step, 0);
+      });
+    } else {
+      searching = false;
+      deepBtn.disabled = false;
+      showResults(bucket, gids.length + " group" + (gids.length === 1 ? "" : "s") + " searched.");
+    }
+  })();
+}
+
+function jumpTo(transId, bookId, ch, vs){
+  if (transId !== cur.trans && transById(transId)) {
+    cur.trans = transId;
+    transSel.value = transId;
+    buildBooks();
+  }
+  if (!TMAP[cur.trans].byId[bookId]) return;
+  goto(bookId, ch, function(ok){
+    if (!ok) return;
+    var el = $("bg-v-" + bookId + "-" + ch + "-" + vs);
+    if (!el) return;
+    el.scrollIntoView({ block: "center" });
+    el.classList.remove("bg-hit");
+    void el.offsetWidth;
+    el.classList.add("bg-hit");
+  });
+}
+
+function showMissing(){
+  root.innerHTML = "";
+  var card = document.createElement("div");
+  card.className = "card bg-missing";
+  var h = document.createElement("h2");
+  var icon = document.createElement("i");
+  icon.className = "fa-solid fa-book";
+  icon.setAttribute("aria-hidden", "true");
+  h.appendChild(icon);
+  h.appendChild(document.createTextNode(" Bible pack isn't installed"));
+  var p1 = document.createElement("p");
+  p1.textContent = "The reader is ready, but no scripture data was found under assets/bible/. Nothing is broken — the pack just hasn't been added yet.";
+  var p2 = document.createElement("p");
+  p2.textContent = "The World English Bible ships as an optional add-on pack. Copy its manifest.js and group files into assets/bible/, then reload this page.";
+  card.appendChild(h);
+  card.appendChild(p1);
+  card.appendChild(p2);
+  root.appendChild(card);
+}
+
+function initUI(){
+  man.translations.forEach(function(t){
+    var o = document.createElement("option");
+    o.value = t.id;
+    o.textContent = t.name;
+    transSel.appendChild(o);
+  });
+  transSel.addEventListener("change", function(){ restoreTrans(transSel.value); });
+  bookSel.addEventListener("change", function(){ goto(bookSel.value, 1); });
+  chapSel.addEventListener("change", function(){
+    var c = parseInt(chapSel.value, 10);
+    if (c >= 1) { cur.chapter = c; renderChapter(); }
+  });
+  prevBtn.addEventListener("click", function(){
+    if (cur.chapter > 1) { cur.chapter--; renderChapter(); }
+  });
+  nextBtn.addEventListener("click", function(){
+    if (knownCount && cur.chapter < knownCount) { cur.chapter++; renderChapter(); }
+  });
+  qInput.addEventListener("input", runLocal);
+  searchForm.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    runDeep();
+  });
+  restoreTrans(man.translations[0].id);
+}
+
+function boot(){
+  loadScript(BASE + "manifest.js").then(function(){
+    man = window.BG_BIBLE_MANIFEST;
+    if (!man || !man.translations || !man.translations.length) throw new Error("manifest invalid");
+    buildIndex();
+    initUI();
+  }).catch(showMissing);
+}
+
+boot();
+})();
+</script>
 </body>
 </html>
