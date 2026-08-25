@@ -299,8 +299,8 @@ attribution block.
 | 4 | Deploy early | nginx/cloudflared/SELinux → live before heavy content ✅ |
 | 5 | Content core | medical, howto, food, pets, town, faith+Bible, books ← **in progress** (medical+howto+food done; next: pets, town, then faith/books data pipelines) |
 | 6 | Apps suite | five single-file apps ✅ (notepad/paint/spreadsheet/todo/calendar) |
-| 7 | Arcade | console emus + wrappers; PICO-8 export pipeline (spike first) |
-| 8 | ZIM vault (tb01) | ZIM downloads into tb01 vault/, kiwix-serve, embedded-reader spike |
+| 7 | Arcade | console emus + wrappers; PICO-8 export pipeline (spike first) ← **core done** (EmulatorJS v4.2.3 bundled, 4,180 playable ROMs across NES/GB/GBC/SNES/GBA browsable at arcade/; remaining: PICO-8 export pipeline w/ owner creds, START-SERVER wrappers) |
+| 8 | ZIM vault (tb01) | ZIM downloads into tb01 vault/, kiwix-serve, embedded-reader spike ← **downloads complete + reader live** (WikiMed/iFixit/maxi staged & streaming; remaining: kiwix-serve container for deep-links) |
 | 9 | Schoolhouse | curriculum skeleton, tracker, Kolibri container ← **skeleton+tracker done** (hub, 4 daily plans, one-room primer, adult literacy, mastery-grid tracker w/ local student files; remaining: bundled OER integration, Kolibri container when sd256/vault work resumes) |
 | 10 | Ask-the-Kit + Phases | proxy service, chat UI, phase tagging sweep |
 | 11 | Usability extras | Emergency Hub drills, Quick Ref, ID Browser, map tiers |
@@ -322,3 +322,6 @@ deep content so the live URL shapes decisions.
 ## Todo adds by Wash the server maintainer
 - I want a clickable line of text in the footer called "How to use this site" that links to a page that describes how the site is designed and intended to be used.
   - Done 2026-08-25: root `how-to-use.html` authored (modes, finding things, phases, printing, data ownership, safety framing); footer link swept across all pages.
+- The iFixit repair guides ZIM has an error when loading
+- IT looks like much of the pages we've added are geared towards printing out and using offline. What if the user has access to a computer and not a printer or paper? Let's make the pages web/PC first and printable second. I want robust interaction and data ingestion that is easy to read understand an interact with on a web browser.
+- Browsing the wikipedia pages in the ZIM reader is a painful experience. I wonder if we need to consider converting these to html pages or better integrate the reader into the page. Propose a timeframe for conversion or downloading html versions. I only have 1 day left to finish this site so we need to get a move on.
