@@ -74,8 +74,13 @@ Changes to this map require editing this file first.
 ## Authoring conventions
 
 - Voice: plain language, calm authority, zero hype.
-- Every content page carries front-matter: phase tags, priority weight,
-  source/license line.
+- Every content page carries head meta tags (the HTML front-matter):
+  `<meta name="bg-phases" content="survive stabilize">` (any of everyday/
+  survive/stabilize/rebuild/thrive) and `<meta name="bg-priority" content="normal">`
+  (high | normal | low). Search and phase elevation consume these.
+- Safety content: source-grounded in public-domain / US-gov references;
+  dosage info must say "educational only — verify against packaging/professional
+  advice"; appropriate severity callout at page top.
 - Severity callouts use the standard component set (danger/warning/caution/info).
 - Print styles assumed used — survival pages get printed.
 - Original curriculum content is authored standards-outward; never mirror
