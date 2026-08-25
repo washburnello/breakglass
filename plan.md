@@ -302,7 +302,7 @@ attribution block.
 | 7 | Arcade | console emus + wrappers; PICO-8 export pipeline (spike first) ← **core done** (EmulatorJS v4.2.3 bundled, 4,180 playable ROMs across NES/GB/GBC/SNES/GBA browsable at arcade/; remaining: PICO-8 export pipeline w/ owner creds, START-SERVER wrappers) |
 | 8 | ZIM vault (tb01) | ZIM downloads into tb01 vault/, kiwix-serve, embedded-reader spike ← **downloads complete + reader live** (WikiMed/iFixit/maxi staged & streaming; remaining: kiwix-serve container for deep-links) |
 | 9 | Schoolhouse | curriculum skeleton, tracker, Kolibri container ← **skeleton+tracker done** (hub, 4 daily plans, one-room primer, adult literacy, mastery-grid tracker w/ local student files; remaining: bundled OER integration, Kolibri container when sd256/vault work resumes) |
-| 10 | Ask-the-Kit + Phases | proxy service, chat UI, phase tagging sweep |
+| 10 | Ask-the-Kit + Phases | proxy service, chat UI, phase tagging sweep ← **core done** (chat UI w/ RAG citations + streaming; admin endpoint config; phase tile-reorder/banners/search-boost/EMERGENCY pin live. Remaining: ai-proxy container for server-masked keys — client-direct works today) |
 | 11 | Usability extras | Emergency Hub drills, Quick Ref, ID Browser, map tiers |
 | 12 | Packaging | pack.sh, kits, START-HERE |
 | 13 | Wrap-up | lando fix, field-guide updates, preview refresh, ESV follow-up |
