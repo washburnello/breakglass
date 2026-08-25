@@ -63,6 +63,12 @@
 <div id="zimit-note" class="callout callout-caution" hidden>
 <p>This archive is a web-capture (Zimit) type and renders simplified here. For the full experience use <a href="https://wiki.w4sh.net" rel="noopener">wiki.w4sh.net</a>, or open it in the Kiwix app.</p>
 </div>
+<div id="zimit-block" class="card" hidden>
+<h3><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Best read in the full reader</h3>
+<p id="zimit-name"></p>
+<p>This pack is a web-capture archive. It renders faithfully in the kit's full reader at <a href="https://wiki.w4sh.net" rel="noopener">wiki.w4sh.net</a> (served kits), or offline in the free Kiwix Reader app. The lightweight reader on this page can't show web-capture layouts.</p>
+<p><button class="btn btn-primary" id="zimit-open" type="button">Open full reader</button> <button class="btn btn-ghost" id="zimit-pick" type="button">Pick a different file…</button></p>
+</div>
 
 <section class="card" id="reader" hidden>
 <div class="wiki-toolbar">
@@ -134,6 +140,15 @@ pendingAnchor: "",
 blobs: [],
 searchTimer: null
 };
+
+function showZimitBlock(name) {
+el("reader").hidden = true;
+el("hero").hidden = true;
+el("error-card").hidden = true;
+el("zimit-name").textContent = '"' + name + '" loaded, but:';
+el("zimit-block").hidden = false;
+setBadge(el("archive-badge"), name + " — open in full reader", true);
+}
 
 var el = function (id) { return document.getElementById(id); };
 var frame = el("articleContent");
@@ -228,6 +243,7 @@ port.postMessage({ action: "giveContent", title: d.title, content: new Uint8Arra
 function showError(msg) {
 el("error-msg").textContent = msg;
 el("error-card").hidden = false;
+el("zimit-block").hidden = true;
 el("hero").hidden = true;
 el("reader").hidden = true;
 setBadge(el("archive-badge"), "No archive loaded", true);
@@ -235,6 +251,7 @@ setBadge(el("archive-badge"), "No archive loaded", true);
 
 function resetForOpen() {
 el("error-card").hidden = true;
+el("zimit-block").hidden = true;
 el("fts-note").hidden = true;
 state.stack = [];
 state.current = null;
@@ -282,6 +299,10 @@ function onArchiveReady(archive) {
 state.archive = archive;
 window.params.zimType = archive.zimType;
 BGWikiStore.set("lastZim", archive.file.name);
+if (/zimit/i.test(archive.zimType || "") && !(MODE === "server" && state.swReady)) {
+showZimitBlock(archive.file.name);
+return;
+}
 el("hero").hidden = true;
 el("error-card").hidden = true;
 el("reader").hidden = false;
@@ -427,6 +448,7 @@ function renderRestricted(de) {
 state.archive.readUtf8File(de, function (fde, html) {
 if (!html) {
 el("load-badge").hidden = true;
+if (/zimit/i.test(state.archive.zimType || "")) { showZimitBlock(state.archive.file.name); return; }
 showError("Empty or unreadable article: " + de.namespace + "/" + de.url);
 return;
 }
@@ -716,6 +738,9 @@ openFile(f);
 });
 document.addEventListener("dragover", function (ev) { ev.preventDefault(); });
 document.addEventListener("drop", function (ev) { ev.preventDefault(); });
+
+el("zimit-open").addEventListener("click", function () { window.open("https://wiki.w4sh.net", "_blank", "noopener"); });
+el("zimit-pick").addEventListener("click", function () { el("zimit-block").hidden = true; el("hero").hidden = false; openPicker(""); });
 
 el("retry-btn").addEventListener("click", function () {
 el("error-card").hidden = true;
