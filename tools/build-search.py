@@ -27,6 +27,10 @@ EXCLUDED_SEGMENTS: tuple[str, ...] = ("/tools/", "/docs/", "/assets/vendor/")
 EXCLUDED_FILES: frozenset[str] = frozenset({"search.html", "a-z.html"})
 NON_ALNUM: re.Pattern[str] = re.compile(r"[^a-z0-9]+")
 TEXT_LIMIT: int = 1500
+HEAD_SPLIT: re.Pattern[str] = re.compile(r"</head>", re.IGNORECASE)
+META_TAG: re.Pattern[str] = re.compile(r"<meta\b[^>]*>", re.IGNORECASE)
+META_NAME: re.Pattern[str] = re.compile(r'name\s*=\s*"([^"]*)"', re.IGNORECASE)
+META_CONTENT: re.Pattern[str] = re.compile(r'content\s*=\s*"([^"]*)"', re.IGNORECASE)
 
 SHELL_HEAD = """<!DOCTYPE html>
 <html lang="en">
@@ -121,13 +125,27 @@ def fallback_title(rel: Path) -> str:
     return rel.stem
 
 
+def head_metas(text: str) -> dict[str, str]:
+    found: dict[str, str] = {}
+    for tag in META_TAG.findall(HEAD_SPLIT.split(text, maxsplit=1)[0]):
+        name = META_NAME.search(tag)
+        content = META_CONTENT.search(tag)
+        if name and content:
+            found.setdefault(name.group(1).lower(), content.group(1))
+    return found
+
+
 def parse_page(path: Path, root: Path) -> dict[str, str]:
+    raw = path.read_text(encoding="utf-8", errors="replace")
     parser = PageParser()
-    parser.feed(path.read_text(encoding="utf-8", errors="replace"))
+    parser.feed(raw)
     rel = path.relative_to(root)
+    metas = head_metas(raw)
     title = collapse(parser.title_parts) or fallback_title(rel)
     text = collapse(parser.text_parts)
-    return {"t": title, "u": rel.as_posix(), "x": text[:TEXT_LIMIT]}
+    ph = collapse(metas.get("bg-phases", "").split())
+    pr = metas.get("bg-priority", "").strip().lower() or "normal"
+    return {"t": title, "u": rel.as_posix(), "x": text[:TEXT_LIMIT], "ph": ph, "pr": pr}
 
 
 def collect_docs(root: Path) -> list[dict[str, str]]:

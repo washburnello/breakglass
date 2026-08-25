@@ -6,13 +6,20 @@
 <meta name="bg-phases" content="survive">
 <meta name="bg-priority" content="high">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-<title>Emergency Mode — BreakGlass</title>
+<title>Emergency — BreakGlass</title>
 <script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
 <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css?v=2">
 <link rel="stylesheet" href="assets/theme.css?v=2">
+<style>
+.emergency-links{display:flex;flex-wrap:wrap;gap:var(--space-3);margin:var(--space-5) 0}
+.emergency-links .btn{padding:var(--space-4) var(--space-6);font-size:var(--fs-lg)}
+.callout ol{margin:var(--space-3) 0 0;padding-left:1.4em}
+.callout li+li{margin-top:var(--space-1)}
+</style>
+<script src="assets/phases.js?v=2" defer></script>
 <script src="assets/shell.js?v=2" defer></script>
 </head>
-<body>
+<body data-force-phase="survive">
 <header class="topbar">
 <a class="brand" href="EMERGENCY.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
 <form class="searchbar" action="search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
@@ -21,18 +28,22 @@
 </header>
 <main>
 <div class="callout callout-danger">
-<h1>EMERGENCY MODE</h1>
-<p>If a life is in danger right now, call emergency services first, whenever it is possible to do so. This page is for guidance when help is delayed or unavailable. Stay calm, work step by step, and do the next clear thing.</p>
+<h1>Emergency</h1>
+<p>If someone is unconscious or not breathing, call for help first — whenever it is possible to do so — then start CPR. This page works offline. Stay calm and do the next clear thing.</p>
+<ol>
+<li>Shout and tap the person's shoulders. No response?</li>
+<li>Send someone to call emergency services and fetch an AED if there is one.</li>
+<li>Tilt the head back, lift the chin, and check for normal breathing for no more than 10 seconds.</li>
+<li>No normal breathing: push hard and fast in the center of the chest — 30 compressions, then 2 breaths. Repeat.</li>
+<li>Keep going until help arrives, an AED is ready, or the person starts breathing.</li>
+</ol>
 </div>
-<h2 class="group-title">Quick actions</h2>
-<div class="tile-grid">
-<a class="tile" href="emergency/index.html"><i class="fa-solid fa-droplet tile-icon"></i><span class="tile-name">Severe bleeding</span><span class="tile-blurb">Stop the blood with firm, direct pressure.</span></a>
-<a class="tile" href="emergency/index.html"><i class="fa-solid fa-heart-pulse tile-icon"></i><span class="tile-name">CPR</span><span class="tile-blurb">Push hard and fast in the center of the chest.</span></a>
-<a class="tile" href="emergency/index.html"><i class="fa-solid fa-lungs tile-icon"></i><span class="tile-name">Choking</span><span class="tile-blurb">Back blows and abdominal thrusts to clear the airway.</span></a>
-<a class="tile" href="emergency/index.html"><i class="fa-solid fa-fire tile-icon"></i><span class="tile-name">Burns</span><span class="tile-blurb">Cool the burn with clean running water.</span></a>
-<a class="tile" href="emergency/index.html"><i class="fa-solid fa-bed-pulse tile-icon"></i><span class="tile-name">Shock</span><span class="tile-blurb">Lie the person down, keep them warm, monitor breathing.</span></a>
+<div class="emergency-links">
+<a class="btn btn-primary" href="medical/severe-bleeding.html"><i class="fa-solid fa-droplet"></i>Bleeding</a>
+<a class="btn btn-primary" href="medical/burns.html"><i class="fa-solid fa-fire"></i>Burns</a>
+<a class="btn btn-primary" href="medical/fever-sick-care.html"><i class="fa-solid fa-thermometer-half"></i>Sick care</a>
 </div>
-<p class="note">These are short reminders only. Open the <a href="index.html">full site home</a> for the complete Emergency Hub and every other section of this kit.</p>
+<p>Need more? Open the <a href="emergency/index.html">full Emergency Hub</a> for triage trees, drills and printable vault documents.</p>
 </main>
 <footer class="status-line"><span><a href="how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
 </body>

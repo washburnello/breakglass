@@ -108,6 +108,19 @@
         var xl = String(doc.x || "").toLowerCase();
         if (tl.indexOf(phrase) !== -1 || xl.indexOf(phrase) !== -1) h.score += 8;
       }
+      var phase = document.body ? document.body.getAttribute("data-phase") : "";
+      if (phase && phase !== "everyday") {
+        var phSet = {};
+        String(doc.ph || "").toLowerCase().split(/[^a-z0-9]+/).forEach(function (tok) {
+          if (tok) phSet[tok] = true;
+        });
+        var overlap = 0;
+        for (var p = 0; p < h.terms.length; p++) {
+          if (phSet[h.terms[p]]) overlap++;
+        }
+        if (overlap) h.score += 2 * overlap;
+        if (String(doc.pr || "").toLowerCase() === "high") h.score += 1;
+      }
       results.push({ id: id, doc: doc, score: h.score, terms: h.terms });
     }
     results.sort(function (a, b) {
