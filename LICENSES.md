@@ -18,8 +18,9 @@ Every bundled asset's license is recorded here before shipping; attribution is a
 | Core Knowledge | CC BY-NC-SA | https://coreknowledge.org | Pending |
 | CK-12 FlexBooks | CC BY-NC-SA | https://ck12.org | Pending |
 | PhET simulations | CC BY (most) | https://phet.colorado.edu | Pending |
-| Project Gutenberg texts | Public Domain | https://gutenberg.org | Pending |
-| Bible translations KJV/ASV/WEB/YLT/Douay-Rheims | Public Domain | ebible.org / OpenScriptures | Pending |
+| Project Gutenberg texts | Public Domain (US) | https://gutenberg.org | **Bundled starter set** (`assets/books/`): Aesop's Fables #21 · Art of War #132 · Call of the Wild #215 · Meditations #2680 · Woodcraft and Camping #34607 · Culpeper's Complete Herbal #49513 · Boy Scouts Handbook #29558 |
+| World English Bible (WEB), 2020 stable text edition | Public Domain; "World English Bible" is a trademark of eBible.org | https://ebible.org | **Bundled** (`assets/bible/`, from eng-web_vpl); text unaltered |
+| Bible translations KJV/ASV/YLT/Douay-Rheims | Public Domain | ebible.org / OpenScriptures | Pending — future add-on packs |
 | ESV | Crossway non-commercial license — APPLICATION SUBMITTED/PENDING approval | https://crossway.org/permissions/ | Blocked until approved |
 | US Army FMs / FEMA / CDC / NOAA / ready.gov works | Public Domain (US gov) | various | Pending |
 | Easy Peasy homeschool curriculum | NOT BUNDLED — All Rights Reserved; link-only if ever | allinonehomeschool.com | Excluded by choice |

@@ -271,6 +271,12 @@ bundled. Survipedia is structural inspiration only (CC BY-NC-ND, no reuse).
 - 2026-08-25 — Phase 5 first pass live: medical/howto/food complete;
   front-matter sweep done; footer layout fixed to single-line
   left/right split.
+- 2026-08-25 — Phase 5 data pipelines live: Faith & Bible ships the World
+  English Bible (PD, eBible.org, ~3.9MB shards in-repo) with chapter browse +
+  progressive whole-Bible search; Book Library ships 7 Gutenberg starters
+  (~3.5MB) with paginated reader (synthesized page breaks at ~2.8KB,
+  heading-aware) and position memory. Lexaloffle credentials staged by owner
+  at ~/.config/breakglass/lexaloffle.env for Phase 7.
 
 ## Licensing register (maintain in LICENSES.md)
 
