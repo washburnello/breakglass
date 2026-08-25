@@ -3,10 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <title>Search — BreakGlass</title>
 <script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
 <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
 <link rel="stylesheet" href="assets/theme.css">
+<style>
+.search-meta{margin:0 0 var(--space-4);color:var(--text-muted);font-size:var(--fs-sm)}
+.result{margin-bottom:var(--space-3)}
+.card-title{font-size:var(--fs-lg);font-weight:700}
+.result-path{margin:0 0 var(--space-2);color:var(--text-muted);font-size:var(--fs-xs);overflow-wrap:anywhere}
+.result-snippet{margin:0;font-size:var(--fs-sm)}
+#selftest-out{overflow:auto;font-size:var(--fs-xs)}
+</style>
 <script src="assets/shell.js" defer></script>
 </head>
 <body>
@@ -18,12 +27,308 @@
 </header>
 <main>
 <h1>Search</h1>
-<div class="callout callout-info">
-<strong>Coming soon.</strong> The full-text search engine ships in Phase 3 —
-indexes are prebuilt as offline data files so search will work without any
-server connection.
-</div>
+<section id="search-results" aria-live="polite"></section>
 </main>
 <footer class="status-line"><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function () {
+  "use strict";
+
+  var RT = {};
+  window.BGSearchRuntime = RT;
+
+  var STOPWORDS = ["a","an","and","the","of","to","in","is","it","on","for","with","as","at","by","from","or","this","that","these","those","be","are","was","were","will","would","can","could","should","do","does","did","not","but","if","then","than","so","such","into","about","your","you","we","our","they","their","its","has","have","had","i"];
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  RT.esc = esc;
+
+  function foldWord(w) {
+    return w.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  RT.normalizeQuery = function (s) {
+    var folded = foldWord(String(s || "").toLowerCase());
+    var parts = folded.split(/[^a-z0-9]+/);
+    var out = [];
+    for (var i = 0; i < parts.length; i++) {
+      var w = parts[i];
+      if (w.length < 2) continue;
+      if (STOPWORDS.indexOf(w) !== -1) continue;
+      out.push(w);
+    }
+    return out;
+  };
+
+  function titleHasTerm(title, term) {
+    var tokens = foldWord(String(title || "").toLowerCase()).split(/[^a-z0-9]+/);
+    return tokens.indexOf(term) !== -1;
+  }
+
+  RT.scoreDocs = function (docs, buckets, rawQuery, terms) {
+    var hits = {};
+    var order = [];
+    var phrase = String(rawQuery || "").trim().toLowerCase();
+    for (var i = 0; i < terms.length; i++) {
+      var shard = buckets ? buckets[String(terms[i]).charAt(0)] : null;
+      var postings = shard ? shard[terms[i]] : null;
+      if (!postings) continue;
+      for (var j = 0; j < postings.length; j++) {
+        var id = postings[j][0];
+        var tf = postings[j][1] || 1;
+        if (!Object.prototype.hasOwnProperty.call(hits, id)) {
+          hits[id] = { score: 0, terms: [] };
+          order.push(id);
+        }
+        hits[id].score += tf;
+        if (hits[id].terms.indexOf(terms[i]) === -1) hits[id].terms.push(terms[i]);
+      }
+    }
+    var results = [];
+    for (var k = 0; k < order.length; k++) {
+      var id = order[k];
+      var doc = docs ? docs[id] : null;
+      if (!doc) continue;
+      var h = hits[id];
+      for (var m = 0; m < h.terms.length; m++) {
+        if (titleHasTerm(doc.t, h.terms[m])) h.score += 2.5;
+      }
+      if (phrase) {
+        var tl = String(doc.t || "").toLowerCase();
+        var xl = String(doc.x || "").toLowerCase();
+        if (tl.indexOf(phrase) !== -1 || xl.indexOf(phrase) !== -1) h.score += 8;
+      }
+      results.push({ id: id, doc: doc, score: h.score, terms: h.terms });
+    }
+    results.sort(function (a, b) {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.doc.t < b.doc.t ? -1 : a.doc.t > b.doc.t ? 1 : 0;
+    });
+    return results;
+  };
+
+  RT.buildSnippet = function (x, terms, matched) {
+    var text = String(x || "");
+    var wanted = (matched && matched.length) ? matched : terms;
+    var lower = text.toLowerCase();
+    var pos = -1;
+    for (var i = 0; i < terms.length; i++) {
+      var idx = lower.indexOf(terms[i]);
+      if (idx !== -1 && (pos === -1 || idx < pos)) pos = idx;
+    }
+    var start, end;
+    if (pos === -1) {
+      start = 0;
+      end = Math.min(text.length, 160);
+    } else {
+      start = Math.max(0, pos - 80);
+      end = Math.min(text.length, pos + 80);
+    }
+    var prefix = start > 0 ? "…" : "";
+    var suffix = end < text.length ? "…" : "";
+    var window = text.slice(start, end);
+    var set = {};
+    for (var w = 0; w < wanted.length; w++) set[wanted[w]] = true;
+    var html = "";
+    var runRe = /[A-Za-z0-9]+/g;
+    var last = 0;
+    var m;
+    while ((m = runRe.exec(window)) !== null) {
+      if (m.index > last) html += esc(window.slice(last, m.index));
+      var tok = foldWord(m[0].toLowerCase());
+      if (set[tok]) html += "<mark>" + esc(m[0]) + "</mark>";
+      else html += esc(m[0]);
+      last = m.index + m[0].length;
+    }
+    html += esc(window.slice(last));
+    return prefix + html + suffix;
+  };
+
+  var attempted = {};
+
+  function loadScript(src) {
+    if (attempted[src]) return Promise.resolve();
+    return new Promise(function (resolve) {
+      attempted[src] = true;
+      var s = document.createElement("script");
+      s.src = src;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { resolve(); };
+      document.head.appendChild(s);
+    });
+  }
+
+  RT.loadShards = function (terms) {
+    return loadScript("assets/search/docs.js").then(function () {
+      return loadScript("assets/search/manifest.js");
+    }).then(function () {
+      var keys = Array.isArray(window.BG_SEARCH_KEYS) ? window.BG_SEARCH_KEYS : [];
+      var want = {};
+      for (var i = 0; i < terms.length; i++) want[String(terms[i]).charAt(0)] = true;
+      var chain = Promise.resolve();
+      var loadedKeys = [];
+      for (var k = 0; k < keys.length; k++) {
+        (function (key) {
+          if (!want[key]) return;
+          loadedKeys.push(key);
+          chain = chain.then(function () {
+            return loadScript("assets/search/bucket-" + key + ".js");
+          });
+        })(keys[k]);
+      }
+      return chain.then(function () { return loadedKeys; });
+    });
+  };
+
+  function getBuckets() {
+    return window.BG_SEARCH_BUCKETS || {};
+  }
+
+  function el(id) {
+    return document.getElementById(id);
+  }
+
+  function renderEmpty(out, raw) {
+    out.innerHTML =
+      '<div class="callout callout-info">' +
+      "<h3>Type a few words</h3>" +
+      "<p>Try things like <a href=\"search.html?q=water\">water</a>, " +
+      "<a href=\"search.html?q=bleeding\">bleeding</a>, " +
+      "<a href=\"search.html?q=bible\">bible</a>, or " +
+      "<a href=\"search.html?q=calculator\">calculator</a>.</p>" +
+      "</div>";
+    if (raw != null) document.title = "Search — BreakGlass";
+  }
+
+  function renderSearching(out, raw) {
+    out.innerHTML =
+      '<div class="card"><p role="status">Searching for “' + esc(raw) + '”…</p></div>';
+    document.title = "Search: " + raw + " — BreakGlass";
+  }
+
+  function renderResults(out, raw, results, ms) {
+    if (!results.length) {
+      out.innerHTML =
+        '<p class="search-meta">' + esc(results.length) + ' results for “' + esc(raw) + '” (' + esc(ms) + ' ms)</p>' +
+        '<div class="callout callout-info">' +
+        "<h3>Nothing found</h3>" +
+        "<p>Try fewer or more general words, or browse the " +
+        '<a href="a-z.html">A–Z index</a> instead.</p>' +
+        "</div>";
+      return;
+    }
+    var html = '<p class="search-meta">' + esc(results.length) + ' results for “' + esc(raw) + '” (' + esc(ms) + ' ms)</p>';
+    var top = results.slice(0, 20);
+    for (var i = 0; i < top.length; i++) {
+      var r = top[i];
+      html +=
+        '<article class="card result">' +
+        '<h2 style="margin:0 0 var(--space-1)"><a class="card-title" href="' + esc(r.doc.u) + '">' + esc(r.doc.t) + '</a></h2>' +
+        '<p class="result-path">' + esc(r.doc.u) + '</p>' +
+        '<p class="result-snippet">' + RT.buildSnippet(r.doc.x, r.terms, r.terms) + '</p>' +
+        '</article>';
+    }
+    out.innerHTML = html;
+  }
+
+  function nowMs() {
+    return (window.performance && performance.now) ? performance.now() : Date.now();
+  }
+
+  function run(raw) {
+    var out = el("search-results");
+    var terms = RT.normalizeQuery(raw);
+    if (!terms.length) {
+      renderEmpty(out, raw);
+      return Promise.resolve();
+    }
+    renderSearching(out, raw);
+    var t0 = nowMs();
+    return RT.loadShards(terms).then(function () {
+      var results = RT.scoreDocs(window.BG_SEARCH_DOCS || {}, getBuckets(), raw, terms);
+      renderResults(out, raw, results, Math.max(1, Math.round(nowMs() - t0)));
+    }).catch(function () {
+      renderEmpty(out, null);
+    });
+  }
+
+  function selftest() {
+    var TERMS = ["water", "emergency", "search", "zzzqqq"];
+    var all = [];
+    for (var i = 0; i < TERMS.length; i++) {
+      var ts = RT.normalizeQuery(TERMS[i]);
+      for (var j = 0; j < ts.length; j++) {
+        if (all.indexOf(ts[j]) === -1) all.push(ts[j]);
+      }
+    }
+    return RT.loadShards(all).then(function (loadedKeys) {
+      var docs = window.BG_SEARCH_DOCS || {};
+      var buckets = getBuckets();
+      var per = {};
+      for (var i = 0; i < TERMS.length; i++) {
+        var r = RT.scoreDocs(docs, buckets, TERMS[i], RT.normalizeQuery(TERMS[i]));
+        var top = [];
+        for (var k = 0; k < r.length && k < 3; k++) {
+          top.push({ u: r[k].doc.u, t: r[k].doc.t });
+        }
+        per[TERMS[i]] = { count: r.length, top: top };
+      }
+      return { loadedKeys: loadedKeys, docCount: Object.keys(docs).length, resultsPerTerm: per };
+    });
+  }
+
+  function params() {
+    try {
+      return new URLSearchParams(location.search);
+    } catch (e) {
+      var out = {};
+      String(location.search).replace(/^\?/, "").split("&").forEach(function (pair) {
+        if (!pair) return;
+        var kv = pair.split("=");
+        out[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || "").replace(/\+/g, " "));
+      });
+      return {
+        get: function (k) { return Object.prototype.hasOwnProperty.call(out, k) ? out[k] : null; }
+      };
+    }
+  }
+
+  var main = document.querySelector("main");
+  var form = document.querySelector(".searchbar");
+  var input = form ? form.querySelector("input[name='q']") : null;
+
+  var sp = params();
+
+  if (sp.get("selftest") === "1") {
+    var h1 = main.querySelector("h1");
+    while (h1.nextSibling) main.removeChild(h1.nextSibling);
+    var pre = document.createElement("pre");
+    pre.id = "selftest-out";
+    main.appendChild(pre);
+    selftest().then(function (report) {
+      pre.textContent = JSON.stringify(report, null, 2);
+    }).catch(function (e) {
+      pre.textContent = JSON.stringify({ error: String(e) }, null, 2);
+    });
+    return;
+  }
+
+  if (input) {
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var val = input.value;
+      try {
+        history.replaceState(null, "", location.pathname + "?q=" + encodeURIComponent(val) + location.hash);
+      } catch (e) {}
+      run(val);
+    });
+  }
+
+  run(sp.get("q") || "");
+})();
+</script>
 </body>
 </html>

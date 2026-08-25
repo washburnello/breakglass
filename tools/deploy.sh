@@ -1,6 +1,7 @@
 set -euo pipefail
 SRC="$HOME/projects/breakglass"
 DST="/mnt/tb01/breakglass"
+python3 "$SRC/tools/build-search.py"
 rsync -a --delete \
   --exclude '.git/' \
   --exclude 'tools/' \
