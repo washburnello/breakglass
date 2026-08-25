@@ -37,7 +37,9 @@ RAW_EXTENSIONS = {
     "snes": [".sfc", ".smc", ".zip"],
     "gba": [".gba", ".zip"],
 }
-PICO8_EXTENSIONS = [".p8.png", ".p8", ".js"]
+PICO8_EXTENSIONS = [".p8.png", ".p8", ".js", ".html"]
+PICOTRON_EXTENSIONS = [".p64.png", ".p64", ".html"]
+WEBGAME_EXTENSIONS = {".html"}
 SKIP_DIRS = {"_trash", "backup", "cstore"}
 BRACKET_TAG = re.compile(r"\s*[\[(][^\])]*[\])]\s*$")
 
@@ -106,31 +108,35 @@ def scan_console_system(system, extensions, zip_ok):
     return entries, skipped
 
 
-def scan_pico8():
-    entries = []
-    root = ROMS_ROOT / "pico-8"
+def scan_fantasy_system(system, sid, extensions):
+    entries = {}
+    root = ROMS_ROOT / system
     if not root.is_dir():
-        return entries
+        return []
     for item in sorted(root.rglob("*")):
         if item.name.startswith(".") or not item.is_file():
             continue
         if SKIP_DIRS.intersection(item.relative_to(root).parts[:-1]):
             continue
         lower = item.name.lower()
-        matched_ext = next((ext for ext in PICO8_EXTENSIONS if lower.endswith(ext)), None)
+        matched_ext = next((ext for ext in extensions if lower.endswith(ext)), None)
         if matched_ext is None:
             continue
-        entries.append(
-            {
-                "sys": "pico8",
-                "file": str(item.relative_to(root)),
-                "path": rel_web_path(item),
-                "title": clean_title(item.name[: -len(matched_ext)]),
-                "size": item.stat().st_size,
-                "playable": False,
-            }
-        )
-    return entries
+        stem = item.name[: -len(matched_ext)]
+        playable = matched_ext in WEBGAME_EXTENSIONS
+        row = {
+            "sys": sid,
+            "file": str(item.relative_to(root)),
+            "path": rel_web_path(item),
+            "title": clean_title(stem),
+            "size": item.stat().st_size,
+            "playable": playable,
+        }
+        key = (item.parent, stem.lower())
+        existing = entries.get(key)
+        if existing is None or (playable and not existing["playable"]):
+            entries[key] = row
+    return [entries[k] for k in sorted(entries, key=lambda k: k[1])]
 
 
 def main():
@@ -144,9 +150,11 @@ def main():
         entries.extend(rows)
         total_skipped += skipped
         per_system[system] = len(rows)
-    pico_rows = scan_pico8()
-    entries.extend(pico_rows)
-    per_system["pico8"] = len(pico_rows)
+    for system in ("pico-8", "picotron"):
+        sid = "pico8" if system == "pico-8" else system
+        fantasy_rows = scan_fantasy_system(system, sid, PICO8_EXTENSIONS if system == "pico-8" else PICOTRON_EXTENSIONS)
+        entries.extend(fantasy_rows)
+        per_system[sid] = len(fantasy_rows)
 
     entries.sort(key=lambda e: (e["sys"], e["title"].casefold(), e["file"].casefold()))
 
@@ -157,10 +165,7 @@ def main():
     print(f"Wrote {OUT_FILE.relative_to(REPO_ROOT)} ({OUT_FILE.stat().st_size} bytes)")
     for system in sorted(per_system):
         playable = sum(1 for e in entries if e["sys"] == system and e["playable"])
-        note = ""
-        if system == "pico8":
-            note = " (playable:false pending PICO-8 export pipeline)"
-        print(f"  {system}: {per_system[system]} entries ({playable} playable){note}")
+        print(f"  {system}: {per_system[system]} entries ({playable} playable)")
     print(f"  total: {len(entries)} entries, {total_skipped} non-ROM files skipped")
     return 0
 

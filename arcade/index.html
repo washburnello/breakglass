@@ -39,6 +39,7 @@
 .row-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .play-head{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-4)}
 .play-head h2{margin:0}
+.webgame-frame{display:block;width:100%;height:min(80vh,540px);border:none;background:#000;border-radius:var(--radius-md)}
 .player-shell{width:100%;aspect-ratio:4/3;background:#000000;border-radius:var(--radius-md);overflow:hidden}
 .player-shell #game{width:100%;height:100%}
 .empty-state{text-align:center;padding:var(--space-7) var(--space-5)}
@@ -100,8 +101,10 @@ var SYSTEMS=[
 {id:"gbc",label:"Game Boy Color",icon:"fa-mobile-screen-button"},
 {id:"snes",label:"SNES",icon:"fa-display"},
 {id:"gba",label:"GBA",icon:"fa-tablet-screen-button"},
-{id:"pico8",label:"PICO-8",icon:"fa-microchip"}
+{id:"pico8",label:"PICO-8",icon:"fa-microchip"},
+{id:"picotron",label:"Picotron",icon:"fa-vector-square"}
 ];
+var WEBGAME={pico8:1,picotron:1};
 var FILE_MODE=location.protocol==="file:";
 var ROMS=Array.isArray(window.BG_ROMS)?window.BG_ROMS:[];
 var currentSys=null;
@@ -141,8 +144,9 @@ a.lastChild.appendChild(icon(s.icon));
 a.appendChild(el("span","tile-name",s.label));
 var blurb=el("span","tile-blurb");
 blurb.appendChild(el("span","badge",count+(count===1?" game":" games")));
-if(s.id==="pico8"){blurb.appendChild(el("span","badge badge-warn","Needs PICO-8 export"));}
-else if(FILE_MODE){blurb.appendChild(el("span","badge badge-warn","Needs served kit"));}
+var playableCount=bySys(s.id).filter(function(x){return x.playable}).length;
+if(playableCount===0){blurb.appendChild(el("span","badge badge-warn","Needs export pipeline"));}
+else if(FILE_MODE&&!WEBGAME[s.id]){blurb.appendChild(el("span","badge badge-warn","Needs served kit"));}
 a.appendChild(blurb);
 grid.appendChild(a);
 });
@@ -164,7 +168,7 @@ a.lastChild.appendChild(icon(SYSTEMS.find(function(x){return x.id===entry.sys}).
 a.appendChild(el("span","tile-name",entry.title));
 var blurb=el("span","tile-blurb");
 blurb.appendChild(el("span","badge",humanSize(entry.size)));
-if(!entry.playable)blurb.appendChild(el("span","badge badge-warn","Needs PICO-8 export"));
+if(!entry.playable)blurb.appendChild(el("span","badge badge-warn","Cart only — needs export"));
 a.appendChild(blurb);
 return a;
 }
@@ -205,8 +209,8 @@ var main=el("button","row-main");
 main.type="button";
 main.appendChild(el("span","row-title",e.title));
 main.appendChild(el("span","badge",humanSize(e.size)));
-if(!e.playable)main.appendChild(el("span","badge badge-warn","Needs PICO-8 export"));
-else if(FILE_MODE)main.appendChild(el("span","badge badge-warn","Needs served kit"));
+if(!e.playable)main.appendChild(el("span","badge badge-warn","Cart only — needs export"));
+else if(FILE_MODE&&!WEBGAME[e.sys])main.appendChild(el("span","badge badge-warn","Needs served kit"));
 main.onclick=function(){location.hash="#/play/"+e.sys+"/"+encodeURIComponent(e.file)};
 row.appendChild(main);
 wrap.appendChild(row);
@@ -237,7 +241,22 @@ document.getElementById("play-title").textContent=entry.title;
 badges.appendChild(el("span","badge",sysLabel(sys)));
 badges.appendChild(el("span","badge",humanSize(entry.size)));
 if(!entry.playable){
-explainCard("callout-info","Needs PICO-8 export","PICO-8 games can't run directly from cart files in a browser. This kit's export pipeline turns them into self-contained web games in a later phase — check back after that update.");
+explainCard("callout-info","Cart file, not an export","This entry is a raw cart (.png/.p8). Raw carts need the native fantasy-console runtime; this kit plays exported HTML builds. Exported titles in these lists run right in the page.");
+return;
+}
+if(WEBGAME[entry.sys]){
+teardownPlayer();
+card.hidden=true;
+var wmount=document.getElementById("player-mount");
+var wshell=el("div","player-shell");
+var frame=el("iframe","webgame-frame");
+frame.title=entry.title;
+frame.src=entry.path;
+frame.setAttribute("allow","fullscreen;gamepad;autoplay");
+frame.allowFullscreen=true;
+wshell.appendChild(frame);
+wmount.appendChild(wshell);
+badges.appendChild(el("span","badge","Runs anywhere"));
 return;
 }
 if(FILE_MODE){
