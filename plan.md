@@ -2,7 +2,7 @@
 
 **Repo:** https://github.com/washburnello/breakglass (private, currently empty)
 **Live URL:** https://breakglass.w4sh.net
-**Status:** Planning complete. Implementation not started.
+**Status:** Live through Phase 4 (deployed at https://breakglass.w4sh.net). Phase 5 content core in progress — medical/howto/food first pass shipped 2026-08-25.
 
 ---
 
@@ -253,6 +253,24 @@ bundled. Survipedia is structural inspiration only (CC BY-NC-ND, no reuse).
   shards). Master copies cloneable from sd256.
 - Friend-facing `START-HERE.html` explains entry point and the one optional
   wrapper (START-SERVER) for SNES/GBA.
+- **Pack manager (Kit Admin):** admin-page UI listing optional add-on packs
+  (media pack, extra Bible translations, book packs, ZIM flavors) with
+  detect-present/absent status and fetch/copy instructions. Decided
+  2026-08-25: core ships with a small starter set in-repo; bulk content is
+  pack add-ons under `media/`.
+
+## Decision log
+
+- 2026-08-25 — **Content sourcing policy:** starter sets bundled in-repo
+  (one Bible translation, a few Gutenberg titles); bulk corpora ship as
+  media-pack add-ons. Network fetching of PD corpora (eBible.org, Gutenberg)
+  at build time approved by owner. ESV application ON HOLD per owner.
+- 2026-08-25 — **Lexaloffle/PICO-8 pipeline** deferred to Phase 7; owner will
+  supply credentials via untracked local file (`~/.config/breakglass/`),
+  never committed or pasted into shared sessions.
+- 2026-08-25 — Phase 5 first pass live: medical/howto/food complete;
+  front-matter sweep done; footer layout fixed to single-line
+  left/right split.
 
 ## Licensing register (maintain in LICENSES.md)
 
@@ -269,11 +287,11 @@ attribution block.
 | # | Phase | Notes |
 |---|---|---|
 | 0 | Docs | this file + field-guide.md ✅ |
-| 1 | Scaffold | git init, connect to GitHub repo, skeleton |
-| 2 | Design system | tokens, themes, components, styleguide.html, landing shell |
-| 3 | Search engine | shard builder + search.html + A-Z index |
-| 4 | Deploy early | nginx/cloudflared/SELinux → live before heavy content |
-| 5 | Content core | medical, howto, food, pets, town, faith+Bible, books |
+| 1 | Scaffold | git init, connect to GitHub repo, skeleton ✅ |
+| 2 | Design system | tokens, themes, components, styleguide.html, landing shell ✅ |
+| 3 | Search engine | shard builder + search.html + A-Z index ✅ |
+| 4 | Deploy early | nginx/cloudflared/SELinux → live before heavy content ✅ |
+| 5 | Content core | medical, howto, food, pets, town, faith+Bible, books ← **in progress** (medical+howto+food done; next: pets, town, then faith/books data pipelines) |
 | 6 | Apps suite | five single-file apps |
 | 7 | Arcade | console emus + wrappers; PICO-8 export pipeline (spike first) |
 | 8 | ZIM vault (tb01) | ZIM downloads into tb01 vault/, kiwix-serve, embedded-reader spike |
