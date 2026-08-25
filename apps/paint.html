@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="everyday">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Paint — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<style>
+.app-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.tool-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tool-btn[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.tool-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tool-sep {
+  align-self: stretch;
+  width: 1px;
+  background: var(--border);
+}
+
+.palette-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.palette-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.swatch[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.page-hint {
+  margin-bottom: var(--space-4);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.paper {
+  margin-top: var(--space-4);
+}
+
+#paint-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+@media print {
+  h1,
+  .page-hint,
+  .app-toolbar,
+  .palette-row,
+  #open-file,
+  #autosave-badge {
+    display: none !important;
+  }
+
+  main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .paper {
+    margin: 0;
+  }
+
+  #paint-canvas {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<h1><i class="fa-solid fa-palette" aria-hidden="true"></i> Paint</h1>
+<p class="page-hint">Draw with mouse, pen or touch. Your work autosaves when the browser allows it — Export PNG and Open image keep permanent file copies.</p>
+<p id="autosave-badge" class="badge badge-warn" hidden><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Autosave unavailable — use Export/Open</p>
+<div class="app-toolbar">
+<div class="tool-group" role="group" aria-label="Tools">
+<button id="tool-pen" class="btn btn-ghost tool-btn" type="button" data-tool="pen" aria-pressed="true"><i class="fa-solid fa-pen" aria-hidden="true"></i> Pen</button>
+<button id="tool-eraser" class="btn btn-ghost tool-btn" type="button" data-tool="eraser" aria-pressed="false"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Eraser</button>
+</div>
+<span class="tool-sep" aria-hidden="true"></span>
+<div class="tool-group" role="group" aria-label="Brush size">
+<button class="btn btn-ghost tool-btn" type="button" data-size="3" aria-pressed="false" title="Thin brush" aria-label="Thin brush"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+<button class="btn btn-ghost tool-btn" type="button" data-size="9" aria-pressed="true" title="Medium brush" aria-label="Medium brush"><i class="fa-solid fa-pen-fancy" aria-hidden="true"></i></button>
+<button class="btn btn-ghost tool-btn" type="button" data-size="22" aria-pressed="false" title="Thick brush" aria-label="Thick brush"><i class="fa-solid fa-pen-nib" aria-hidden="true"></i></button>
+</div>
+<span class="tool-sep" aria-hidden="true"></span>
+<div class="tool-group" role="group" aria-label="Actions">
+<button id="undo-btn" class="btn btn-ghost" type="button" disabled><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Undo</button>
+<button id="clear-btn" class="btn btn-danger" type="button"><i class="fa-solid fa-trash" aria-hidden="true"></i> Clear</button>
+<button id="open-btn" class="btn btn-ghost" type="button"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Open image</button>
+<button id="export-btn" class="btn btn-primary" type="button"><i class="fa-solid fa-download" aria-hidden="true"></i> Export PNG</button>
+<button id="print-btn" class="btn btn-ghost" type="button"><i class="fa-solid fa-print" aria-hidden="true"></i> Print</button>
+</div>
+</div>
+<div id="palette-row" class="palette-row" role="group" aria-label="Colors"><span class="palette-label">Color</span></div>
+<div class="paper"><canvas id="paint-canvas" width="1200" height="800"></canvas></div>
+<input id="open-file" type="file" accept="image/*" hidden>
+</main>
+<footer class="status-line"><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function () {
+  "use strict";
+
+  var STORE_KEY = "bg.apps.paint.doc";
+  var CANVAS_W = 1200;
+  var CANVAS_H = 800;
+  var UNDO_LIMIT = 20;
+  var PALETTE = ["#000000", "#525252", "#B3402F", "#D97706", "#F5C542", "#2F7D4F", "#57A773", "#2C6E9E", "#1E3A8A", "#7C3AED", "#DB2777", "#8B5E34"];
+
+  var canvas = document.getElementById("paint-canvas");
+  var ctx = canvas.getContext("2d");
+  var paletteRow = document.getElementById("palette-row");
+  var undoBtn = document.getElementById("undo-btn");
+  var clearBtn = document.getElementById("clear-btn");
+  var openBtn = document.getElementById("open-btn");
+  var exportBtn = document.getElementById("export-btn");
+  var printBtn = document.getElementById("print-btn");
+  var fileInput = document.getElementById("open-file");
+  var autosaveBadge = document.getElementById("autosave-badge");
+
+  var tool = "pen";
+  var color = PALETTE[0];
+  var size = 9;
+  var drawing = false;
+  var lastX = 0;
+  var lastY = 0;
+  var midX = 0;
+  var midY = 0;
+  var undoStack = [];
+  var saveTimer = null;
+  var storageOk = true;
+
+  function paintPaper() {
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  }
+
+  function updateUndoBtn() {
+    undoBtn.disabled = undoStack.length === 0;
+  }
+
+  function snapshot() {
+    undoStack.push(ctx.getImageData(0, 0, CANVAS_W, CANVAS_H));
+    if (undoStack.length > UNDO_LIMIT) {
+      undoStack.shift();
+    }
+    updateUndoBtn();
+  }
+
+  function undo() {
+    if (undoStack.length === 0) return;
+    ctx.putImageData(undoStack.pop(), 0, 0);
+    updateUndoBtn();
+    scheduleSave();
+  }
+
+  function showStorageBadge() {
+    autosaveBadge.hidden = false;
+  }
+
+  function scheduleSave() {
+    if (!storageOk) return;
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 1000);
+  }
+
+  function saveNow() {
+    try {
+      localStorage.setItem(STORE_KEY, canvas.toDataURL("image/png"));
+    } catch (e) {
+      storageOk = false;
+      showStorageBadge();
+    }
+  }
+
+  function restore() {
+    var doc = null;
+    try {
+      doc = localStorage.getItem(STORE_KEY);
+    } catch (e) {
+      storageOk = false;
+      showStorageBadge();
+    }
+    paintPaper();
+    if (!doc) {
+      snapshot();
+      return;
+    }
+    var im = new Image();
+    im.onload = function () {
+      ctx.drawImage(im, 0, 0, CANVAS_W, CANVAS_H);
+      snapshot();
+    };
+    im.onerror = function () {
+      snapshot();
+    };
+    im.src = doc;
+  }
+
+  function pointerPos(ev) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: (ev.clientX - rect.left) * (CANVAS_W / rect.width),
+      y: (ev.clientY - rect.top) * (CANVAS_H / rect.height)
+    };
+  }
+
+  function strokeColor() {
+    return tool === "eraser" ? "#FFFFFF" : color;
+  }
+
+  function drawDot(x, y) {
+    ctx.beginPath();
+    ctx.fillStyle = strokeColor();
+    ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function beginStroke(ev) {
+    if (drawing || (ev.button !== undefined && ev.button > 0)) return;
+    drawing = true;
+    try {
+      canvas.setPointerCapture(ev.pointerId);
+    } catch (e) {}
+    var p = pointerPos(ev);
+    lastX = p.x;
+    lastY = p.y;
+    midX = p.x;
+    midY = p.y;
+    drawDot(p.x, p.y);
+  }
+
+  function moveStroke(ev) {
+    if (!drawing) return;
+    var p = pointerPos(ev);
+    var mx = (lastX + p.x) / 2;
+    var my = (lastY + p.y) / 2;
+    ctx.beginPath();
+    ctx.strokeStyle = strokeColor();
+    ctx.lineWidth = size;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.moveTo(midX, midY);
+    ctx.quadraticCurveTo(lastX, lastY, mx, my);
+    ctx.stroke();
+    midX = mx;
+    midY = my;
+    lastX = p.x;
+    lastY = p.y;
+  }
+
+  function endStroke(ev) {
+    if (!drawing) return;
+    drawing = false;
+    try {
+      canvas.releasePointerCapture(ev.pointerId);
+    } catch (e) {}
+    snapshot();
+    scheduleSave();
+  }
+
+  function setTool(t) {
+    tool = t;
+    document.querySelectorAll("[data-tool]").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-tool") === t ? "true" : "false");
+    });
+  }
+
+  function setSize(n) {
+    size = n;
+    document.querySelectorAll("[data-size]").forEach(function (b) {
+      b.setAttribute("aria-pressed", Number(b.getAttribute("data-size")) === n ? "true" : "false");
+    });
+  }
+
+  function setColor(c) {
+    color = c;
+    document.querySelectorAll(".swatch").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-color") === c ? "true" : "false");
+    });
+    setTool("pen");
+  }
+
+  PALETTE.forEach(function (c) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "swatch";
+    b.style.background = c;
+    b.title = c;
+    b.setAttribute("aria-label", "Color " + c);
+    b.setAttribute("aria-pressed", c === color ? "true" : "false");
+    b.setAttribute("data-color", c);
+    b.addEventListener("click", function () {
+      setColor(c);
+    });
+    paletteRow.appendChild(b);
+  });
+
+  document.querySelectorAll("[data-tool]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      setTool(b.getAttribute("data-tool"));
+    });
+  });
+
+  document.querySelectorAll("[data-size]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      setSize(Number(b.getAttribute("data-size")));
+    });
+  });
+
+  canvas.addEventListener("pointerdown", beginStroke);
+  canvas.addEventListener("pointermove", moveStroke);
+  canvas.addEventListener("pointerup", endStroke);
+  canvas.addEventListener("pointercancel", endStroke);
+
+  undoBtn.addEventListener("click", undo);
+
+  clearBtn.addEventListener("click", function () {
+    if (!window.confirm("Clear the entire painting? You can press Undo afterwards to bring it back.")) return;
+    snapshot();
+    paintPaper();
+    scheduleSave();
+  });
+
+  openBtn.addEventListener("click", function () {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener("change", function () {
+    var f = fileInput.files && fileInput.files[0];
+    if (!f) return;
+    var url = URL.createObjectURL(f);
+    var im = new Image();
+    im.onload = function () {
+      snapshot();
+      paintPaper();
+      var s = Math.min(CANVAS_W / im.width, CANVAS_H / im.height);
+      var dw = im.width * s;
+      var dh = im.height * s;
+      ctx.drawImage(im, (CANVAS_W - dw) / 2, (CANVAS_H - dh) / 2, dw, dh);
+      URL.revokeObjectURL(url);
+      scheduleSave();
+    };
+    im.onerror = function () {
+      URL.revokeObjectURL(url);
+      window.alert("Could not load that image.");
+    };
+    im.src = url;
+    fileInput.value = "";
+  });
+
+  exportBtn.addEventListener("click", function () {
+    var a = document.createElement("a");
+    a.download = "paint.png";
+    if (canvas.toBlob) {
+      canvas.toBlob(function (blob) {
+        if (!blob) return;
+        var url = URL.createObjectURL(blob);
+        a.href = url;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () {
+          URL.revokeObjectURL(url);
+        }, 1000);
+      }, "image/png");
+    } else {
+      a.href = canvas.toDataURL("image/png");
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+  });
+
+  printBtn.addEventListener("click", function () {
+    window.print();
+  });
+
+  restore();
+})();
+</script>
+</body>
+</html>

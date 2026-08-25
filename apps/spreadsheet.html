@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="everyday">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Spreadsheet — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<style>
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin-bottom:var(--space-4)}
+.toolbar .btn{cursor:pointer}
+.toolbar-hint{margin-left:auto;font-size:var(--fs-xs);color:var(--text-muted)}
+.grid-wrap{max-height:60vh;overflow:auto;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+.sheet-grid{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-size:var(--fs-sm);line-height:1.4}
+.sheet-grid th,.sheet-grid td{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:var(--space-1) var(--space-2);white-space:nowrap}
+.sheet-grid thead th{position:sticky;top:0;z-index:3;background:var(--surface);color:var(--text-muted);font-weight:600;text-align:center;min-width:96px}
+.sheet-grid thead th.corner{position:sticky;left:0;top:0;z-index:4;min-width:40px}
+.sheet-grid .rowhead{position:sticky;left:0;z-index:2;background:var(--surface);color:var(--text-muted);font-weight:600;text-align:center;min-width:40px}
+.sheet-grid td{min-width:96px;max-width:200px;overflow:hidden;text-overflow:ellipsis;text-align:left;vertical-align:middle;background:var(--surface);cursor:cell;height:30px}
+.sheet-grid td:focus{outline:none}
+.sheet-grid td.selected{outline:2px solid var(--accent);outline-offset:-2px;background:var(--accent-soft)}
+.sheet-grid td.num{text-align:right;font-variant-numeric:tabular-nums}
+.sheet-grid td.err{color:var(--danger);font-weight:600}
+.cell-ed{display:block;width:100%;height:100%;border:0;margin:0;padding:0;font:inherit;color:inherit;background:transparent;outline:2px solid var(--accent);outline-offset:-2px}
+.sheet-status{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-3);font-size:var(--fs-sm);color:var(--text-muted);min-height:26px}
+#status-ref{color:var(--text);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-pill);padding:0 var(--space-2);font-size:var(--fs-xs);line-height:1.7}
+#storage-note[hidden]{display:none}
+.page-hint{margin-top:var(--space-5);font-size:var(--fs-sm);color:var(--text-muted)}
+.page-hint p+p{margin-top:var(--space-2)}
+@media print{
+.topbar,.status-line,.toolbar,.sheet-status,.page-hint{display:none!important}
+main{max-width:none;padding:0}
+.grid-wrap{max-height:none;overflow:visible;border:0;border-radius:0}
+.sheet-grid{width:100%}
+.sheet-grid td,.sheet-grid th{border:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<h1>Spreadsheet</h1>
+<div class="toolbar">
+<button class="btn btn-ghost" type="button" id="btn-new"><i class="fa-solid fa-file"></i> New</button>
+<button class="btn btn-ghost" type="button" id="btn-save"><i class="fa-solid fa-floppy-disk"></i> Save CSV</button>
+<label class="btn btn-ghost" for="file-open"><i class="fa-solid fa-folder-open"></i> Open CSV<input type="file" id="file-open" accept=".csv,text/csv" hidden></label>
+<span class="toolbar-hint">Formulas start with “=” · SUM · AVG · MIN · MAX · COUNT</span>
+</div>
+<div class="grid-wrap">
+<table class="sheet-grid">
+<thead><tr><th class="corner" aria-hidden="true"></th></tr></thead>
+</table>
+</div>
+<div class="sheet-status">
+<strong id="status-ref">A1</strong>
+<span id="status-val">(empty)</span>
+<span id="storage-note" class="badge badge-warn" hidden></span>
+</div>
+<div class="card page-hint">
+<p><strong>Keys:</strong> click a cell, then type to enter · Enter commits and moves down · Tab commits and moves right · arrow keys navigate · Esc cancels · Delete clears the cell.</p>
+<p><strong>Files:</strong> Save CSV writes raw contents, including “=” formulas. Open CSV fits what it can into A1:J40. The sheet also autosaves quietly in this browser.</p>
+</div>
+</main>
+<footer class="status-line"><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function () {
+"use strict";
+var COLS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+var ROWS = 40;
+var STORE_KEY = "bg.apps.sheet.doc";
+var engine = bgSheetEngine();
+var doc = { cells: {} };
+var computed = {};
+var cellsByRef = {};
+var selRef = "A1";
+var editing = false;
+var editor = null;
+var saveTimer = 0;
+function bgSheetEngine() {
+  var CLS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+  var CIRC = { circ: true };
+  function isNumStr(s) {
+    return /^[-+]?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][-+]?[0-9]+)?$/.test(String(s).trim());
+  }
+  function formatNum(v) {
+    if (!isFinite(v)) return "#NUM";
+    if (Math.abs(v) >= 1e15) return v.toExponential(6).replace(/\.?0+e/, "e");
+    return String(Math.round(v * 1e10) / 1e10);
+  }
+  function tokenize(src) {
+    var t = [], i = 0;
+    while (i < src.length) {
+      var c = src[i];
+      if (c === " " || c === "\t" || c === "\r" || c === "\n") { i++; continue; }
+      if ((c >= "0" && c <= "9") || (c === "." && src[i + 1] >= "0" && src[i + 1] <= "9")) {
+        var j = i, dots = 0;
+        while (j < src.length && ((src[j] >= "0" && src[j] <= "9") || src[j] === ".")) { if (src[j] === ".") dots++; j++; }
+        if (dots > 1) throw "#ERR";
+        if (src[j] === "e" || src[j] === "E") {
+          var k = j + 1;
+          if (src[k] === "+" || src[k] === "-") k++;
+          if (src[k] >= "0" && src[k] <= "9") { j = k; while (j < src.length && src[j] >= "0" && src[j] <= "9") j++; }
+        }
+        t.push({ k: "n", v: parseFloat(src.slice(i, j)) });
+        i = j;
+        continue;
+      }
+      if ((c >= "A" && c <= "Z") || (c >= "a" && c <= "z") || c === "_") {
+        var j2 = i;
+        while (j2 < src.length && /[A-Za-z0-9_]/.test(src[j2])) j2++;
+        t.push({ k: "id", v: src.slice(i, j2).toUpperCase() });
+        i = j2;
+        continue;
+      }
+      if ("+-*/^(),:".indexOf(c) >= 0) { t.push({ k: c }); i++; continue; }
+      throw "#ERR";
+    }
+    return t;
+  }
+  function evaluate(expr, cellFn, rangeFn) {
+    var toks = tokenize(expr), p = 0;
+    function peek() { return toks[p]; }
+    function eat(k) { var t = toks[p]; if (!t || t.k !== k) throw "#ERR"; p++; }
+    function toNum(v) {
+      if (typeof v === "number") return v;
+      if (v === null || v === undefined || v === "") return 0;
+      if (typeof v === "string") {
+        if (v.charAt(0) === "#") throw v;
+        if (isNumStr(v)) return parseFloat(v);
+        throw "#VAL";
+      }
+      throw "#VAL";
+    }
+    function apply(op, x, y) {
+      var a = toNum(x), b = toNum(y);
+      if (op === "+") return a + b;
+      if (op === "-") return a - b;
+      if (op === "*") return a * b;
+      if (op === "/") { if (b === 0) throw "#DIV/0!"; return a / b; }
+      return Math.pow(a, b);
+    }
+    function collect(args) {
+      var out = [];
+      args.forEach(function (a) {
+        if (a.range) {
+          rangeFn(a.range[0], a.range[1], function (v) { if (typeof v === "number") out.push(v); });
+        } else if (typeof a.val === "number") {
+          out.push(a.val);
+        } else if (typeof a.val === "string") {
+          if (a.val.charAt(0) === "#") throw a.val;
+          if (isNumStr(a.val)) out.push(parseFloat(a.val));
+        }
+      });
+      return out;
+    }
+    function avg(a) {
+      var n = collect(a);
+      if (!n.length) throw "#DIV/0!";
+      return n.reduce(function (s, v) { return s + v; }, 0) / n.length;
+    }
+    var FUNCS = {
+      SUM: function (a) { return collect(a).reduce(function (s, v) { return s + v; }, 0); },
+      AVG: avg,
+      AVERAGE: avg,
+      MIN: function (a) { var n = collect(a); return n.length ? Math.min.apply(null, n) : 0; },
+      MAX: function (a) { var n = collect(a); return n.length ? Math.max.apply(null, n) : 0; },
+      COUNT: function (a) { return collect(a).length; }
+    };
+    function callFunc(name) {
+      if (!FUNCS[name]) throw "#NAME?";
+      var args = [];
+      p++;
+      eat("(");
+      if (peek() && peek().k !== ")") {
+        for (;;) {
+          var nt = toks[p];
+          if (nt && nt.k === "id" && toks[p + 1] && toks[p + 1].k === ":") {
+            var a1 = toks[p].v;
+            p += 2;
+            var a2 = toks[p];
+            if (!a2 || a2.k !== "id") throw "#ERR";
+            p++;
+            args.push({ range: [a1, a2.v] });
+          } else {
+            args.push({ val: parseExpr() });
+          }
+          if (peek() && peek().k === ",") { p++; continue; }
+          break;
+        }
+      }
+      eat(")");
+      return FUNCS[name](args);
+    }
+    function parseExpr() {
+      var v = parseTerm();
+      while (peek() && (peek().k === "+" || peek().k === "-")) { var op = toks[p++].k; v = apply(op, v, parseTerm()); }
+      return v;
+    }
+    function parseTerm() {
+      var v = parsePow();
+      while (peek() && (peek().k === "*" || peek().k === "/")) { var op = toks[p++].k; v = apply(op, v, parsePow()); }
+      return v;
+    }
+    function parsePow() {
+      var b = parseUnary();
+      if (peek() && peek().k === "^") { p++; return apply("^", b, parsePow()); }
+      return b;
+    }
+    function parseUnary() {
+      if (peek() && peek().k === "-") { p++; return -toNum(parseUnary()); }
+      if (peek() && peek().k === "+") { p++; return toNum(parseUnary()); }
+      return parseAtom();
+    }
+    function parseAtom() {
+      var t = toks[p];
+      if (!t) throw "#ERR";
+      if (t.k === "(") { p++; var v = parseExpr(); eat(")"); return v; }
+      if (t.k === "n") { p++; return t.v; }
+      if (t.k === "id") {
+        if (toks[p + 1] && toks[p + 1].k === "(") return callFunc(t.v);
+        p++;
+        if (/^[A-Z][0-9]+$/.test(t.v)) return cellFn(t.v);
+        throw "#NAME?";
+      }
+      throw "#ERR";
+    }
+    var v = parseExpr();
+    if (p < toks.length) throw "#ERR";
+    if (typeof v === "number" && isNaN(v)) return "#NUM";
+    return v;
+  }
+  function recalcAll(cells) {
+    var computed = {}, chain = {};
+    function ensure(ref) {
+      if (Object.prototype.hasOwnProperty.call(computed, ref)) return computed[ref];
+      if (chain[ref]) throw CIRC;
+      var raw = cells[ref] || "";
+      var val;
+      if (raw.charAt(0) === "=") {
+        chain[ref] = true;
+        try {
+          var r = evaluate(raw.slice(1), ensure, function (a, b, cb) {
+            var m1 = /^([A-Z])([0-9]+)$/.exec(a), m2 = /^([A-Z])([0-9]+)$/.exec(b);
+            if (!m1 || !m2) throw "#REF";
+            var c1 = m1[1].charCodeAt(0), c2 = m2[1].charCodeAt(0);
+            var r1 = parseInt(m1[2], 10), r2 = parseInt(m2[2], 10);
+            if (CLS.indexOf(m1[1]) < 0 || CLS.indexOf(m2[1]) < 0 || r1 < 1 || r1 > 40 || r2 < 1 || r2 > 40) throw "#REF";
+            var sw;
+            if (c1 > c2) { sw = c1; c1 = c2; c2 = sw; }
+            if (r1 > r2) { sw = r1; r1 = r2; r2 = sw; }
+            for (var c = c1; c <= c2; c++) for (var q = r1; q <= r2; q++) cb(ensure(String.fromCharCode(c) + q));
+          });
+          val = typeof r === "number" ? (isNaN(r) ? "#NUM" : r) : r;
+        } catch (e) {
+          val = e === CIRC ? "#CIRC" : (typeof e === "string" ? e : "#ERR");
+        }
+        delete chain[ref];
+      } else {
+        val = raw === "" ? null : (isNumStr(raw) ? parseFloat(raw) : raw);
+      }
+      computed[ref] = val;
+      return val;
+    }
+    for (var pass = 0; pass < 3; pass++) {
+      computed = {};
+      for (var c = 0; c < CLS.length; c++) {
+        for (var r = 1; r <= 40; r++) ensure(CLS[c] + r);
+      }
+    }
+    return computed;
+  }
+  return { recalc: recalcAll, format: formatNum };
+}
+function displayValue(v) {
+  return v === null || v === undefined ? "" : (typeof v === "number" ? engine.format(v) : String(v));
+}
+function buildGrid() {
+  var headRow = document.querySelector(".sheet-grid thead tr");
+  COLS.forEach(function (c) {
+    var th = document.createElement("th");
+    th.scope = "col";
+    th.textContent = c;
+    headRow.appendChild(th);
+  });
+  var tb = document.createElement("tbody");
+  for (var r = 1; r <= ROWS; r++) {
+    var tr = document.createElement("tr");
+    var rh = document.createElement("th");
+    rh.className = "rowhead";
+    rh.scope = "row";
+    rh.textContent = r;
+    tr.appendChild(rh);
+    COLS.forEach(function (c) {
+      var td = document.createElement("td");
+      td.setAttribute("data-ref", c + r);
+      td.tabIndex = -1;
+      tr.appendChild(td);
+      cellsByRef[c + r] = td;
+    });
+    tb.appendChild(tr);
+  }
+  document.querySelector(".sheet-grid").appendChild(tb);
+}
+function updateStatus() {
+  document.getElementById("status-ref").textContent = selRef;
+  var raw = doc.cells[selRef] || "";
+  var txt = raw === "" ? "(empty)" : raw;
+  if (raw.charAt(0) === "=") txt += " → " + displayValue(computed[selRef]);
+  document.getElementById("status-val").textContent = txt;
+}
+function render() {
+  Object.keys(cellsByRef).forEach(function (ref) {
+    var td = cellsByRef[ref];
+    var raw = doc.cells[ref] || "";
+    var v = computed[ref];
+    td.textContent = raw.charAt(0) === "=" ? displayValue(v) : raw;
+    td.classList.toggle("num", typeof v === "number");
+    td.classList.toggle("err", typeof v === "string" && v.charAt(0) === "#");
+    if (raw !== "") td.title = raw;
+    else td.removeAttribute("title");
+  });
+  updateStatus();
+}
+function refresh() {
+  computed = engine.recalc(doc.cells);
+  render();
+  scheduleSave();
+}
+function select(ref, focus) {
+  var prev = cellsByRef[selRef];
+  if (prev) prev.classList.remove("selected");
+  selRef = ref;
+  cellsByRef[ref].classList.add("selected");
+  updateStatus();
+  if (focus !== false) cellsByRef[ref].focus();
+}
+function moveSel(dc, dr) {
+  var c = Math.max(0, Math.min(COLS.length - 1, COLS.indexOf(selRef.charAt(0)) + dc));
+  var r = Math.max(1, Math.min(ROWS, parseInt(selRef.slice(1), 10) + dr));
+  select(COLS[c] + r);
+}
+function endEdit() {
+  if (!editing) return;
+  editing = false;
+  if (editor && editor.parentNode) editor.parentNode.removeChild(editor);
+  editor = null;
+}
+function beginEdit(seed) {
+  if (editing) return;
+  var td = cellsByRef[selRef];
+  editing = true;
+  editor = document.createElement("input");
+  editor.className = "cell-ed";
+  editor.type = "text";
+  editor.value = seed !== undefined && seed !== null ? seed : (doc.cells[selRef] || "");
+  td.textContent = "";
+  td.appendChild(editor);
+  editor.focus();
+  var len = editor.value.length;
+  try { editor.setSelectionRange(len, len); } catch (e) {}
+  editor.addEventListener("keydown", function (ev) {
+    ev.stopPropagation();
+    if (ev.key === "Enter") { ev.preventDefault(); commitEdit(0, 1); }
+    else if (ev.key === "Tab") { ev.preventDefault(); commitEdit(ev.shiftKey ? -1 : 1, 0); }
+    else if (ev.key === "Escape") { ev.preventDefault(); cancelEdit(); }
+  });
+  editor.addEventListener("blur", function () { if (editing) commitEdit(0, 0); });
+}
+function commitEdit(dc, dr) {
+  if (!editing) return;
+  var val = editor ? editor.value : "";
+  var ref = selRef;
+  endEdit();
+  if (val === "") delete doc.cells[ref];
+  else doc.cells[ref] = val;
+  refresh();
+  moveSel(dc, dr);
+}
+function cancelEdit() {
+  endEdit();
+  render();
+  select(selRef);
+}
+function csvField(s) {
+  return /[",\r\n]/.test(s) || s !== s.trim() ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function parseCSV(text) {
+  var rows = [[]], field = "", q = false, i = 0;
+  while (i < text.length) {
+    var ch = text[i];
+    if (q) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+        q = false;
+        i++;
+        continue;
+      }
+      field += ch;
+      i++;
+      continue;
+    }
+    if (ch === '"') { q = true; i++; continue; }
+    if (ch === ",") { rows[rows.length - 1].push(field); field = ""; i++; continue; }
+    if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && text[i + 1] === "\n") i++;
+      i++;
+      rows[rows.length - 1].push(field);
+      field = "";
+      rows.push([]);
+      continue;
+    }
+    field += ch;
+    i++;
+  }
+  rows[rows.length - 1].push(field);
+  while (rows.length && rows[rows.length - 1].every(function (x) { return x === ""; })) rows.pop();
+  return rows;
+}
+function loadCSVText(text) {
+  var rows = parseCSV(text);
+  var cells = {};
+  for (var r = 0; r < rows.length && r < ROWS; r++) {
+    for (var c = 0; c < rows[r].length && c < COLS.length; c++) {
+      if (rows[r][c] !== "") cells[COLS[c] + (r + 1)] = rows[r][c];
+    }
+  }
+  doc.cells = cells;
+  refresh();
+}
+function storageNote(msg) {
+  var el = document.getElementById("storage-note");
+  el.hidden = false;
+  el.textContent = msg;
+}
+var storeOK = true;
+try {
+  localStorage.setItem(STORE_KEY + ".probe", "1");
+  localStorage.removeItem(STORE_KEY + ".probe");
+} catch (e) { storeOK = false; }
+function persistNow() {
+  if (!storeOK) { storageNote("Autosave unavailable — browser storage is blocked"); return; }
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ cells: doc.cells })); }
+  catch (e) { storeOK = false; storageNote("Autosave unavailable — browser storage is blocked"); }
+}
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(persistNow, 300);
+}
+function restoreDoc() {
+  if (!storeOK) { storageNote("Autosave unavailable — browser storage is blocked"); return; }
+  try {
+    var s = localStorage.getItem(STORE_KEY);
+    if (!s) return;
+    var d = JSON.parse(s);
+    if (d && d.cells && typeof d.cells === "object") doc.cells = d.cells;
+  } catch (e) {}
+}
+buildGrid();
+restoreDoc();
+computed = engine.recalc(doc.cells);
+render();
+select("A1", false);
+document.querySelector(".sheet-grid").addEventListener("click", function (ev) {
+  if (editing) return;
+  var td = ev.target.closest("td[data-ref]");
+  if (!td) return;
+  var ref = td.getAttribute("data-ref");
+  if (ref === selRef) beginEdit();
+  else select(ref);
+});
+document.querySelector(".sheet-grid").addEventListener("dblclick", function (ev) {
+  var td = ev.target.closest("td[data-ref]");
+  if (!td || editing) return;
+  select(td.getAttribute("data-ref"));
+  beginEdit();
+});
+document.addEventListener("keydown", function (ev) {
+  if (editing) return;
+  var tg = ev.target;
+  if (tg && (tg.tagName === "INPUT" || tg.tagName === "SELECT" || tg.tagName === "TEXTAREA" || tg.tagName === "BUTTON")) return;
+  var k = ev.key;
+  if (k === "ArrowUp") { ev.preventDefault(); moveSel(0, -1); }
+  else if (k === "ArrowDown") { ev.preventDefault(); moveSel(0, 1); }
+  else if (k === "ArrowLeft") { ev.preventDefault(); moveSel(-1, 0); }
+  else if (k === "ArrowRight") { ev.preventDefault(); moveSel(1, 0); }
+  else if (k === "Enter" || k === "F2") { ev.preventDefault(); beginEdit(); }
+  else if (k === "Delete" || k === "Backspace") {
+    ev.preventDefault();
+    if (doc.cells[selRef] !== undefined) {
+      delete doc.cells[selRef];
+      refresh();
+    }
+  } else if (k.length === 1 && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
+    ev.preventDefault();
+    beginEdit(k);
+  }
+});
+document.getElementById("btn-new").addEventListener("click", function () {
+  if (confirm("Clear the whole sheet?")) {
+    doc.cells = {};
+    refresh();
+  }
+});
+document.getElementById("btn-save").addEventListener("click", function () {
+  var lastRow = 0;
+  Object.keys(doc.cells).forEach(function (ref) {
+    var r = parseInt(ref.slice(1), 10);
+    if (r > lastRow) lastRow = r;
+  });
+  var lines = [];
+  for (var r = 1; r <= lastRow; r++) {
+    var row = [];
+    for (var c = 0; c < COLS.length; c++) row.push(csvField(doc.cells[COLS[c] + r] || ""));
+    while (row.length > 1 && row[row.length - 1] === "") row.pop();
+    lines.push(row.join(","));
+  }
+  var blob = new Blob([lines.join("\r\n")], { type: "text/csv" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "breakglass-sheet.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 500);
+});
+document.getElementById("file-open").addEventListener("change", function () {
+  var f = this.files && this.files[0];
+  if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function () { loadCSVText(String(rd.result)); };
+  rd.onerror = function () { alert("Could not read that file."); };
+  rd.readAsText(f);
+  this.value = "";
+});
+})();
+</script>
+</body>
+</html>

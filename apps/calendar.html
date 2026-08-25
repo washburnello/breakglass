@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="everyday">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Calendar — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<style>
+.page-head{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap}
+.page-head i{color:var(--accent);font-size:var(--fs-xl)}
+.lede{color:var(--text-muted);margin-top:var(--space-1)}
+.storage-note{margin-top:var(--space-4)}
+.cal-toolbar{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-5)}
+.cal-title{font-size:var(--fs-lg);min-width:11ch;text-align:center;flex:1 1 auto}
+.cal-week,.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--space-1)}
+.cal-week{margin-top:var(--space-4);color:var(--text-muted);font-weight:600;font-size:var(--fs-sm);text-align:center}
+.cal-grid{margin-top:var(--space-1)}
+.day{display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-1);min-height:var(--space-8);padding:var(--space-1) var(--space-2);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font:inherit;color:inherit;text-align:left;overflow:hidden}
+.day:hover{border-color:var(--accent)}
+.day.selected{background:var(--accent-soft);border-color:var(--accent)}
+.day.today{box-shadow:inset 0 0 0 2px var(--accent)}
+.day-num{font-weight:600;font-size:var(--fs-sm)}
+.ev{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-xs);color:var(--text-muted)}
+.ev::before{content:"";display:inline-block;width:.5em;height:.5em;border-radius:var(--radius-pill);background:var(--accent);margin-right:var(--space-1);vertical-align:baseline}
+.more{font-size:var(--fs-xs);color:var(--text-muted)}
+.day-blank{min-height:var(--space-8);border:1px solid transparent}
+.day-panel{margin-top:var(--space-4)}
+.day-panel h2{font-size:var(--fs-lg);margin-bottom:var(--space-2)}
+.event-list{list-style:none;padding:0;margin:0}
+.event-list li{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;border-top:1px solid var(--border)}
+.event-list li:first-child{border-top:none}
+.event-text{flex:1 1 auto}
+.event-add{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-3)}
+.event-add input{flex:1 1 200px;padding:var(--space-2) var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.event-add input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.file-row{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-5)}
+.hint{color:var(--text-muted);font-size:var(--fs-sm);margin-top:var(--space-2)}
+.print-only{display:none}
+@media print{
+.print-only{display:block}
+.no-print{display:none!important}
+main{max-width:none}
+body{font-size:var(--fs-sm)}
+h1 i{display:none}
+.cal-toolbar{margin-top:0}
+.cal-title{text-align:left}
+.day{break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.day-panel,.file-row{display:none}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<div class="page-head">
+<h1><i class="fa-solid fa-calendar-days"></i> Calendar</h1>
+<span class="badge">offline</span>
+</div>
+<p class="lede">A simple month calendar for dates worth remembering. Entries stay on this computer.</p>
+<div class="storage-note no-print" id="storage-note" hidden><span class="badge badge-warn"><i class="fa-solid fa-triangle-exclamation"></i> Autosave is blocked in this browser. Use Save file / Open file to keep your entries.</span></div>
+<div class="cal-toolbar no-print">
+<button type="button" class="btn btn-ghost" id="prev-month" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i> Prev</button>
+<button type="button" class="btn btn-ghost" id="today-btn">Today</button>
+<button type="button" class="btn btn-ghost" id="next-month" aria-label="Next month">Next <i class="fa-solid fa-chevron-right"></i></button>
+<h2 class="cal-title" id="cal-title" aria-live="polite"></h2>
+</div>
+<h2 class="cal-title print-only" id="print-title"></h2>
+<div class="cal-week" aria-hidden="true">
+<span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+</div>
+<div class="cal-grid" id="cal-grid"></div>
+<section class="day-panel card" id="day-panel" aria-live="polite"></section>
+<div class="file-row no-print">
+<button type="button" class="btn btn-primary" id="save-file"><i class="fa-solid fa-floppy-disk"></i> Save file</button>
+<button type="button" class="btn btn-ghost" id="open-file-btn"><i class="fa-solid fa-folder-open"></i> Open file</button>
+<input type="file" id="open-file" accept=".json,application/json" hidden>
+<button type="button" class="btn btn-ghost" id="print-btn"><i class="fa-solid fa-print"></i> Print</button>
+</div>
+<p class="hint no-print">Click a day to add or remove events. Left and right arrow keys also change months.</p>
+</main>
+<footer class="status-line"><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function(){
+"use strict";
+var KEY="bg.apps.cal.events";
+var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+var DOW=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var events={};
+var view=new Date();
+var selectedISO=null;
+var saveTimer=null;
+
+function el(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+
+function pad(n){return n<10?"0"+n:String(n);}
+function isoOf(y,m,d){return y+"-"+pad(m+1)+"-"+pad(d);}
+function isoOfDate(dt){return dt.getFullYear()+"-"+pad(dt.getMonth()+1)+"-"+pad(dt.getDate());}
+function todayISO(){return isoOfDate(new Date());}
+
+function storeWrite(val){
+try{localStorage.setItem(KEY,val);return true;}
+catch(e){showStorageNote();return false;}
+}
+function storeRead(){
+try{return localStorage.getItem(KEY);}
+catch(e){showStorageNote();return null;}
+}
+function showStorageNote(){
+el("storage-note").hidden=false;
+}
+function scheduleSave(){
+if(saveTimer)clearTimeout(saveTimer);
+saveTimer=setTimeout(function(){
+saveTimer=null;
+storeWrite(JSON.stringify(events));
+},400);
+}
+
+function normalizeEvents(raw){
+var out={};
+if(!raw||typeof raw!=="object")return null;
+Object.keys(raw).forEach(function(k){
+if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;
+if(!Array.isArray(raw[k]))return;
+var list=[];
+raw[k].forEach(function(v){
+if(typeof v==="string"){
+var t=v.trim();
+if(t)list.push(t.slice(0,200));
+}
+});
+if(list.length)out[k]=list;
+});
+return out;
+}
+
+function renderGrid(){
+var y=view.getFullYear(),m=view.getMonth();
+el("cal-title").textContent=MONTHS[m]+" "+y;
+el("print-title").textContent="Calendar — "+MONTHS[m]+" "+y;
+var grid=el("cal-grid");
+grid.innerHTML="";
+var firstDow=new Date(y,m,1).getDay();
+var daysInMonth=new Date(y,m+1,0).getDate();
+var tISO=todayISO();
+for(var b=0;b<firstDow;b++){
+var blank=document.createElement("span");
+blank.className="day-blank";
+grid.appendChild(blank);
+}
+for(var d=1;d<=daysInMonth;d++){
+var key=isoOf(y,m,d);
+var btn=document.createElement("button");
+btn.type="button";
+btn.className="day";
+btn.setAttribute("data-date",key);
+btn.setAttribute("aria-label",MONTHS[m]+" "+d+", "+y+". "+(events[key]?events[key].length+" event(s).":"No events."));
+if(key===tISO)btn.classList.add("today");
+if(key===selectedISO)btn.classList.add("selected");
+var num=document.createElement("span");
+num.className="day-num";
+num.textContent=d;
+btn.appendChild(num);
+var list=events[key]||[];
+for(var i=0;i<Math.min(2,list.length);i++){
+var ev=document.createElement("span");
+ev.className="ev";
+ev.textContent=list[i];
+btn.appendChild(ev);
+}
+if(list.length>2){
+var more=document.createElement("span");
+more.className="more";
+more.textContent="+"+(list.length-2)+" more";
+btn.appendChild(more);
+}
+btn.addEventListener("click",function(key){
+return function(){selectDay(key);};
+}(key));
+grid.appendChild(btn);
+}
+renderPanel();
+}
+
+function renderPanel(){
+var panel=el("day-panel");
+panel.innerHTML="";
+if(!selectedISO){
+panel.innerHTML="<p>Select a day on the grid to see or add its events.</p>";
+return;
+}
+var parts=selectedISO.split("-");
+var dt=new Date(Number(parts[0]),Number(parts[1])-1,Number(parts[2]));
+var heading=document.createElement("h2");
+heading.textContent=DOW[dt.getDay()]+", "+MONTHS[dt.getMonth()]+" "+Number(parts[2])+", "+parts[0];
+panel.appendChild(heading);
+var list=events[selectedISO]||[];
+var ul=document.createElement("ul");
+ul.className="event-list";
+list.forEach(function(text,i){
+var li=document.createElement("li");
+var span=document.createElement("span");
+span.className="event-text";
+span.textContent=text;
+var del=document.createElement("button");
+del.type="button";
+del.className="btn btn-ghost no-print";
+del.setAttribute("aria-label","Delete event: "+text);
+del.innerHTML='<i class="fa-solid fa-trash-can"></i>';
+del.addEventListener("click",function(){
+list.splice(i,1);
+if(list.length===0)delete events[selectedISO];
+scheduleSave();
+renderGrid();
+});
+li.appendChild(span);
+li.appendChild(del);
+ul.appendChild(li);
+});
+if(list.length===0){
+var empty=document.createElement("p");
+empty.textContent="No events for this day yet.";
+panel.appendChild(empty);
+}
+panel.appendChild(ul);
+var formWrap=document.createElement("div");
+formWrap.className="event-add no-print";
+var input=document.createElement("input");
+input.type="text";
+input.maxLength=200;
+input.placeholder="Add an event…";
+input.setAttribute("aria-label","New event for this day");
+var add=document.createElement("button");
+add.type="button";
+add.className="btn btn-primary";
+add.innerHTML='<i class="fa-solid fa-plus"></i> Add';
+function commit(){
+var v=input.value.trim();
+if(!v)return;
+if(!events[selectedISO])events[selectedISO]=[];
+events[selectedISO].push(v.slice(0,200));
+scheduleSave();
+renderGrid();
+var focusInput=el("event-input");
+if(focusInput)focusInput.focus();
+}
+add.addEventListener("click",commit);
+input.addEventListener("keydown",function(ev){
+if(ev.key==="Enter"){ev.preventDefault();commit();}
+});
+formWrap.appendChild(input);
+formWrap.appendChild(add);
+panel.appendChild(formWrap);
+input.id="event-input";
+}
+
+function selectDay(iso){
+selectedISO=iso;
+renderGrid();
+}
+
+function shiftMonth(delta){
+view=new Date(view.getFullYear(),view.getMonth()+delta,1);
+renderGrid();
+}
+
+function goToday(){
+view=new Date();
+selectDay(todayISO());
+}
+
+el("prev-month").addEventListener("click",function(){shiftMonth(-1);});
+el("next-month").addEventListener("click",function(){shiftMonth(1);});
+el("today-btn").addEventListener("click",goToday);
+
+document.addEventListener("keydown",function(ev){
+if(ev.altKey||ev.ctrlKey||ev.metaKey)return;
+var t=ev.target;
+if(t&&(t.tagName==="INPUT"||t.tagName==="SELECT"||t.tagName==="TEXTAREA"||t.isContentEditable))return;
+if(ev.key==="ArrowLeft"){shiftMonth(-1);}
+else if(ev.key==="ArrowRight"){shiftMonth(1);}
+});
+
+el("save-file").addEventListener("click",function(){
+var payload={app:"breakglass-calendar",version:1,saved:new Date().toISOString(),events:events};
+var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+var url=URL.createObjectURL(blob);
+var a=document.createElement("a");
+a.href=url;
+a.download="calendar.json";
+document.body.appendChild(a);
+a.click();
+a.remove();
+setTimeout(function(){URL.revokeObjectURL(url);},1000);
+});
+
+el("open-file-btn").addEventListener("click",function(){el("open-file").click();});
+
+el("open-file").addEventListener("change",function(){
+var file=this.files[0];
+this.value="";
+if(!file)return;
+var reader=new FileReader();
+reader.onload=function(){
+var parsed=null;
+try{parsed=normalizeEvents(JSON.parse(reader.result).events);}
+catch(e){parsed=null;}
+if(parsed===null){
+window.alert("That file does not look like a BreakGlass calendar export. Nothing was changed.");
+return;
+}
+var count=Object.keys(parsed).length;
+if(count===0){
+window.alert("The file contains no usable events. Nothing was changed.");
+return;
+}
+var merge=window.confirm('Found '+count+' day(s) with events.\n\nOK = add them to the current entries\nCancel = replace the current entries');
+if(merge){
+Object.keys(parsed).forEach(function(k){
+events[k]=(events[k]||[]).concat(parsed[k]);
+});
+}else{
+events=parsed;
+}
+scheduleSave();
+renderGrid();
+};
+reader.readAsText(file);
+});
+
+el("print-btn").addEventListener("click",function(){window.print();});
+
+var savedRaw=storeRead();
+if(savedRaw){
+try{
+var parsedSaved=normalizeEvents(JSON.parse(savedRaw).events);
+if(parsedSaved)events=parsedSaved;
+}catch(e){}
+}
+goToday();
+})();
+</script>
+</body>
+</html>

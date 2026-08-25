@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="everyday">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Notepad — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<style>
+html,body{height:100%;}
+body{display:flex;flex-direction:column;}
+main{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;padding-bottom:var(--space-4);}
+.np-title{display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-4);margin-bottom:var(--space-3);font-size:var(--fs-2xl);}
+.np-title-icon{color:var(--accent);}
+.np-shell{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-1);transition:border-color var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out);}
+.np-shell:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.np-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--border);}
+.np-spacer{flex:1 1 auto;}
+textarea.np-pad{flex:1 1 auto;width:100%;min-height:30vh;padding:var(--space-4);background:transparent;border:none;border-radius:0 0 var(--radius-md) var(--radius-md);color:var(--text);line-height:1.6;resize:none;}
+textarea.np-pad:focus{outline:none;}
+.np-size-md{font-size:var(--fs-md);}
+.np-size-lg{font-size:var(--fs-lg);}
+.np-status{color:var(--text-muted);font-size:var(--fs-sm);}
+.np-print{display:none;padding:var(--space-4);white-space:pre-wrap;overflow-wrap:anywhere;}
+@media print{
+body,main{display:block;}
+main{padding-bottom:0;}
+.np-title,.np-toolbar,textarea.np-pad{display:none;}
+.np-print{display:block;}
+.np-shell{border:none;border-radius:0;box-shadow:none;background:transparent;}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<h1 class="np-title"><i class="fa-solid fa-pen-to-square np-title-icon" aria-hidden="true"></i> Notepad</h1>
+<div class="np-shell">
+<div class="np-toolbar">
+<button id="np-new" class="btn btn-ghost" type="button" title="Start a new note"><i class="fa-solid fa-file" aria-hidden="true"></i> New</button>
+<button id="np-open" class="btn btn-ghost" type="button" title="Open a .txt or .md file"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Open</button>
+<button id="np-save" class="btn btn-primary" type="button" title="Save as notepad.txt"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save</button>
+<button id="np-font" class="btn btn-ghost" type="button" title="Change text size"><i class="fa-solid fa-font" aria-hidden="true"></i> Text size</button>
+<input id="np-file" type="file" accept=".txt,.md,text/plain,text/markdown" hidden>
+<span class="np-spacer"></span>
+<span id="np-warn" class="badge badge-warn" hidden><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Autosave unavailable — use Save/Open</span>
+<span id="np-count" class="badge">0 words · 0 chars</span>
+<span id="np-status" class="np-status" role="status" aria-live="polite">New note</span>
+</div>
+<textarea id="np-text" class="np-pad np-size-md" spellcheck="false" aria-label="Note text"></textarea>
+<div id="np-printout" class="np-print" aria-hidden="true"></div>
+</div>
+</main>
+<footer class="status-line"><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function(){
+"use strict";
+var KEY_DOC="bg.apps.notepad.doc";
+var KEY_FONT="bg.apps.notepad.font";
+var ta=document.getElementById("np-text");
+var countEl=document.getElementById("np-count");
+var statusEl=document.getElementById("np-status");
+var warnEl=document.getElementById("np-warn");
+var printEl=document.getElementById("np-printout");
+var newBtn=document.getElementById("np-new");
+var openBtn=document.getElementById("np-open");
+var saveBtn=document.getElementById("np-save");
+var fontBtn=document.getElementById("np-font");
+var fileInput=document.getElementById("np-file");
+var lastStored="";
+var timer=0;
+var storageOk=true;
+
+function lsGet(k){
+try{return window.localStorage.getItem(k);}catch(e){return null;}
+}
+function lsSet(k,v){
+try{window.localStorage.setItem(k,v);return true;}catch(e){return false;}
+}
+function updateCount(){
+var v=ta.value;
+var trimmed=v.trim();
+var words=trimmed?trimmed.split(/\s+/).length:0;
+countEl.textContent=words+(words===1?" word · ":" words · ")+v.length+(v.length===1?" char":" chars");
+}
+function setStatus(s){
+statusEl.textContent=s;
+}
+function markStorageBroken(){
+if(storageOk){
+storageOk=false;
+warnEl.hidden=false;
+}
+}
+function persistNow(){
+if(lsSet(KEY_DOC,ta.value)){
+lastStored=ta.value;
+setStatus("Saved to browser just now");
+}else{
+markStorageBroken();
+setStatus("Unsaved changes");
+}
+}
+function scheduleAutosave(){
+if(timer)window.clearTimeout(timer);
+timer=window.setTimeout(function(){
+timer=0;
+persistNow();
+},800);
+}
+function isDirty(){
+return ta.value!==lastStored;
+}
+function refresh(){
+updateCount();
+if(isDirty()){
+setStatus("Unsaved changes");
+scheduleAutosave();
+}
+}
+newBtn.addEventListener("click",function(){
+if(isDirty()&&!window.confirm("Discard unsaved changes?"))return;
+ta.value="";
+refresh();
+persistNow();
+ta.focus();
+});
+openBtn.addEventListener("click",function(){
+fileInput.click();
+});
+fileInput.addEventListener("change",function(){
+var f=fileInput.files&&fileInput.files[0];
+fileInput.value="";
+if(!f)return;
+if(isDirty()&&!window.confirm("Opening a file replaces the current note. Discard unsaved changes?"))return;
+var reader=new FileReader();
+reader.onload=function(){
+ta.value=String(reader.result||"");
+refresh();
+};
+reader.onerror=function(){
+setStatus("Could not read that file");
+};
+reader.readAsText(f);
+});
+saveBtn.addEventListener("click",function(){
+try{
+var blob=new Blob([ta.value],{type:"text/plain"});
+var url=URL.createObjectURL(blob);
+var a=document.createElement("a");
+a.href=url;
+a.download="notepad.txt";
+document.body.appendChild(a);
+a.click();
+a.remove();
+window.setTimeout(function(){URL.revokeObjectURL(url);},1000);
+setStatus("Saved to file just now");
+}catch(e){
+setStatus("Save failed — copy the text out by hand");
+}
+});
+fontBtn.addEventListener("click",function(){
+var next=ta.classList.contains("np-size-lg")?"md":"lg";
+ta.classList.toggle("np-size-lg",next==="lg");
+ta.classList.toggle("np-size-md",next!=="lg");
+lsSet(KEY_FONT,next);
+ta.focus();
+});
+ta.addEventListener("input",refresh);
+ta.addEventListener("keydown",function(ev){
+if((ev.ctrlKey||ev.metaKey)&&ev.key==="s"){
+ev.preventDefault();
+saveBtn.click();
+}
+});
+function renderPrint(){
+printEl.textContent=ta.value;
+}
+window.addEventListener("beforeprint",renderPrint);
+if(window.matchMedia){
+var mq=window.matchMedia("print");
+if(mq&&mq.addEventListener)mq.addEventListener("change",renderPrint);
+}
+renderPrint();
+var savedDoc=lsGet(KEY_DOC);
+if(savedDoc!==null&&savedDoc!==""){
+ta.value=savedDoc;
+lastStored=savedDoc;
+setStatus("Draft restored from last visit");
+}else{
+lastStored="";
+setStatus("New note");
+}
+if(lsGet(KEY_FONT)==="lg"){
+ta.classList.add("np-size-lg");
+ta.classList.remove("np-size-md");
+}
+updateCount();
+})();
+</script>
+</body>
+</html>

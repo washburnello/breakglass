@@ -298,7 +298,7 @@ attribution block.
 | 3 | Search engine | shard builder + search.html + A-Z index ✅ |
 | 4 | Deploy early | nginx/cloudflared/SELinux → live before heavy content ✅ |
 | 5 | Content core | medical, howto, food, pets, town, faith+Bible, books ← **in progress** (medical+howto+food done; next: pets, town, then faith/books data pipelines) |
-| 6 | Apps suite | five single-file apps |
+| 6 | Apps suite | five single-file apps ✅ (notepad/paint/spreadsheet/todo/calendar) |
 | 7 | Arcade | console emus + wrappers; PICO-8 export pipeline (spike first) |
 | 8 | ZIM vault (tb01) | ZIM downloads into tb01 vault/, kiwix-serve, embedded-reader spike |
 | 9 | Schoolhouse | curriculum skeleton, tracker, Kolibri container |
