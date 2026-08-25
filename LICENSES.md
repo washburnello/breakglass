@@ -6,10 +6,13 @@ Every bundled asset's license is recorded here before shipping; attribution is a
 |---|---|---|---|
 | Font Awesome Free 6.7.2 | Icons CC BY 4.0; code MIT; fonts SIL OFL 1.1 | https://fontawesome.com | Bundled (`assets/vendor/fontawesome`) |
 | Inter | SIL OFL 1.1 | https://rsms.me/inter/ (via Fontsource) | Bundled (`assets/vendor/inter`) |
-| kiwix-js | GPL-3.0 | https://github.com/kiwix/kiwix-js | Pending vendoring |
+| kiwix-js 4.4.0 | GPL-3.0 (full text vendored at `assets/vendor/kiwix-js/LICENSE-GPLv3.txt`) | https://github.com/kiwix/kiwix-js/releases/tag/4.4.0 | **Bundled** (`assets/vendor/kiwix-js`, engine.bundle.js provenance in VENDOR-NOTES.md) |
 | EmulatorJS + cores | GPLv3 / GPL-2.0+ cores | https://emulatorjs.org | Pending |
 | PICO-8 / Picotron cart HTML exports | Personal use; carts © their authors; player © Lexaloffle | https://lexaloffle.com | Pending (owner owns licenses) |
-| Wikipedia/WikiHow/WikiMed/iFixit ZIMs | CC BY-SA respective | https://library.kiwix.org | Pending (sd256 vault) |
+| WikiMed ZIM (Wikipedia medical, en maxi 2026-04) | CC BY-SA 4.0 (Wikimedia contributors; packaged by Kiwix) | https://download.kiwix.org/zim/wikipedia/ | **Staged pack** (`media/zims/` symlink → tb01 `vault/`) |
+| iFixit ZIM (en all 2025-12) | CC BY-SA per iFixit terms (packaged by Kiwix/Zimit) | https://download.kiwix.org/zim/ifixit/ | **Staged pack** (`media/zims/` symlink → tb01 `vault/`) |
+| Wikipedia English maxi ZIM | CC BY-SA 4.0 / GFDL | https://download.kiwix.org/zim/wikipedia/ | Downloading into tb01 `vault/` |
+| WikiHow ZIM | CC BY-NC-SA — non-commercial caveat | delisted from Kiwix catalog 2026-08 | Excluded upstream |
 | OpenStreetMap raster/vector tiles | ODbL 1.0 attribution required | https://openstreetmap.org | Pending |
 | Natural Earth | Public Domain | https://naturalearthdata.com | Pending |
 | USGS topo quads | Public Domain | https://usgs.gov | Pending |
