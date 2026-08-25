@@ -13,17 +13,472 @@
 <script src="../assets/shell.js?v=2" defer></script>
 </head>
 <body>
+<style>
+.crumbline{margin-bottom:var(--space-4)}
+.shelf-intro{margin-bottom:var(--space-5)}
+.loading-card{display:flex;align-items:center;justify-content:center;gap:var(--space-3);padding:var(--space-6);color:var(--text-muted)}
+.empty-state{text-align:center;padding:var(--space-7) var(--space-5)}
+.empty-state .glyph{font-size:var(--fs-3xl);color:var(--text-muted);margin-bottom:var(--space-3)}
+.empty-state h2{margin-bottom:var(--space-2)}
+.empty-state p{margin-inline:auto}
+.reader-shell{--measure:70ch;max-width:var(--measure);margin-inline:auto}
+.reader-head{margin-bottom:var(--space-4)}
+.reader-meta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin-top:var(--space-1);font-size:var(--fs-sm);color:var(--text-muted)}
+.reader-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)}
+.jump-select,.search-input{padding:var(--space-2) var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text)}
+.jump-select:hover,.search-input:focus{border-color:var(--accent)}
+.searchbox{display:flex;flex:1 1 var(--space-8);min-width:var(--space-7);gap:var(--space-2)}
+.searchbox .search-input{flex:1 1 auto;min-width:0}
+.searchbox .btn{flex:none}
+.search-out{max-width:100%}
+.indicator{white-space:nowrap;font-size:var(--fs-sm);font-weight:600;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.reader-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:var(--fs-md);transition:font-size var(--dur-fast) var(--ease-out)}
+.reader-body[data-size="lg"]{font-size:var(--fs-lg)}
+.reader-body mark{background:var(--accent-soft);color:inherit;padding:0 var(--space-1);border-radius:var(--radius-sm)}
+.reader-pager{display:flex;align-items:center;justify-content:center;gap:var(--space-3);margin-top:var(--space-4)}
+.reader-pager .btn{min-width:var(--space-8)}
+.btn[disabled]{background:transparent;border-color:var(--border);color:var(--text-muted);cursor:default}
+.btn[disabled]:active{transform:none}
+.reader-note{margin-top:var(--space-5);text-align:center;font-size:var(--fs-xs);color:var(--text-muted)}
+@media print{.crumbline,.reader-toolbar,.reader-pager,.btn{display:none}.reader-shell{max-width:none}}
+</style>
 <header class="topbar">
 <a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
 <form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
 <select class="phase-select" aria-label="Situation phase"></select>
 <button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
 </header>
-<main>
-<h1>Book Library</h1>
-<div class="callout callout-info"><p>This section is under construction. Content ships in phases — see plan.md.</p></div>
-<div class="card"><p>The Book Library stores classic and practical texts, each one fully readable straight from the page.</p></div>
+<main data-view>
+<noscript><div class="callout callout-warning"><h4>JavaScript needed</h4><p>The Book Library opens its shelf and reader with JavaScript. Enable it to browse the books.</p></div></noscript>
 </main>
 <footer class="status-line"><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function () {
+  "use strict";
+
+  var MANIFEST_SRC = "../assets/books/manifest.js";
+  var BOOK_DIR = "../assets/books/";
+  var FONT_KEY = "bg.books.fontsize";
+  var POS_KEY = "bg.books.pos";
+
+  var view = null;
+  var current = null;
+  var manifestPromise = null;
+  var shardPromises = {};
+
+  function store(key, val) {
+    try {
+      if (val === undefined) return localStorage.getItem(key);
+      if (val === null) { localStorage.removeItem(key); return null; }
+      localStorage.setItem(key, val);
+    } catch (e) { return null; }
+    return null;
+  }
+
+  function readJSON(key, fallback) {
+    var raw = store(key);
+    if (!raw) return fallback;
+    try { return JSON.parse(raw); } catch (e) { return fallback; }
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function el(html) {
+    var t = document.createElement("template");
+    t.innerHTML = html;
+    return t.content.firstElementChild;
+  }
+
+  function inject(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = src;
+      s.async = true;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { s.remove(); reject(new Error("load failed: " + src)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function getManifest() {
+    if (Array.isArray(window.BG_BOOKS_MANIFEST) && window.BG_BOOKS_MANIFEST.length > 0) {
+      return Promise.resolve(window.BG_BOOKS_MANIFEST);
+    }
+    if (!manifestPromise) {
+      manifestPromise = inject(MANIFEST_SRC).then(function () {
+        if (Array.isArray(window.BG_BOOKS_MANIFEST) && window.BG_BOOKS_MANIFEST.length > 0) {
+          return window.BG_BOOKS_MANIFEST;
+        }
+        manifestPromise = null;
+        throw new Error("book pack not installed");
+      }, function (err) {
+        manifestPromise = null;
+        throw err;
+      });
+    }
+    return manifestPromise;
+  }
+
+  function getShard(meta) {
+    if (window.BG_BOOKS && window.BG_BOOKS[meta.slug]) {
+      return Promise.resolve(window.BG_BOOKS[meta.slug]);
+    }
+    if (!shardPromises[meta.slug]) {
+      shardPromises[meta.slug] = inject(BOOK_DIR + meta.file).then(function () {
+        var b = window.BG_BOOKS && window.BG_BOOKS[meta.slug];
+        if (!b || typeof b.body !== "string") {
+          delete shardPromises[meta.slug];
+          throw new Error("shard incomplete");
+        }
+        return b;
+      }, function (err) {
+        delete shardPromises[meta.slug];
+        throw err;
+      });
+    }
+    return shardPromises[meta.slug];
+  }
+
+  function parseRoute() {
+    var m = location.hash.match(/^#\/read\/([A-Za-z0-9_-]+)\/?$/);
+    if (m) return { name: "read", slug: m[1] };
+    return { name: "shelf" };
+  }
+
+  function routeIsRead(slug) {
+    var r = parseRoute();
+    return r.name === "read" && r.slug === slug;
+  }
+
+  function getSize() {
+    return store(FONT_KEY) === "lg" ? "lg" : "md";
+  }
+
+  function pageHas(text, term) {
+    return text.toLowerCase().indexOf(term.toLowerCase()) !== -1;
+  }
+
+  function countIn(text, term) {
+    var l = text.toLowerCase();
+    var t = term.toLowerCase();
+    var n = 0;
+    var i = 0;
+    if (!t) return 0;
+    while ((i = l.indexOf(t, i)) !== -1) { n++; i += t.length; }
+    return n;
+  }
+
+  function hl(text, term) {
+    var l = text.toLowerCase();
+    var t = term.toLowerCase();
+    var out = [];
+    var i = 0;
+    var idx;
+    if (!t) return { html: esc(text), count: 0 };
+    while ((idx = l.indexOf(t, i)) !== -1) {
+      out.push(esc(text.slice(i, idx)), "<mark>", esc(text.slice(idx, idx + t.length)), "</mark>");
+      i = idx + t.length;
+    }
+    out.push(esc(text.slice(i)));
+    return { html: out.join(""), count: countIn(text, term) };
+  }
+
+  function findPage(pages, term, from) {
+    for (var k = 0; k < pages.length; k++) {
+      var i = (from + k) % pages.length;
+      if (pageHas(pages[i], term)) return i;
+    }
+    return -1;
+  }
+
+  function savePos() {
+    if (!current) return;
+    var map = readJSON(POS_KEY, {});
+    if (!map || typeof map !== "object") map = {};
+    map[current.meta.slug] = current.page + 1;
+    try { localStorage.setItem(POS_KEY, JSON.stringify(map)); } catch (e) {}
+  }
+
+  function paint(scrollTop) {
+    var c = current;
+    if (!c) return;
+    var res = c.term ? hl(c.pages[c.page], c.term) : { html: esc(c.pages[c.page]), count: 0 };
+    c.body.innerHTML = res.html;
+    c.body.setAttribute("data-size", getSize());
+    var label = "Page " + (c.page + 1) + " / " + c.pages.length;
+    c.indicators.forEach(function (s) { s.textContent = label; });
+    c.jump.value = String(c.page + 1);
+    c.prevs.forEach(function (b) { b.disabled = c.page === 0; });
+    c.nexts.forEach(function (b) { b.disabled = c.page === c.pages.length - 1; });
+    if (scrollTop) window.scrollTo(0, 0);
+  }
+
+  function goto(n, opts) {
+    var c = current;
+    if (!c) return;
+    var p = Math.max(0, Math.min(c.pages.length - 1, n));
+    if (p === c.page && !(opts && opts.force)) return;
+    c.page = p;
+    savePos();
+    paint(!(opts && opts.keepScroll));
+  }
+
+  function emptyState(icon, heading, bodyHTML, retryAttr, retryLabel) {
+    return el(
+      '<div class="card empty-state">' +
+      '<div class="glyph"><i class="fa-solid ' + icon + '" aria-hidden="true"></i></div>' +
+      '<h2>' + esc(heading) + '</h2>' +
+      bodyHTML +
+      (retryAttr ? '<p><button class="btn btn-primary" type="button" ' + retryAttr + '>' + esc(retryLabel) + '</button></p>' : '') +
+      '</div>'
+    );
+  }
+
+  function renderShelf() {
+    current = null;
+    view.innerHTML = "";
+    view.appendChild(el('<h1>Book Library</h1>'));
+    view.appendChild(el(
+      '<div class="callout callout-info shelf-intro"><p>The books below ship inside the kit and read straight from the page — no connection needed. Larger libraries come as optional add-on packs.</p></div>'
+    ));
+    var stage = el('<div aria-live="polite"></div>');
+    view.appendChild(stage);
+    var grid = el('<div class="tile-grid"></div>');
+    grid.hidden = true;
+    var loading = el('<div class="card loading-card"><i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i><span>Checking for the book pack…</span></div>');
+    stage.appendChild(loading);
+    getManifest().then(function (list) {
+      if (parseRoute().name !== "shelf") return;
+      loading.hidden = true;
+      grid.hidden = false;
+      list.slice().sort(function (a, b) {
+        return String(a && a.title).localeCompare(String(b && b.title));
+      }).forEach(function (m) {
+        grid.appendChild(el(
+          '<a class="tile" href="#/read/' + encodeURIComponent(m.slug) + '">' +
+          '<i class="fa-solid fa-book tile-icon" aria-hidden="true"></i>' +
+          '<span class="tile-name">' + esc((m && m.title) || "Untitled") + '</span>' +
+          '<span class="tile-blurb">' + esc((m && m.author) || "Unknown author") + '</span>' +
+          '</a>'
+        ));
+      });
+      stage.appendChild(grid);
+    }, function () {
+      if (parseRoute().name !== "shelf") return;
+      loading.remove();
+      stage.appendChild(emptyState(
+        "fa-book-open",
+        "Book pack not installed",
+        "<p>No book pack was found in this kit. Starter books ship inside the kit; bigger libraries arrive as add-on packs you copy into the kit.</p>",
+        "data-retry-manifest",
+        "Check again"
+      ));
+    });
+  }
+
+  function mountBook(meta, book, stage) {
+    var pages = book.body.split("\f").map(function (p) {
+      return p.replace(/^\s+|\s+$/g, "");
+    }).filter(function (p) { return p.length > 0; });
+    stage.innerHTML = "";
+    if (!pages.length) {
+      stage.appendChild(emptyState(
+        "fa-book-open",
+        "No readable pages",
+        "<p>This book shipped without readable text.</p>",
+        null,
+        null
+      ));
+      return;
+    }
+    var posMap = readJSON(POS_KEY, {});
+    var saved = posMap && typeof posMap === "object" ? Number(posMap[meta.slug]) : 0;
+    var start = saved >= 1 && saved <= pages.length ? saved - 1 : 0;
+    var author = book.author || meta.author || "Unknown author";
+    var title = book.title || meta.title || "Untitled";
+    var id = Number(book.gutenbergId != null ? book.gutenbergId : meta.gutenbergId);
+    var pgBadge = id > 0 ? ' <span class="badge">Project Gutenberg #' + id + '</span>' : "";
+    var foot = id > 0
+      ? '<p class="reader-note">Text source: Project Gutenberg #' + id + ' · public domain.</p>'
+      : "";
+    var shell = el(
+      '<article class="reader-shell">' +
+      '<header class="reader-head">' +
+      '<h1>' + esc(title) + '</h1>' +
+      '<p class="reader-meta"><span>by ' + esc(author) + '</span>' + pgBadge + '</p>' +
+      '</header>' +
+      '<div class="reader-toolbar">' +
+      '<button class="btn btn-ghost" type="button" data-nav="-1"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Prev</button>' +
+      '<span class="indicator" data-indicator></span>' +
+      '<button class="btn btn-ghost" type="button" data-nav="1">Next <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>' +
+      '<select class="jump-select" data-jump aria-label="Jump to page"></select>' +
+      '<button class="btn btn-ghost" type="button" data-size><i class="fa-solid fa-text-height" aria-hidden="true"></i> <span data-size-label></span></button>' +
+      '<form class="searchbox" role="search">' +
+      '<input class="search-input" type="search" data-term placeholder="Search in this book…" aria-label="Search in this book">' +
+      '<button class="btn btn-primary" type="submit">Find</button>' +
+      '</form>' +
+      '<span class="badge search-out" data-searchout hidden></span>' +
+      '</div>' +
+      '<div class="card article"><div class="reader-body" data-body></div></div>' +
+      '<div class="reader-pager">' +
+      '<button class="btn btn-ghost" type="button" data-nav="-1"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Prev</button>' +
+      '<span class="indicator" data-indicator></span>' +
+      '<button class="btn btn-ghost" type="button" data-nav="1">Next <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>' +
+      '</div>' +
+      foot +
+      '</article>'
+    );
+    stage.appendChild(shell);
+    var sizeBtn = shell.querySelector("[data-size]");
+    var sizeLabel = shell.querySelector("[data-size-label]");
+    var form = shell.querySelector("form");
+    var input = shell.querySelector("[data-term]");
+    var out = shell.querySelector("[data-searchout]");
+    current = {
+      meta: meta,
+      pages: pages,
+      page: start,
+      term: null,
+      body: shell.querySelector("[data-body]"),
+      jump: shell.querySelector("[data-jump]"),
+      indicators: [].slice.call(shell.querySelectorAll("[data-indicator]")),
+      prevs: [].slice.call(shell.querySelectorAll('[data-nav="-1"]')),
+      nexts: [].slice.call(shell.querySelectorAll('[data-nav="1"]'))
+    };
+    sizeLabel.textContent = getSize() === "lg" ? "Large text" : "Normal text";
+    for (var i = 0; i < pages.length; i++) {
+      var o = document.createElement("option");
+      o.value = String(i + 1);
+      o.textContent = "Page " + (i + 1) + " of " + pages.length;
+      current.jump.appendChild(o);
+    }
+    shell.querySelectorAll("[data-nav]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        goto(current.page + Number(b.getAttribute("data-nav")));
+      });
+    });
+    current.jump.addEventListener("change", function () {
+      goto(Number(current.jump.value) - 1);
+    });
+    sizeBtn.addEventListener("click", function () {
+      store(FONT_KEY, getSize() === "lg" ? "md" : "lg");
+      sizeLabel.textContent = getSize() === "lg" ? "Large text" : "Normal text";
+      current.body.setAttribute("data-size", getSize());
+    });
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var term = input.value.trim();
+      if (!term) {
+        current.term = null;
+        out.hidden = true;
+        paint(false);
+        return;
+      }
+      var repeat = current.term === term && pageHas(current.pages[current.page], term);
+      var from = repeat ? (current.page + 1) % current.pages.length : 0;
+      var idx = findPage(current.pages, term, from);
+      if (idx === -1) {
+        current.term = null;
+        out.hidden = false;
+        out.textContent = "No matches for \u201C" + term + "\u201D.";
+        paint(false);
+        return;
+      }
+      current.term = term;
+      var cnt = countIn(current.pages[idx], term);
+      goto(idx, { keepScroll: true, force: true });
+      out.hidden = false;
+      out.textContent = cnt + (cnt === 1 ? " match on this page." : " matches on this page.");
+      var mk = current.body.querySelector("mark");
+      if (mk && mk.scrollIntoView) mk.scrollIntoView({ block: "center" });
+    });
+    paint(true);
+  }
+
+  function renderReader(slug) {
+    current = null;
+    view.innerHTML = "";
+    view.appendChild(el(
+      '<nav class="crumbline"><a class="btn btn-ghost" href="#/"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Book Library</a></nav>'
+    ));
+    var stage = el('<div aria-live="polite"></div>');
+    view.appendChild(stage);
+    stage.appendChild(el('<div class="card loading-card"><i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i><span>Loading book…</span></div>'));
+    getManifest().then(function (list) {
+      var meta = null;
+      for (var i = 0; i < list.length; i++) {
+        if (list[i] && list[i].slug === slug) meta = list[i];
+      }
+      if (!meta) {
+        var nf = new Error("not in pack");
+        nf.notFound = true;
+        throw nf;
+      }
+      return getShard(meta).then(function (book) {
+        if (!routeIsRead(slug)) return;
+        mountBook(meta, book, stage);
+      });
+    }).catch(function (err) {
+      if (!routeIsRead(slug)) return;
+      stage.innerHTML = "";
+      if (err && err.notFound) {
+        stage.appendChild(emptyState(
+          "fa-book-open",
+          "Not in this pack",
+          "<p>That title is not part of the installed book pack.</p>",
+          null,
+          null
+        ));
+      } else {
+        stage.appendChild(emptyState(
+          "fa-triangle-exclamation",
+          "Could not open this book",
+          "<p>Its file is missing or unreadable. You can try again.</p>",
+          "data-retry-shard",
+          "Retry"
+        ));
+      }
+    });
+  }
+
+  function render() {
+    var r = parseRoute();
+    if (r.name === "read") renderReader(r.slug);
+    else renderShelf();
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (!current) return;
+    var t = e.target && e.target.tagName;
+    if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT") return;
+    if (e.key === "ArrowLeft" || e.key === "PageUp") {
+      e.preventDefault();
+      goto(current.page - 1);
+    } else if (e.key === "ArrowRight" || e.key === "PageDown") {
+      e.preventDefault();
+      goto(current.page + 1);
+    }
+  });
+
+  view = document.querySelector("[data-view]");
+  view.addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-retry-manifest],[data-retry-shard]");
+    if (!b) return;
+    if (b.hasAttribute("data-retry-manifest")) {
+      manifestPromise = null;
+      renderShelf();
+    } else {
+      var r = parseRoute();
+      if (r.name === "read") renderReader(r.slug);
+    }
+  });
+  window.addEventListener("hashchange", render);
+  render();
+})();
+</script>
 </body>
 </html>
