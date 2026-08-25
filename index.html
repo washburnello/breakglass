@@ -10,6 +10,11 @@
 <script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
 <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css?v=2">
 <link rel="stylesheet" href="assets/theme.css?v=2">
+<style>
+.home-intro{margin-bottom:var(--space-5)}
+.home-intro-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3)}
+.home-intro-actions{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)}
+</style>
 <script src="assets/shell.js?v=2" defer></script>
 </head>
 <body>
@@ -20,6 +25,17 @@
 <button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
 </header>
 <main>
+<section class="card home-intro" id="home-intro" hidden>
+<div class="home-intro-row">
+<p>Knowledge that survives losing everything else — browse below, search above, print what matters.</p>
+<button class="btn btn-ghost" type="button" id="home-intro-dismiss" aria-label="Dismiss welcome message"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<div class="home-intro-actions">
+<a class="btn btn-ghost" href="START-HERE.html"><i class="fa-solid fa-map-signs"></i>Start Here</a>
+<a class="btn btn-ghost" href="how-to-use.html"><i class="fa-solid fa-circle-info"></i>How to use</a>
+<a class="btn btn-ghost" href="EMERGENCY.html"><i class="fa-solid fa-truck-medical"></i>Emergency</a>
+</div>
+</section>
 <section>
 <h2 class="group-title">SURVIVAL</h2>
 <div class="tile-grid">
@@ -66,5 +82,27 @@
 </section>
 </main>
 <footer class="status-line"><span><a href="how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function () {
+  "use strict";
+  var KEY = "bg.home.intro-dismissed";
+  var strip = document.getElementById("home-intro");
+  if (!strip) return;
+  var show = true;
+  try {
+    show = localStorage.getItem(KEY) !== "1";
+  } catch (e) {}
+  if (show) strip.hidden = false;
+  var btn = document.getElementById("home-intro-dismiss");
+  if (btn) {
+    btn.addEventListener("click", function () {
+      strip.hidden = true;
+      try {
+        localStorage.setItem(KEY, "1");
+      } catch (e) {}
+    });
+  }
+})();
+</script>
 </body>
 </html>

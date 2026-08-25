@@ -17,6 +17,11 @@
 .result-path{margin:0 0 var(--space-2);color:var(--text-muted);font-size:var(--fs-xs);overflow-wrap:anywhere}
 .result-snippet{margin:0;font-size:var(--fs-sm)}
 #selftest-out{overflow:auto;font-size:var(--fs-xs)}
+.result.is-selected{outline:2px solid var(--accent);outline-offset:2px}
+.chips-label{margin-top:var(--space-3)}
+.chips{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2)}
+.didyou{cursor:pointer}
+.didyou:hover,.didyou:focus-visible{color:var(--text);border-color:var(--accent)}
 </style>
 <script src="assets/shell.js?v=2" defer></script>
 </head>
@@ -149,6 +154,123 @@
     return prefix + html + suffix;
   };
 
+  var SECTION_MAP = {
+    "emergency": "Emergency Hub",
+    "medical": "Medical & Health",
+    "howto": "How-To & Skills",
+    "food": "Food & Water",
+    "comms": "Comms & Radio",
+    "wiki": "Offline Wiki",
+    "books": "Book Library",
+    "faith": "Faith & Bible",
+    "education": "Education",
+    "ask": "Ask-the-Kit",
+    "id": "ID Browser",
+    "town": "Town Builder",
+    "maps": "Maps & Navigation",
+    "pets": "Pets & Animals",
+    "reference": "Quick Reference",
+    "apps": "Pocket Apps",
+    "calc": "Calculators",
+    "admin": "Kit Admin",
+    "arcade": "Arcade"
+  };
+
+  function sectionPath(u) {
+    var parts = String(u || "").split("/");
+    if (parts.length < 2) return "Home";
+    var head = parts.shift();
+    var name = Object.prototype.hasOwnProperty.call(SECTION_MAP, head) ? SECTION_MAP[head] : head;
+    var dirs = parts.slice(0, -1);
+    for (var i = 0; i < dirs.length; i++) {
+      if (dirs[i] && dirs[i] !== "index.html") name += " › " + dirs[i];
+    }
+    return name;
+  }
+
+  function letterSet(w) {
+    var set = {};
+    for (var i = 0; i < w.length; i++) set[w.charAt(i)] = true;
+    return set;
+  }
+
+  function countKeys(set) {
+    var n = 0;
+    for (var k in set) {
+      if (Object.prototype.hasOwnProperty.call(set, k)) n++;
+    }
+    return n;
+  }
+
+  var dictCache = null;
+
+  function dictionary() {
+    if (dictCache) return dictCache;
+    var docs = window.BG_SEARCH_DOCS || {};
+    var ids = Object.keys(docs);
+    var seen = {};
+    var words = [];
+    for (var i = 0; i < ids.length; i++) {
+      var doc = docs[ids[i]];
+      var text = String(doc.t || "") + " " + String(doc.x || "");
+      var toks = foldWord(text.toLowerCase()).split(/[^a-z0-9]+/);
+      for (var j = 0; j < toks.length; j++) {
+        var w = toks[j];
+        if (w.length < 3 || STOPWORDS.indexOf(w) !== -1 || seen[w]) continue;
+        seen[w] = true;
+        words.push(w);
+      }
+    }
+    dictCache = words;
+    return words;
+  }
+
+  function suggestFor(terms) {
+    var dict = dictionary();
+    var scored = [];
+    for (var q = 0; q < terms.length; q++) {
+      var qset = letterSet(terms[q]);
+      var qn = countKeys(qset);
+      for (var i = 0; i < dict.length; i++) {
+        var cand = dict[i];
+        if (cand === terms[q]) continue;
+        var cset = letterSet(cand);
+        var cn = countKeys(cset);
+        var shared = 0;
+        for (var c in cset) {
+          if (!Object.prototype.hasOwnProperty.call(cset, c)) continue;
+          if (qset[c]) shared++;
+        }
+        var union = qn + cn - shared;
+        if (!union) continue;
+        var ratio = shared / union;
+        if (ratio >= 0.6) scored.push({ w: cand, r: ratio });
+      }
+    }
+    scored.sort(function (a, b) {
+      if (b.r !== a.r) return b.r - a.r;
+      return a.w < b.w ? -1 : a.w > b.w ? 1 : 0;
+    });
+    var picked = [];
+    var used = {};
+    for (var s = 0; s < scored.length && picked.length < 5; s++) {
+      if (used[scored[s].w]) continue;
+      used[scored[s].w] = true;
+      picked.push(scored[s].w);
+    }
+    return picked;
+  }
+
+  function suggestionsHtml(terms) {
+    var picks = suggestFor(terms);
+    if (!picks.length) return "";
+    var html = '<p class="chips-label">Did you mean:</p><div class="chips">';
+    for (var i = 0; i < picks.length; i++) {
+      html += '<button type="button" class="badge didyou" data-suggest="' + esc(picks[i]) + '">' + esc(picks[i]) + "</button>";
+    }
+    return html + "</div>";
+  }
+
   var attempted = {};
 
   function loadScript(src) {
@@ -195,9 +317,15 @@
 
   function renderEmpty(out, raw) {
     out.innerHTML =
-      '<div class="callout callout-info">' +
-      "<h3>Type a few words</h3>" +
-      "<p>Try things like <a href=\"search.html?q=water\">water</a>, " +
+      '<div class="card">' +
+      "<h3>Quick links</h3>" +
+      "<p><a href=\"a-z.html\">A–Z Index</a> · " +
+      "<a href=\"emergency/index.html\">Emergency Hub</a> · " +
+      "<a href=\"medical/index.html\">Medical</a> · " +
+      "<a href=\"howto/index.html\">How-To</a> · " +
+      "<a href=\"howto/water-treatment.html\">Water Treatment</a> · " +
+      "<a href=\"medical/dosing-by-weight.html\">Dosing by Weight</a></p>" +
+      "<p>Type a few words above — try things like <a href=\"search.html?q=water\">water</a>, " +
       "<a href=\"search.html?q=bleeding\">bleeding</a>, " +
       "<a href=\"search.html?q=bible\">bible</a>, or " +
       "<a href=\"search.html?q=calculator\">calculator</a>.</p>" +
@@ -211,33 +339,67 @@
     document.title = "Search: " + raw + " — BreakGlass";
   }
 
-  function renderResults(out, raw, results, ms) {
+  function renderResults(out, raw, results, ms, terms) {
+    var meta = '<p class="search-meta">' + esc(results.length) + ' results for “' + esc(raw) + '” · ' + esc(ms) + ' ms</p>';
     if (!results.length) {
       out.innerHTML =
-        '<p class="search-meta">' + esc(results.length) + ' results for “' + esc(raw) + '” (' + esc(ms) + ' ms)</p>' +
+        meta +
         '<div class="callout callout-info">' +
         "<h3>Nothing found</h3>" +
         "<p>Try fewer or more general words, or browse the " +
         '<a href="a-z.html">A–Z index</a> instead.</p>' +
+        suggestionsHtml(terms) +
         "</div>";
+      wireSuggestions(out);
       return;
     }
-    var html = '<p class="search-meta">' + esc(results.length) + ' results for “' + esc(raw) + '” (' + esc(ms) + ' ms)</p>';
+    var html = meta;
     var top = results.slice(0, 20);
     for (var i = 0; i < top.length; i++) {
       var r = top[i];
       html +=
         '<article class="card result">' +
         '<h2 style="margin:0 0 var(--space-1)"><a class="card-title" href="' + esc(r.doc.u) + '">' + esc(r.doc.t) + '</a></h2>' +
-        '<p class="result-path">' + esc(r.doc.u) + '</p>' +
+        '<p class="result-path">' + esc(sectionPath(r.doc.u)) + '</p>' +
         '<p class="result-snippet">' + RT.buildSnippet(r.doc.x, r.terms, r.terms) + '</p>' +
         '</article>';
     }
     out.innerHTML = html;
   }
 
+  function wireSuggestions(out) {
+    var chips = out.querySelectorAll("button[data-suggest]");
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].addEventListener("click", function () {
+        submitQuery(this.getAttribute("data-suggest"));
+      });
+    }
+  }
+
   function nowMs() {
     return (window.performance && performance.now) ? performance.now() : Date.now();
+  }
+
+  var cards = [];
+  var selIdx = -1;
+
+  function resetSelection() {
+    cards = Array.prototype.slice.call(el("search-results").querySelectorAll("article.result"));
+    selIdx = -1;
+  }
+
+  function moveSelection(delta) {
+    if (!cards.length) return;
+    var next = selIdx + delta;
+    if (next < 0) next = 0;
+    if (next > cards.length - 1) next = cards.length - 1;
+    if (next === selIdx) return;
+    if (selIdx >= 0 && cards[selIdx]) cards[selIdx].classList.remove("is-selected");
+    selIdx = next;
+    cards[selIdx].classList.add("is-selected");
+    try {
+      cards[selIdx].scrollIntoView({ block: "nearest" });
+    } catch (e) {}
   }
 
   function run(raw) {
@@ -245,15 +407,19 @@
     var terms = RT.normalizeQuery(raw);
     if (!terms.length) {
       renderEmpty(out, raw);
+      resetSelection();
       return Promise.resolve();
     }
     renderSearching(out, raw);
+    resetSelection();
     var t0 = nowMs();
     return RT.loadShards(terms).then(function () {
       var results = RT.scoreDocs(window.BG_SEARCH_DOCS || {}, getBuckets(), raw, terms);
-      renderResults(out, raw, results, Math.max(1, Math.round(nowMs() - t0)));
+      renderResults(out, raw, results, Math.max(1, Math.round(nowMs() - t0)), terms);
+      resetSelection();
     }).catch(function () {
       renderEmpty(out, null);
+      resetSelection();
     });
   }
 
@@ -318,16 +484,40 @@
     return;
   }
 
+  function submitQuery(val) {
+    if (input) input.value = val;
+    try {
+      history.replaceState(null, "", location.pathname + "?q=" + encodeURIComponent(val) + location.hash);
+    } catch (e) {}
+    run(val);
+  }
+
   if (input) {
     form.addEventListener("submit", function (ev) {
       ev.preventDefault();
-      var val = input.value;
-      try {
-        history.replaceState(null, "", location.pathname + "?q=" + encodeURIComponent(val) + location.hash);
-      } catch (e) {}
-      run(val);
+      if (selIdx >= 0 && cards[selIdx]) {
+        var link = cards[selIdx].querySelector("a.card-title");
+        if (link && link.href) {
+          location.href = link.href;
+          return;
+        }
+      }
+      submitQuery(input.value);
     });
   }
+
+  document.addEventListener("keydown", function (ev) {
+    var tgt = ev.target;
+    if (tgt && tgt !== input && (tgt.tagName === "INPUT" || tgt.tagName === "TEXTAREA" || tgt.tagName === "SELECT")) return;
+    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+      ev.preventDefault();
+      moveSelection(ev.key === "ArrowDown" ? 1 : -1);
+    } else if (ev.key === "Escape") {
+      if (selIdx >= 0 && cards[selIdx]) cards[selIdx].classList.remove("is-selected");
+      selIdx = -1;
+      if (tgt === input) input.blur();
+    }
+  });
 
   run(sp.get("q") || "");
 })();
