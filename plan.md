@@ -303,7 +303,7 @@ attribution block.
 | 8 | ZIM vault (tb01) | ZIM downloads into tb01 vault/, kiwix-serve, embedded-reader spike ← **downloads complete + reader live** (WikiMed/iFixit/maxi staged & streaming; remaining: kiwix-serve container for deep-links) |
 | 9 | Schoolhouse | curriculum skeleton, tracker, Kolibri container ← **skeleton+tracker done** (hub, 4 daily plans, one-room primer, adult literacy, mastery-grid tracker w/ local student files; remaining: bundled OER integration, Kolibri container when sd256/vault work resumes) |
 | 10 | Ask-the-Kit + Phases | proxy service, chat UI, phase tagging sweep ← **core done** (chat UI w/ RAG citations + streaming; admin endpoint config; phase tile-reorder/banners/search-boost/EMERGENCY pin live. Remaining: ai-proxy container for server-masked keys — client-direct works today) |
-| 11 | Usability extras | Emergency Hub drills, Quick Ref, ID Browser, map tiers ← **Emergency Hub complete** (20 glance-cards + triage wizard + drill runner + document vault); remaining: Quick Ref, ID Browser, map tiers, calculators — see decision log |
+| 11 | Usability extras | Emergency Hub drills, Quick Ref, ID Browser, map tiers ✅ COMPLETE — Emergency Hub (20 glance-cards, triage wizard, drill runner, document vault) · Quick Reference (13 tables) · Calculators (6 solvers) · Comms & Radio (hub + reference + PACE plan builder) · ID Browser (41-entry text edition, photo-ready) · Maps & Navigation (compass/sun-stars/knots + tier cards). Map tile-data packs remain future media-pack work. |
 | 12 | Packaging | pack.sh, kits, START-HERE ✅ (tools/pack.sh → dist/breakglass-{pocket,fat}-DATE.zip, ~27 MB each; private library + manifests excluded; START-SERVER shims: python3 primary / PowerShell fallback on Windows — bundled per-OS binaries dropped as unnecessary) |
 | 13 | Wrap-up | lando fix, field-guide updates, preview refresh, ESV follow-up ← **done 2026-08-25** (system field-guide: projects/tunnel/nginx/storage tables + BreakGlass service section + hosts-file resilience; landing preview refreshed; ESV remains ON HOLD per owner; stray ~/projects git-repo cleanup stays owner's call as noted in Housekeeping) |
 
@@ -340,4 +340,8 @@ deep content so the live URL shapes decisions.
   components (.toc-chips / .keyfacts / ol.steps / details.fold) added via
   styleguide, then applied across all 23 content articles. Print still
   force-opens folds; safety callouts never collapse.
+- 2026-08-25 — Gap found and closed: Comms & Radio had NO content spec in the
+  original plan (tile existed, section did not). Authored clean-room: radio
+  reference w/ FCC-accurate FRS/GMRS power limits, NOAA SAME, PACE family
+  plan builder. All five stub tiles (reference/calc/comms/id/maps) now real.
 
