@@ -11,6 +11,31 @@
 <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
 <link rel="stylesheet" href="../assets/theme.css?v=2">
 <script src="../assets/shell.js?v=2" defer></script>
+<script src="../assets/id-data.js?v=2"></script>
+<style>
+.id-toolbar{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:flex-end;margin-top:var(--space-4)}
+.id-search{flex:1;min-width:min(320px,100%)}
+.toc-chips button{font:inherit;display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-1) var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-pill);font-size:var(--fs-xs);font-weight:600;color:var(--text-muted);cursor:pointer;transition:color var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out),background-color var(--dur-fast) var(--ease-out)}
+.toc-chips button:hover{color:var(--text);border-color:var(--accent);background:var(--accent-soft)}
+.toc-chips button[aria-pressed="true"]{color:var(--text-on-accent);border-color:var(--accent);background:var(--accent)}
+.id-count{margin-top:var(--space-3);font-size:var(--fs-sm);color:var(--text-muted)}
+.id-grid{grid-template-columns:repeat(auto-fill,minmax(270px,1fr));margin-top:var(--space-2)}
+.id-head{display:flex;align-items:flex-start;gap:var(--space-3)}
+.id-mono{flex:none;width:var(--space-7);height:var(--space-7);display:flex;align-items:center;justify-content:center;font-size:var(--fs-xl);font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--radius-md)}
+.id-img{width:100%;height:auto;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:var(--space-3)}
+.id-title h3{margin-bottom:var(--space-1)}
+.id-aka{margin:0;font-size:var(--fs-xs);font-style:italic;color:var(--text-muted)}
+.id-badges{display:flex;flex-wrap:wrap;gap:var(--space-1);margin-top:var(--space-3)}
+.id-note{margin-top:var(--space-3)}
+.id-lookalike{margin-top:var(--space-3);font-size:var(--fs-sm);color:var(--text-muted)}
+.id-ref{margin-top:var(--space-3)}
+.id-ref a{font-size:var(--fs-sm);font-weight:600}
+.id-empty{margin-top:var(--space-4)}
+@media print{
+.id-toolbar,.id-count,.no-print{display:none}
+.glance-card{break-inside:avoid}
+}
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -21,9 +46,138 @@
 </header>
 <main>
 <h1>ID Browser</h1>
-<div class="callout callout-info"><p>This section is under construction. Content ships in phases — see plan.md.</p></div>
-<div class="card"><p>The ID Browser helps you identify plants, wildlife and hazards around you before you touch, eat or approach them.</p></div>
+<div class="callout callout-danger">
+<h4>Identification is not permission</h4>
+<p>These pages help you recognize plants, wildlife and hazards — they never greenlight eating forage. Never eat any plant, mushroom or berry based on a website entry alone; a wrong guess can kill you. US Poison Control: <strong>1-800-222-1222</strong>. When identification is uncertain at all, the answer is always the same: leave it alone.</p>
+</div>
+<div class="card no-print">
+<p>Entries are text-first and photo-ready. Each one carries an optional <code>img</code> field pointing at <code>media/id/…</code>; when a photo file exists it renders above the entry, and when it is missing or fails to load you get the letter monogram instead — nothing ever shows as a broken image.</p>
+</div>
+<section class="id-toolbar no-print" aria-label="Filters">
+<nav class="toc-chips" data-group="type" aria-label="Filter by type">
+<button type="button" id="id-type-all" aria-pressed="true">All types</button>
+<button type="button" id="id-type-plant" aria-pressed="false">Plants</button>
+<button type="button" id="id-type-animal" aria-pressed="false">Animals</button>
+<button type="button" id="id-type-insect" aria-pressed="false">Insects &amp; arachnids</button>
+<button type="button" id="id-type-fungus" aria-pressed="false">Fungi</button>
+<button type="button" id="id-type-hazard" aria-pressed="false">Hazards</button>
+</nav>
+<nav class="toc-chips" data-group="danger" aria-label="Filter by danger level">
+<button type="button" id="id-danger-all" aria-pressed="true">All dangers</button>
+<button type="button" id="id-danger-toxic" aria-pressed="false">Toxic</button>
+<button type="button" id="id-danger-venomous" aria-pressed="false">Venomous</button>
+<button type="button" id="id-danger-irritant" aria-pressed="false">Irritant</button>
+<button type="button" id="id-danger-beneficial" aria-pressed="false">Beneficial</button>
+<button type="button" id="id-danger-caution" aria-pressed="false">Caution</button>
+</nav>
+<div class="id-search">
+<label class="form-label" for="id-q">Search name, alias or field mark</label>
+<input class="form-input" type="search" id="id-q" placeholder="e.g. three leaflets, hourglass, amanita…">
+</div>
+</section>
+<p class="id-count" id="id-count" role="status" aria-live="polite"></p>
+<div class="tile-grid id-grid" id="id-grid"></div>
+<div class="card id-empty" id="id-empty" hidden>
+<h3>No matches</h3>
+<p>Nothing in the current dataset matches that combination of filters and search. Clear the search box or switch a filter back to All.</p>
+</div>
+<noscript><div class="callout callout-warning no-print"><h4>JavaScript needed for browsing</h4><p>This card grid assembles itself with JavaScript, which your browser has disabled. The raw dataset ships locally in <code>assets/id-data.js</code> and opens in any text editor.</p></div></noscript>
 </main>
 <footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function(){
+"use strict";
+var DATA=window.BG_ID||[];
+var TONE={toxic:"tone-danger",venomous:"tone-danger",irritant:"tone-warn",caution:"tone-warn",beneficial:"tone-ok"};
+var state={type:"all",danger:"all",q:""};
+function filterEntries(list,over){
+var o=over||{};
+var fType=o.type!==undefined?o.type:state.type;
+var fDanger=o.danger!==undefined?o.danger:state.danger;
+var q=String(o.q!==undefined?o.q:state.q).trim().toLowerCase();
+return list.filter(function(e){
+if(fType!=="all"&&e.type!==fType)return false;
+if(fDanger!=="all"&&e.danger!==fDanger)return false;
+if(!q)return true;
+var hay=[e.name].concat(e.aka||[]).concat(e.marks||[]).join(" ").toLowerCase();
+return hay.indexOf(q)>-1;
+});
+}
+function el(tag,cls,text){var n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined&&text!==null)n.textContent=text;return n;}
+function buildCard(e){
+var card=el("article","glance-card "+(TONE[e.danger]||"tone-info"));
+var mono=el("span","id-mono",String(e.name||"?").charAt(0).toUpperCase());
+var head=el("div","id-head");
+var title=el("div","id-title");
+title.appendChild(el("h3",null,e.name));
+if((e.aka||[]).length)title.appendChild(el("p","id-aka",e.aka.join(" · ")));
+head.appendChild(mono);
+head.appendChild(title);
+if(e.img){
+var pic=document.createElement("img");
+pic.className="id-img";
+pic.src="../"+e.img;
+pic.alt=e.name+" photograph";
+pic.loading="lazy";
+pic.addEventListener("load",function(){mono.hidden=true;});
+pic.addEventListener("error",function(){if(pic.parentNode)pic.parentNode.removeChild(pic);mono.hidden=false;});
+card.appendChild(pic);
+}
+card.appendChild(head);
+[["type",e.type],["danger",e.danger],["season",e.season],["region",e.region]].forEach(function(pair){
+if(!pair[1])return;
+card.appendChild(el("span","badge",pair[0]+": "+pair[1]));
+});
+if((e.marks||[]).length){
+var marks=el("ul");
+e.marks.forEach(function(m){marks.appendChild(el("li",null,m));});
+card.appendChild(marks);
+}
+if((e.lookalikes||[]).length)card.appendChild(el("p","id-lookalike","Look-alikes: "+e.lookalikes.join("; ")+"."));
+card.appendChild(el("p","id-note",e.note));
+(e.refs||[]).forEach(function(r){
+var p=el("p","id-ref");
+var a=document.createElement("a");
+a.href=r.h;
+a.textContent=r.t+" →";
+p.appendChild(a);
+card.appendChild(p);
+});
+return card;
+}
+function render(){
+var grid=document.getElementById("id-grid");
+var empty=document.getElementById("id-empty");
+var count=document.getElementById("id-count");
+while(grid.firstChild)grid.removeChild(grid.firstChild);
+var shown=filterEntries(DATA);
+shown.forEach(function(e){grid.appendChild(buildCard(e));});
+count.textContent=shown.length+" of "+DATA.length+" shown";
+empty.hidden=shown.length>0;
+}
+function wireGroup(group,prefix){
+var btns=[];
+["all","plant","animal","insect","fungus","hazard"].forEach(function(v){
+if(group==="type")btns.push(document.getElementById(prefix+v));
+});
+["all","toxic","venomous","irritant","beneficial","caution"].forEach(function(v){
+if(group==="danger")btns.push(document.getElementById(prefix+v));
+});
+btns.forEach(function(btn){
+btn.addEventListener("click",function(){
+state[group]=btn.id.replace(/^id-(?:type|danger)-/,"");
+btns.forEach(function(b){b.setAttribute("aria-pressed",b===btn?"true":"false");});
+render();
+});
+});
+}
+wireGroup("type","id-type-");
+wireGroup("danger","id-danger-");
+var q=document.getElementById("id-q");
+q.addEventListener("input",function(){state.q=q.value;render();});
+window.BG_ID_FILTER=filterEntries;
+render();
+})();
+</script>
 </body>
 </html>
