@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="survive">
+<meta name="bg-priority" content="high">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Triage Helper — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<style>
+.triage-trail{font-size:var(--fs-sm);color:var(--text-muted);margin-top:var(--space-5);min-height:1.4em}
+.triage-qcard{max-width:560px;margin-top:var(--space-4)}
+.triage-prompt{margin-bottom:var(--space-4)}
+.triage-answers{display:grid;gap:var(--space-2)}
+.triage-answers .btn{justify-content:flex-start;width:100%;padding:var(--space-3) var(--space-4);font-size:var(--fs-md)}
+.triage-back{margin-top:var(--space-3)}
+.triage-result{max-width:560px;margin-top:var(--space-4)}
+.triage-result h3{font-size:var(--fs-lg)}
+.triage-result ol{margin:var(--space-3) 0 0;padding-left:var(--space-5)}
+.triage-result li + li{margin-top:var(--space-2)}
+.triage-result .btn{margin-top:var(--space-4);margin-right:var(--space-2)}
+.triage-note{margin-top:var(--space-3);font-size:var(--fs-sm);color:var(--text-muted)}
+.triage-noscript .card{margin-top:var(--space-4)}
+.triage-noscript ol{padding-left:var(--space-5);margin-top:var(--space-2)}
+.triage-noscript li + li{margin-top:var(--space-1)}
+@media print{.triage-qcard,.triage-back,#triage-root .btn{display:none}}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<p style="font-size:var(--fs-sm)"><a href="index.html">&larr; Emergency Hub</a></p>
+<h1>Triage Helper</h1>
+<div class="callout callout-warning">
+<p>This helps you choose what to do first. It never replaces emergency services — when in doubt, call.</p>
+</div>
+<div id="triage-root" aria-live="polite"></div>
+<noscript>
+<div class="triage-noscript">
+<p>Scripts are off, so the interactive wizard cannot run. Every outcome the helper can reach is listed below as plain steps.</p>
+<div class="card">
+<h2>Unresponsive and not breathing normally (or only gasping)</h2>
+<ol>
+<li>Call emergency services now, or shout for someone else to call while you start.</li>
+<li>Push hard and fast in the center of the chest: 30 compressions, then 2 breaths (30:2).</li>
+<li>Bare hands beat waiting. Keep pauses between compressions under 10 seconds.</li>
+<li>If an AED arrives, switch it on and follow its voice prompts immediately; resume compressions when told.</li>
+<li>Only once breathing returns, roll them into the recovery position and stay until help takes over.</li>
+</ol>
+<p class="triage-note">Control severe bleeding only after breathing is restored — see <a href="../medical/severe-bleeding.html">Severe Bleeding</a>.</p>
+</div>
+<div class="card">
+<h2>Unresponsive, breathing, with severe bleeding</h2>
+<ol>
+<li>Call emergency services.</li>
+<li>Press hard on the wound with clean cloth; stack fresh layers on top, never remove soaked ones.</li>
+<li>Pack deep pocket wounds; for limb bleeding you cannot stop, apply a tourniquet above the wound and note the time.</li>
+<li>Once bleeding is controlled, roll them into the recovery position to keep the airway open.</li>
+<li>Keep monitoring breathing and keep them warm until help arrives.</li>
+</ol>
+<p class="triage-note">Full procedure: <a href="../medical/severe-bleeding.html">Severe Bleeding</a>.</p>
+</div>
+<div class="card">
+<h2>Unresponsive, breathing, no severe bleeding</h2>
+<ol>
+<li>Call emergency services if you have not already.</li>
+<li>Kneel beside them and place the near arm at a right angle.</li>
+<li>Bring the far arm across the chest and hold the back of its hand against the near cheek.</li>
+<li>Bend the far knee, roll them toward you onto their side, and tilt the head to keep the airway open.</li>
+<li>Stay and watch breathing until help arrives; be ready to start CPR if breathing stops.</li>
+</ol>
+</div>
+<div class="card">
+<h2>Responsive with severe bleeding</h2>
+<ol>
+<li>Press hard on the wound with clean cloth — full weight, both hands if needed.</li>
+<li>Add fresh cloth on top when it soaks through; never lift to peek.</li>
+<li>Keep pressure for ten full minutes minimum, or until relieved by help.</li>
+<li>Lay them down and keep them warm; watch for pale clammy skin and confusion.</li>
+</ol>
+<p class="triage-note">Full procedure: <a href="../medical/severe-bleeding.html">Severe Bleeding</a>.</p>
+</div>
+<div class="card">
+<h2>Choking — cannot breathe or speak</h2>
+<ol>
+<li>Encourage hard coughing; do not interfere while they can still cough.</li>
+<li>If coughing fails, give 5 firm back blows between the shoulder blades, then 5 abdominal thrusts; repeat the cycle.</li>
+<li>If they collapse, lower them to the floor, call emergency services, and start CPR 30:2 — chest compressions often clear the airway.</li>
+<li>Infants under 1 year: use 5 back blows plus 5 chest thrusts with two fingers — never abdominal thrusts.</li>
+</ol>
+</div>
+<div class="card">
+<h2>Chest pain — possible heart attack</h2>
+<ol>
+<li>Call 911 immediately; unlock the door for responders.</li>
+<li>Sit them down, half-upright against a wall, and loosen tight clothing.</li>
+<li>Keep them calm and still; do not let them walk around.</li>
+<li>Give aspirin only if the dispatcher advises it.</li>
+<li>If they collapse and stop responding, start CPR.</li>
+</ol>
+</div>
+<div class="card">
+<h2>Stroke signs (FAST)</h2>
+<ol>
+<li>Note the exact time symptoms started — treatments are time-limited.</li>
+<li>Check Face drooping, Arm weakness, Speech difficulty — any one means Time to call 911.</li>
+<li>Call 911 even if the symptoms fade.</li>
+<li>Nothing to eat or drink; lay them on their side if drowsy and stay with them.</li>
+</ol>
+</div>
+<div class="card">
+<h2>Burn</h2>
+<ol>
+<li>Cool the burn under cool running water for 10–20 minutes — never ice.</li>
+<li>Remove rings, watches, and tight clothing near the burn before swelling starts.</li>
+<li>Cover loosely with clean, non-stick cloth or cling film.</li>
+<li>No creams, butter, or ice. Seek care for large, deep, face, joint, or genital burns, and for any infant or elderly burn.</li>
+</ol>
+<p class="triage-note">Full procedure: <a href="../medical/burns.html">Burns</a>.</p>
+</div>
+<div class="card">
+<h2>Poisoning</h2>
+<ol>
+<li>Grab the container, label, or plant name and keep it with you.</li>
+<li>Call Poison Control at 1-800-222-1222 (US).</li>
+<li>Do NOT induce vomiting unless poison control tells you to.</li>
+<li>If they become unresponsive, seize, or stop breathing normally, call 911 and follow the unresponsive steps above.</li>
+</ol>
+</div>
+<div class="card">
+<h2>None of these fit — sick or hurt, cause unclear</h2>
+<ol>
+<li>Ask and record: pain level 0–10, breathing normal or labored, skin pale or clammy, confusion.</li>
+<li>Write down symptoms and the times they change.</li>
+<li>Recheck every 10 minutes.</li>
+<li>Escalate to emergency services for labored breathing, chest pain, worst-ever headache, new confusion, unresponsiveness, or a gut feeling that something is badly wrong.</li>
+</ol>
+</div>
+</div>
+</noscript>
+</main>
+<footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function(){
+"use strict";
+var STORE_KEY="bg.emergency.triage-last";
+var START="q-responsive";
+var QUESTIONS={
+"q-responsive":{tag:"Responsive?",prompt:"Is the person responsive?",answers:[
+{id:"no",label:"No",trail:"not responsive",next:"q-breathing"},
+{id:"yes",label:"Yes",trail:"responsive",next:"q-urgent"}]},
+"q-breathing":{tag:"Breathing normally?",prompt:"Are they breathing normally?",answers:[
+{id:"no",label:"No — not breathing",trail:"not breathing",next:"r-cpr"},
+{id:"gasping",label:"Abnormal or gasping",trail:"gasping only",next:"r-cpr"},
+{id:"yes",label:"Yes — breathing normally",trail:"breathing normally",next:"q-bleeding"}]},
+"q-bleeding":{tag:"Severe bleeding?",prompt:"Any severe bleeding?",answers:[
+{id:"yes",label:"Yes — spurting, pooling, or soaking through",trail:"severe bleeding",next:"r-bleed-unresp"},
+{id:"no",label:"No severe bleeding",trail:"no severe bleeding",next:"r-recovery"}]},
+"q-urgent":{tag:"Most urgent problem?",prompt:"What is the most urgent problem?",answers:[
+{id:"bleeding",label:"Severe bleeding",trail:"severe bleeding",next:"r-bleeding"},
+{id:"choking",label:"Cannot breathe / choking",trail:"choking",next:"r-choking"},
+{id:"chest",label:"Chest pain",trail:"chest pain",next:"r-cardiac"},
+{id:"stroke",label:"Stroke signs (FAST)",trail:"stroke signs",next:"r-stroke"},
+{id:"burn",label:"Burn",trail:"burn",next:"r-burn"},
+{id:"poison",label:"Poisoning",trail:"poisoning",next:"r-poison"},
+{id:"none",label:"None of these fit",trail:"cause unclear",next:"r-checklist"}]}
+};
+var RESULTS={
+"r-cpr":{name:"Unconscious and not breathing normally",tone:"danger",actions:[
+"Call emergency services now — or point at someone and have them call while you start.",
+"Push hard and fast in the center of the chest: 30 compressions, then 2 breaths (30:2).",
+"Bare hands beat waiting. Keep pauses between compressions under ten seconds.",
+"If they collapse again later, restart compressions immediately.",
+"Only once breathing returns, roll them into the recovery position and stay until help takes over."
+],note:"If an AED arrives, switch it on and follow the voice prompts immediately — pads go on a wet-exposed, dry chest, then resume compressions when it instructs.",link:{href:"../medical/severe-bleeding.html",text:"Open the Severe Bleeding guide"},linkNote:"Control severe bleeding only after breathing is restored."},
+"r-bleed-unresp":{name:"Unresponsive, breathing, severe bleeding",tone:"danger",actions:[
+"Call emergency services.",
+"Press hard on the wound with clean cloth; stack fresh layers on top — never remove soaked ones.",
+"Pack deep pocket wounds (groin, armpit, neck base); for limb bleeding you cannot stop, apply a tourniquet above the wound and write down the time.",
+"Then roll them into the recovery position to keep the airway open.",
+"Keep monitoring breathing and keep them warm until help arrives."
+],note:"",link:{href:"../medical/severe-bleeding.html",text:"Open the Severe Bleeding guide"},linkNote:""},
+"r-recovery":{name:"Unresponsive but breathing — recovery position",tone:"warn",actions:[
+"Call emergency services if you have not already.",
+"Kneel beside them; place the near arm at a right angle to their body.",
+"Bring the far arm across the chest and hold the back of its hand against the near cheek.",
+"Bend the far knee up, roll them toward you onto their side, and tilt the head back gently to keep the airway open.",
+"Stay and monitor breathing continuously until help arrives — be ready to start CPR if breathing stops."
+],note:"",link:null,linkNote:""},
+"r-bleeding":{name:"Severe bleeding",tone:"danger",actions:[
+"Press hard on the wound with clean cloth — full weight, both hands if needed. Bare hands beat waiting.",
+"Add fresh cloth on top when blood soaks through; never lift to peek.",
+"Keep pressure for ten full minutes minimum, or until relieved by professional help.",
+"Lay the person down and keep them warm; watch for pale clammy skin and confusion — shock kills quietly.",
+"Send someone to call emergency services if you have not already."
+],note:"Deep pocket wounds get packed then pressed; limb bleeding that will not stop gets a tourniquet above the wound — never on a joint — with the time written down.",link:{href:"../medical/severe-bleeding.html",text:"Open the Severe Bleeding guide"},linkNote:""},
+"r-choking":{name:"Choking",tone:"danger",actions:[
+"Encourage hard coughing — do not interfere while they can still cough or speak.",
+"If coughing fails, give 5 firm back blows between the shoulder blades, then 5 abdominal thrusts; repeat the cycle.",
+"If they collapse or become unconscious, lower them to the floor, call emergency services, and start CPR 30:2 — chest compressions often dislodge the blockage.",
+"Continue until the object clears or help takes over."
+],note:"Infant under 1 year: 5 back blows with the baby face-down along your forearm, then 5 chest thrusts with two fingers — never abdominal thrusts.",link:null,linkNote:""},
+"r-cardiac":{name:"Heart attack — chest pain",tone:"danger",actions:[
+"Call 911 immediately and unlock the door for responders.",
+"Sit them down, half-upright against a wall, knees bent.",
+"Loosen tight clothing and keep them calm and completely still.",
+"Aspirin only if the dispatcher advises it.",
+"If they collapse and stop responding, start CPR 30:2."
+],note:"",link:null,linkNote:""},
+"r-stroke":{name:"Stroke signs (FAST)",tone:"danger",actions:[
+"Note the exact time symptoms started — clot-busting treatment is strictly time-limited.",
+"Face drooping? Arm weakness? Speech difficulty? Any one means Time to call 911.",
+"Call 911 even if the symptoms fade — do not drive yourself or let them drive.",
+"Nothing to eat or drink.",
+"Lay them on their side if drowsy and stay with them until help arrives."
+],note:"",link:null,linkNote:""},
+"r-burn":{name:"Burn",tone:"warn",actions:[
+"Cool the burn under cool running water for 10–20 minutes — never ice, butter, or creams.",
+"Remove rings, watches, and tight clothing near the burn before swelling starts.",
+"Cover loosely with clean, non-stick cloth or cling film — no tight wrapping.",
+"Seek medical care for large, deep, chemical, electrical, face, joint, or genital burns, and for any infant or elderly burn."
+],note:"",link:{href:"../medical/burns.html",text:"Open the Burns guide"},linkNote:""},
+"r-poison":{name:"Poisoning",tone:"warn",actions:[
+"Grab the container, bottle, label, or plant — keep it with you; responders will ask.",
+"Call Poison Control at 1-800-222-1222 (US) and follow their instructions.",
+"Do NOT induce vomiting unless poison control specifically tells you to.",
+"Do not give food, water, or activated charcoal unless instructed.",
+"If they become unresponsive, seize, or stop breathing normally, call 911 and follow the unresponsive steps."
+],note:"",link:null,linkNote:""},
+"r-checklist":{name:"Sick or hurt — cause unclear",tone:"warn",actions:[
+"Ask and record: pain level 0–10? Breathing normal or labored? Skin pale or clammy? Confused?",
+"Write down the symptoms and the times they change.",
+"Recheck every ten minutes and note any change.",
+"Escalate to emergency services for labored breathing, chest pain, worst-ever headache, new confusion, unresponsiveness — or simply a strong gut feeling that something is badly wrong."
+],note:"",link:null,linkNote:""}
+};
+var root=null;
+var path=[];
+function lsSet(k,v){
+try{window.localStorage.setItem(k,v);return true;}catch(e){return false;}
+}
+function next(id,answerId){
+var q=QUESTIONS[id];
+if(!q){return null;}
+for(var i=0;i<q.answers.length;i++){
+if(q.answers[i].id===answerId){return q.answers[i].next;}
+}
+return null;
+}
+function walk(){
+var id=START;
+var crumbs=[];
+for(var i=0;i<path.length;i++){
+var q=QUESTIONS[id];
+if(!q){break;}
+var a=q.answers[path[i]];
+crumbs.push(q.tag+" "+a.trail);
+id=a.next;
+}
+return {node:id,crumbs:crumbs};
+}
+function renderQuestion(id){
+var q=QUESTIONS[id];
+var html='<div class="card triage-qcard"><h2 class="triage-prompt">'+q.prompt+'</h2><div class="triage-answers">';
+for(var i=0;i<q.answers.length;i++){
+html+='<button class="btn btn-primary" type="button" data-i="'+i+'">'+q.answers[i].label+"</button>";
+}
+html+="</div>";
+if(path.length>0){
+html+='<button class="btn btn-ghost triage-back" type="button" data-back>&larr; Back</button>';
+}
+html+="</div>";
+return html;
+}
+function renderResult(id){
+var r=RESULTS[id];
+var html='<div class="glance-card tone-'+r.tone+' triage-result"><h3>'+r.name+"</h3><ol>";
+for(var i=0;i<r.actions.length;i++){
+html+"<li>"+r.actions[i]+"</li>";
+}
+html+="</ol>";
+if(r.note){
+html+='<p class="triage-note">'+r.note+"</p>";
+}
+if(r.link){
+if(r.linkNote){
+html+='<p class="triage-note">'+r.linkNote+"</p>";
+}
+html+='<a class="btn btn-primary" href="'+r.link.href+'">'+r.link.text+"</a>";
+}
+html+='<button class="btn btn-ghost" type="button" data-reset>Start over</button>';
+html+="</div>";
+lsSet(STORE_KEY,JSON.stringify({name:r.name,at:new Date().toISOString()}));
+return html;
+}
+function render(){
+var w=walk();
+var html="";
+if(w.crumbs.length>0){
+html+='<p class="triage-trail">Path: '+w.crumbs.join(" &rsaquo; ")+"</p>";
+}
+if(QUESTIONS[w.node]){
+html+=renderQuestion(w.node);
+}else{
+html+=renderResult(w.node);
+}
+root.innerHTML=html;
+}
+function onClick(e){
+var t=e.target;
+while(t&&t!==root){
+if(t.hasAttribute&&t.hasAttribute("data-back")){path.pop();render();return;}
+if(t.hasAttribute&&t.hasAttribute("data-reset")){path=[];render();return;}
+if(t.getAttribute&&t.getAttribute("data-i")!==null){
+var idx=t.getAttribute("data-i");
+var w=walk();
+var q=QUESTIONS[w.node];
+if(q&&q.answers[idx]){path.push(parseInt(idx,10));render();}
+return;
+}
+t=t.parentNode;
+}
+}
+function boot(){
+root=document.getElementById("triage-root");
+if(!root){return;}
+root.addEventListener("click",onClick);
+render();
+}
+if(typeof window!=="undefined"&&window.__bgTestHooks){
+window.__bgTestHooks.triage={start:START,questions:QUESTIONS,results:RESULTS,next:next};
+}
+if(document.readyState==="loading"){
+document.addEventListener("DOMContentLoaded",boot);
+}else{
+boot();
+}
+})();
+</script>
+</body>
+</html>

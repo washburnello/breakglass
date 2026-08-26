@@ -616,6 +616,75 @@ details.fold[open] {
   padding-bottom: var(--space-4);
 }
 
+.glance-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--tone, var(--accent));
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+.glance-card h3 {
+  font-size: var(--fs-md);
+}
+
+.glance-card ul {
+  margin: var(--space-2) 0 0;
+  padding-left: 1.2em;
+}
+
+.glance-card li + li {
+  margin-top: var(--space-1);
+}
+
+.tone-danger { --tone: var(--danger); }
+.tone-warn { --tone: var(--warn); }
+.tone-info { --tone: var(--info); }
+.tone-ok { --tone: var(--ok); }
+
+.form-label {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.form-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.form-input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 4em;
+}
+
+.form-row {
+  margin-top: var(--space-3);
+}
+
+.timer-display {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 .status-line {
   display: flex;
   align-items: center;

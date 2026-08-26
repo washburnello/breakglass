@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="survive">
+<meta name="bg-priority" content="high">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Drill Runner — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<style>
+.drill-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.drill-tile{font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer}
+.drill-tile .tile-icon{color:var(--tone,var(--accent))}
+.drill-tile .badge{margin-top:var(--space-1)}
+.drill-live{margin-top:var(--space-5);max-width:640px}
+.drill-head h2{font-size:var(--fs-lg)}
+.drill-head p{margin-top:var(--space-1);font-size:var(--fs-sm);color:var(--text-muted)}
+.drill-clockrow{display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-4)}
+.drill-steps{list-style:none;counter-reset:step;padding:0;margin:var(--space-4) 0 0}
+.drill-steps li{counter-increment:step;position:relative;margin-top:var(--space-2)}
+.drill-steps li::before{content:counter(step);position:absolute;left:0;top:calc(var(--space-3) + 0.15em);width:var(--space-5);height:var(--space-5);border-radius:var(--radius-pill);background:var(--accent);color:var(--text-on-accent);font-weight:700;font-size:var(--fs-sm);display:flex;align-items:center;justify-content:center}
+.drill-steps li.done::before{content:"✓";background:var(--ok)}
+.step-row{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--space-3) var(--space-3) var(--space-3) calc(var(--space-6) + var(--space-3));cursor:pointer;transition:background-color var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out)}
+.step-row:hover{border-color:var(--accent)}
+li.done .step-row{background:color-mix(in srgb,var(--ok) 12%,transparent);border-color:color-mix(in srgb,var(--ok) 45%,transparent);text-decoration:line-through;color:var(--text-muted)}
+#drills-root[data-mode="drill"] .drill-picker,
+#drills-root[data-mode="drill"] .drill-logzone{display:none}
+#drills-root[data-mode="pick"] .drill-live{display:none}
+.drill-logzone{margin-top:var(--space-7)}
+.drill-logzone h2,.drill-picker h2{font-size:var(--fs-xl);margin-bottom:var(--space-3)}
+.drill-logcard ul{list-style:none;padding:0;margin:0}
+.drill-logcard li{padding:var(--space-2) 0;display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;justify-content:space-between;border-bottom:1px dashed color-mix(in srgb,var(--border) 70%,transparent)}
+.drill-logcard li:last-child{border-bottom:none}
+.drill-danger{margin-top:var(--space-4);max-width:480px;border-color:color-mix(in srgb,var(--danger) 40%,transparent)}
+.drill-danger h3{color:var(--danger);font-size:var(--fs-md)}
+.drill-danger p{font-size:var(--fs-sm);color:var(--text-muted);margin-top:var(--space-1)}
+.drill-danger .btn{margin-top:var(--space-3)}
+.print-note{display:none}
+@media print{
+.drill-picker,.drill-logzone,.drill-back,.drill-clockrow,#drill-stamp{display:none!important}
+#drills-root[data-mode="pick"] .print-note{display:block;margin-top:var(--space-4)}
+.drill-steps li{break-inside:avoid}
+.drill-steps li::before{content:"";position:static;display:inline-block;width:var(--space-4);height:var(--space-4);margin-right:var(--space-2);vertical-align:-0.15em;border-radius:var(--radius-sm);background:none;border:2px solid var(--text)}
+.step-row,.step-row:hover{border:none;background:none;padding:var(--space-2) 0;padding-left:calc(var(--space-4) + var(--space-2));text-decoration:none!important;color:var(--text)!important}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<p style="font-size:var(--fs-sm)"><a href="index.html">&larr; Emergency Hub</a></p>
+<h1>Drill Runner</h1>
+<div class="callout callout-info">
+<h4>Practice builds calm</h4>
+<p>Pick a scenario and run it against the clock. Click each step as you finish it — completing every step stops the timer and logs the run. Beat your best time, then run it again next month.</p>
+</div>
+<div id="drills-root" data-mode="pick">
+<section class="drill-picker" aria-labelledby="picker-h">
+<h2 id="picker-h">Pick a drill</h2>
+<div class="tile-grid drill-grid" id="drill-grid"></div>
+<p class="print-note">Open a drill first, then print to get its pen-and-paper checklist.</p>
+</section>
+<section class="drill-live" id="drill-live" hidden aria-label="Active drill">
+<button class="btn btn-ghost drill-back" id="drill-back" type="button">&larr; All drills</button>
+<div class="glance-card drill-head" id="drill-head">
+<h2 id="drill-title"></h2>
+<p id="drill-goal"></p>
+</div>
+<div class="drill-clockrow">
+<span class="timer-display" id="drill-clock">00:00</span>
+<button class="btn btn-primary" id="drill-toggle" type="button">Start</button>
+<button class="btn btn-ghost" id="drill-reset" type="button">Reset</button>
+</div>
+<ol class="drill-steps" id="drill-steps"></ol>
+<p class="badge" id="drill-stamp" role="status" hidden></p>
+</section>
+<section class="drill-logzone" aria-labelledby="log-h">
+<h2 id="log-h">Drill log</h2>
+<div class="card drill-logcard">
+<ul id="drill-loglist"></ul>
+</div>
+<div class="card drill-danger">
+<h3>Danger zone</h3>
+<p>Erase every recorded run from this device. This cannot be undone.</p>
+<button class="btn btn-danger" id="drill-clear" type="button">Clear drill log</button>
+</div>
+</section>
+</div>
+<noscript>
+<div class="drill-picker">
+<h2>Pick a drill</h2>
+<p>Scripts are off, so the timed runner cannot start. The checklists below still work on paper — print this page and tick the boxes by hand.</p>
+<div class="card" style="margin-top:var(--space-4)">
+<h3>Night-time house fire evacuation</h3>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Goal: everyone out and counted in under 2 minutes.</p>
+<ul class="checklist">
+<li><label><input type="checkbox"> Shout to wake everyone — say FIRE — and get low.</label></li>
+<li><label><input type="checkbox"> Feel every door with the back of your hand before opening; hot door means use your second route.</label></li>
+<li><label><input type="checkbox"> Crawl low beneath smoke to your exit.</label></li>
+<li><label><input type="checkbox"> Gather at the agreed meeting point outside.</label></li>
+<li><label><input type="checkbox"> Count heads — nobody goes back inside for anything.</label></li>
+<li><label><input type="checkbox"> Call emergency services from outside and report anyone missing.</label></li>
+</ul>
+</div>
+<div class="card" style="margin-top:var(--space-4)">
+<h3>Gas smell indoors</h3>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Goal: everyone outside within 60 seconds.</p>
+<ul class="checklist">
+<li><label><input type="checkbox"> Touch nothing: no switches, no lights, no phone calls indoors.</label></li>
+<li><label><input type="checkbox"> Get everyone out immediately; leave doors open behind you if it does not slow you down.</label></li>
+<li><label><input type="checkbox"> Move upwind, well away from the building.</label></li>
+<li><label><input type="checkbox"> From outside, call the gas company emergency line or 911.</label></li>
+<li><label><input type="checkbox"> Nobody re-enters until officials declare it clear.</label></li>
+</ul>
+</div>
+<div class="card" style="margin-top:var(--space-4)">
+<h3>Boil-water order begins</h3>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Goal: safe-water routine running within 10 minutes.</p>
+<ul class="checklist">
+<li><label><input type="checkbox"> Read the order: which areas, how long, what happened.</label></li>
+<li><label><input type="checkbox"> Boil tap water at a rolling boil — 1 minute, or 3 above 6,500 ft.</label></li>
+<li><label><input type="checkbox"> Label cooled containers BOILED with the date.</label></li>
+<li><label><input type="checkbox"> Switch all drinking, cooking, and tooth-brushing to boiled or bottled water only.</label></li>
+<li><label><input type="checkbox"> Turn off the ice maker and throw out existing ice.</label></li>
+<li><label><input type="checkbox"> Set a daily reminder to re-check when the order ends.</label></li>
+</ul>
+</div>
+<div class="card" style="margin-top:var(--space-4)">
+<h3>Winter power outage setup</h3>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Goal: warm, lit, and informed within 30 minutes.</p>
+<ul class="checklist">
+<li><label><input type="checkbox"> Dress everyone in layers before anything else.</label></li>
+<li><label><input type="checkbox"> Move the household into one small room and block its drafts.</label></li>
+<li><label><input type="checkbox"> Set up flashlights and lanterns; candles only lit and attended.</label></li>
+<li><label><input type="checkbox"> Generators, grills, and camp stoves run OUTSIDE only, far from windows.</label></li>
+<li><label><input type="checkbox"> Test the carbon monoxide alarm.</label></li>
+<li><label><input type="checkbox"> Keep fridge and freezer shut; note the time power failed.</label></li>
+<li><label><input type="checkbox"> Send one text to your out-of-area contact with status.</label></li>
+</ul>
+</div>
+<div class="card" style="margin-top:var(--space-4)">
+<h3>Severe bleeding response</h3>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Goal: hard pressure on the wound within 30 seconds.</p>
+<ul class="checklist">
+<li><label><input type="checkbox"> Grab the cleanest cloth within reach — bare hands beat waiting.</label></li>
+<li><label><input type="checkbox"> Press hard directly on the wound; both hands, full weight.</label></li>
+<li><label><input type="checkbox"> Stack fresh cloth on top when soaked; never remove layers.</label></li>
+<li><label><input type="checkbox"> Send someone to call emergency services.</label></li>
+<li><label><input type="checkbox"> Hold pressure ten full minutes minimum — no peeking.</label></li>
+<li><label><input type="checkbox"> Lay them down, keep them warm, watch for shock.</label></li>
+</ul>
+</div>
+<div class="card" style="margin-top:var(--space-4)">
+<h3>Storm prep 6 hours out</h3>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Goal: every task done before dark.</p>
+<ul class="checklist">
+<li><label><input type="checkbox"> Bring in or tie down loose outdoor items.</label></li>
+<li><label><input type="checkbox"> Charge every phone and power bank you own.</label></li>
+<li><label><input type="checkbox"> Fill bathtubs and spare containers with water.</label></li>
+<li><label><input type="checkbox"> Test flashlight and radio batteries; gather spares.</label></li>
+<li><label><input type="checkbox"> Fuel vehicles and park clear of trees and power lines.</label></li>
+<li><label><input type="checkbox"> Confirm the family plan and meeting point; check on neighbors.</label></li>
+<li><label><input type="checkbox"> Stage medications, documents, and blankets in the interior room.</label></li>
+</ul>
+</div>
+</div>
+</noscript>
+</main>
+<footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function(){
+"use strict";
+var LOG_KEY="bg.emergency.drilllog";
+var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var SCENARIOS=[
+{id:"fire-night",title:"Night-time house fire evacuation",tone:"danger",icon:"fire",goal:"Everyone out and counted in under 2 minutes",targetSec:120,steps:[
+"Shout to wake everyone — say FIRE — and get low.",
+"Feel every door with the back of your hand before opening; a hot door means take your second route.",
+"Crawl low beneath smoke to your way out.",
+"Gather at the agreed meeting point outside.",
+"Count heads — nobody goes back inside for anything.",
+"Call emergency services from outside and report anyone missing."
+]},
+{id:"gas-indoors",title:"Gas smell indoors",tone:"danger",icon:"wind",goal:"Everyone outside within 60 seconds",targetSec:60,steps:[
+"Touch nothing: no switches, no lights, no phone calls indoors.",
+"Get everyone out immediately; leave doors open behind you if it does not slow you down.",
+"Move upwind, well away from the building.",
+"From outside, call the gas company emergency line or 911.",
+"Nobody re-enters until officials declare it clear."
+]},
+{id:"boil-water",title:"Boil-water order begins",tone:"warn",icon:"droplet",goal:"Safe-water routine running within 10 minutes",targetSec:600,steps:[
+"Read the order: which areas are covered, how long it lasts, and what happened.",
+"Boil tap water at a rolling boil — 1 minute, or 3 minutes above 6,500 ft.",
+"Label cooled containers BOILED with today's date.",
+"Switch all drinking, cooking, and tooth-brushing to boiled or bottled water only.",
+"Turn off the ice maker and throw out existing ice.",
+"Set a daily reminder to re-check when the order is lifted."
+]},
+{id:"winter-outage",title:"Winter power outage setup",tone:"info",icon:"snowflake",goal:"Warm, lit, and informed within 30 minutes",targetSec:1800,steps:[
+"Dress everyone in layers before touching anything else.",
+"Move the household into one small room and block its drafts.",
+"Set up flashlights and lanterns; candles only while lit and attended.",
+"Run generators, grills, and camp stoves OUTSIDE only, far from windows and vents.",
+"Test the carbon monoxide alarm.",
+"Keep the fridge and freezer shut; write down the time power failed.",
+"Send one text to your out-of-area contact with your status."
+]},
+{id:"bleeding-response",title:"Severe bleeding response",tone:"danger",icon:"user-injured",goal:"Hard pressure on the wound within 30 seconds",targetSec:30,steps:[
+"Grab the cleanest cloth within reach — bare hands beat waiting.",
+"Press hard directly on the wound; both hands, full body weight.",
+"Stack fresh cloth on top when blood soaks through; never remove layers.",
+"Send someone to call emergency services.",
+"Hold pressure ten full minutes minimum — no peeking underneath.",
+"Lay the person down, keep them warm, and watch for shock."
+]},
+{id:"storm-six-hours",title:"Storm prep 6 hours out",tone:"warn",icon:"cloud-showers-heavy",goal:"Every task done before dark",targetSec:null,steps:[
+"Bring in or tie down everything loose outdoors.",
+"Charge every phone and power bank in the house.",
+"Fill bathtubs and spare containers with water.",
+"Test flashlight and radio batteries; gather spares.",
+"Fuel vehicles and park them clear of trees and power lines.",
+"Confirm the family plan and meeting point; check on neighbors.",
+"Stage medications, documents, and blankets in the interior room."
+]}
+];
+var root=null;
+var gridEl=null;
+var liveEl=null;
+var headEl=null;
+var titleEl=null;
+var goalEl=null;
+var clockEl=null;
+var toggleBtn=null;
+var resetBtn=null;
+var stepsEl=null;
+var stampEl=null;
+var logListEl=null;
+var backBtn=null;
+var clearBtn=null;
+var curId=null;
+var done=[];
+var finished=false;
+var timer={running:false,baseMs:0,accumMs:0,int:0};
+var log={};
+function lsGet(k){
+try{return window.localStorage.getItem(k);}catch(e){return null;}
+}
+function lsSet(k,v){
+try{window.localStorage.setItem(k,v);return true;}catch(e){return false;}
+}
+function loadLog(){
+var raw=lsGet(LOG_KEY);
+if(!raw){return {};}
+try{
+var p=JSON.parse(raw);
+return (p&&typeof p==="object"&&!Array.isArray(p))?p:{};
+}catch(e){return {};}
+}
+function saveLog(){
+lsSet(LOG_KEY,JSON.stringify(log));
+}
+function formatClock(sec){
+sec=Math.max(0,Math.floor(Number(sec)||0));
+var m=Math.floor(sec/60);
+var s=sec%60;
+return (m<10?"0":"")+m+":"+((s<10?"0":"")+s);
+}
+function elapsed(running,baseMs,accumMs,nowMs){
+return running?Math.floor((nowMs-baseMs+accumMs)/1000):Math.floor(accumMs/1000);
+}
+function currentSecs(){
+return elapsed(timer.running,timer.baseMs,timer.accumMs,Date.now());
+}
+function paintClock(nowMs){
+if(clockEl){clockEl.textContent=formatClock(elapsed(timer.running,timer.baseMs,timer.accumMs,nowMs));}
+}
+function startTick(){
+stopTick();
+timer.int=window.setInterval(function(){paintClock(Date.now());},250);
+paintClock(Date.now());
+}
+function stopTick(){
+if(timer.int){window.clearInterval(timer.int);}
+timer.int=0;
+}
+function stopTimer(){
+if(timer.running){
+timer.accumMs+=Date.now()-timer.baseMs;
+timer.running=false;
+timer.baseMs=0;
+}
+stopTick();
+paintClock(0);
+toggleBtn.textContent="Resume";
+}
+function resetTimer(){
+stopTimer();
+timer.accumMs=0;
+toggleBtn.textContent="Start";
+}
+function monDay(iso){
+var d=new Date(iso);
+if(isNaN(d.getTime())){return "?";}
+return MONTHS[d.getMonth()]+" "+("0"+d.getDate()).slice(-2);
+}
+function badgeText(id){
+var e=log[id];
+if(!e){return "Not run yet";}
+return "Last: "+monDay(e.last)+" · Best "+formatClock(e.best)+" · "+e.runs+(e.runs===1?" run":" runs");
+}
+function renderGrid(){
+var html="";
+for(var i=0;i<SCENARIOS.length;i++){
+var s=SCENARIOS[i];
+html+='<button class="glance-card tone-'+s.tone+' tile drill-tile" type="button" data-id="'+s.id+'">'+
+'<span class="tile-icon"><i class="fa-solid fa-'+s.icon+'" aria-hidden="true"></i></span>'+
+'<span class="tile-name">'+s.title+"</span>"+
+'<span class="tile-blurb">'+s.steps.length+' steps · Goal: '+s.goal+"</span>"+
+'<span class="badge">'+badgeText(s.id)+"</span>"+
+"</button>";
+}
+gridEl.innerHTML=html;
+}
+function renderLogList(){
+var html="";
+for(var i=0;i<SCENARIOS.length;i++){
+var s=SCENARIOS[i];
+html+='<li><span>'+s.title+'</span><span class="badge">'+badgeText(s.id)+"</span></li>";
+}
+logListEl.innerHTML=html;
+}
+function renderSteps(){
+var s=findScenario(curId);
+var html="";
+for(var i=0;i<s.steps.length;i++){
+html+='<li'+(done[i]?' class="done"':'')+'><button class="step-row" type="button" data-i="'+i+'">'+s.steps[i]+"</button></li>";
+}
+stepsEl.innerHTML=html;
+}
+function findScenario(id){
+for(var i=0;i<SCENARIOS.length;i++){
+if(SCENARIOS[i].id===id){return SCENARIOS[i];}
+}
+return null;
+}
+function openDrill(id){
+curId=id;
+done=[];
+finished=false;
+stampEl.hidden=true;
+resetTimer();
+renderSteps();
+var s=findScenario(id);
+titleEl.textContent=s.title;
+headEl.className="glance-card drill-head tone-"+s.tone;
+goalEl.textContent="Goal: "+s.goal;
+root.setAttribute("data-mode","drill");
+liveEl.hidden=false;
+window.scrollTo(0,0);
+}
+function closeDrill(){
+resetTimer();
+curId=null;
+liveEl.hidden=true;
+root.setAttribute("data-mode","pick");
+}
+function finishDrill(){
+stopTimer();
+finished=true;
+var secs=Math.floor(timer.accumMs/1000);
+var s=findScenario(curId);
+var e=log[curId]||{last:"",best:null,runs:0};
+e.last=new Date().toISOString();
+e.best=(e.best===null||secs<e.best)?secs:e.best;
+e.runs+=1;
+log[curId]=e;
+saveLog();
+var note;
+if(s.targetSec!==null&&s.targetSec!==undefined){
+note=secs<=s.targetSec?("Goal beaten — "+formatClock(Math.max(0,s.targetSec-secs))+" to spare."):"Over goal by "+formatClock(secs-s.targetSec)+".";
+}else{
+note="Completion criteria: "+s.goal+".";
+}
+stampEl.textContent="Finished "+formatClock(secs)+" · "+note+" Run logged.";
+stampEl.hidden=false;
+toggleBtn.textContent="Start";
+renderLogList();
+renderGrid();
+}
+function onStepClick(i){
+if(finished||!curId){return;}
+done[i]=!done[i];
+if(done[i]){
+var all=true;
+for(var k=0;k<findScenario(curId).steps.length;k++){
+if(!done[k]){all=false;break;}
+}
+if(all){finishDrill();}
+else if(!timer.running&&!timer.accumMs){
+timer.baseMs=Date.now();
+timer.running=true;
+startTick();
+toggleBtn.textContent="Pause";
+}
+}
+renderSteps();
+paintClock(Date.now());
+}
+function onToggle(){
+if(!curId||finished){return;}
+if(timer.running){
+stopTimer();
+}else{
+timer.baseMs=Date.now();
+timer.running=true;
+startTick();
+toggleBtn.textContent="Pause";
+}
+}
+function onReset(){
+if(!curId){return;}
+resetTimer();
+done=[];
+finished=false;
+stampEl.hidden=true;
+renderSteps();
+}
+function onClear(){
+var msg="Erase the entire drill log? This cannot be undone.";
+if(window.confirm?window.confirm(msg):true){
+log={};
+saveLog();
+renderLogList();
+renderGrid();
+}
+}
+function onGridClick(e){
+var t=e.target;
+while(t&&t!==gridEl){
+if(t.getAttribute&&t.getAttribute("data-id")){
+openDrill(t.getAttribute("data-id"));
+return;
+}
+t=t.parentNode;
+}
+}
+function onStepsClick(e){
+var t=e.target;
+while(t&&t!==stepsEl){
+if(t.getAttribute&&t.getAttribute("data-i")!==null){
+onStepClick(parseInt(t.getAttribute("data-i"),10));
+return;
+}
+t=t.parentNode;
+}
+}
+function boot(){
+root=document.getElementById("drills-root");
+if(!root){return;}
+gridEl=document.getElementById("drill-grid");
+liveEl=document.getElementById("drill-live");
+headEl=document.getElementById("drill-head");
+titleEl=document.getElementById("drill-title");
+goalEl=document.getElementById("drill-goal");
+clockEl=document.getElementById("drill-clock");
+toggleBtn=document.getElementById("drill-toggle");
+resetBtn=document.getElementById("drill-reset");
+stepsEl=document.getElementById("drill-steps");
+stampEl=document.getElementById("drill-stamp");
+logListEl=document.getElementById("drill-loglist");
+backBtn=document.getElementById("drill-back");
+clearBtn=document.getElementById("drill-clear");
+log=loadLog();
+gridEl.addEventListener("click",onGridClick);
+stepsEl.addEventListener("click",onStepsClick);
+toggleBtn.addEventListener("click",onToggle);
+resetBtn.addEventListener("click",onReset);
+backBtn.addEventListener("click",closeDrill);
+clearBtn.addEventListener("click",onClear);
+renderGrid();
+renderLogList();
+paintClock(0);
+}
+if(typeof window!=="undefined"&&window.__bgTestHooks){
+window.__bgTestHooks.drills={
+scenarios:SCENARIOS,
+formatClock:formatClock,
+elapsed:elapsed
+};
+}
+if(document.readyState==="loading"){
+document.addEventListener("DOMContentLoaded",boot);
+}else{
+boot();
+}
+})();
+</script>
+</body>
+</html>

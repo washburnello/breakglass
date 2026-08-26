@@ -339,6 +339,29 @@ th,td{padding:var(--space-2);border-bottom:1px solid var(--border);text-align:le
     </div>
   </section>
 
+  <section id="emergency-components">
+    <h2>Emergency components</h2>
+    <p class="sg-lede" style="margin-bottom:var(--space-3)">Patterns for the Emergency Hub: tone-tinted glance-cards, form fields for the printable document vault, and the drill timer.</p>
+    <div class="sg-stack">
+      <div>
+        <p class="sg-label">.glance-card + .tone-* — one action set per emergency</p>
+        <div class="tile-grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">
+          <div class="glance-card tone-danger"><h3>Severe bleeding</h3><ul><li>Press hard with clean cloth</li><li>Add layers, never remove</li><li>Ten full minutes, no peeking</li></ul></div>
+          <div class="glance-card tone-warn"><h3>Gas smell</h3><ul><li>Don't flip switches</li><li>Leave immediately</li><li>Call from outside</li></ul></div>
+        </div>
+      </div>
+      <div style="max-width:420px">
+        <p class="sg-label">.form-label + .form-input (+ .form-row spacing)</p>
+        <label class="form-label" for="sg-fn">Full name</label>
+        <input class="form-input" id="sg-fn" type="text" placeholder="As it appears on ID">
+      </div>
+      <div>
+        <p class="sg-label">.timer-display — drill clock (tabular numerals)</p>
+        <span class="timer-display">04:37</span>
+      </div>
+    </div>
+  </section>
+
   <section id="rules">
     <h2>Hard rules</h2>
     <ol>

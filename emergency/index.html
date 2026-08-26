@@ -11,6 +11,15 @@
 <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
 <link rel="stylesheet" href="../assets/theme.css?v=2">
 <script src="../assets/shell.js?v=2" defer></script>
+<style>
+.glance-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.callout-actions{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)}
+.hub-links{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)}
+@media print{
+.glance-card{break-inside:avoid}
+.group-title{break-after:avoid}
+}
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -21,8 +30,242 @@
 </header>
 <main>
 <h1>Emergency Hub</h1>
-<div class="callout callout-info"><p>This section is under construction. Content ships in phases — see plan.md.</p></div>
-<div class="card"><p>The Emergency Hub gathers life-safety procedures, triage trees and practice drills so you can act quickly and correctly when it matters most.</p></div>
+<div class="callout callout-danger">
+<p><strong>If someone is unconscious or not breathing:</strong> send someone to call emergency services, start CPR, and open the triage page.</p>
+<div class="callout-actions">
+<a class="btn btn-danger" href="triage.html"><i class="fa-solid fa-heart-pulse"></i> Open the triage helper</a>
+<a class="btn btn-ghost" href="../EMERGENCY.html">Go to the root emergency page</a>
+</div>
+</div>
+<div class="card">
+<p>Twenty glance-cards for the moments that matter most. Read your card, do the actions, get help. Educational reference only — when in doubt, call professionals. In the US: 911 · Poison Control 1-800-222-1222.</p>
+<div class="hub-links">
+<a class="btn btn-ghost" href="drills.html"><i class="fa-solid fa-stopwatch"></i> Practice drills</a>
+<a class="btn btn-ghost" href="documents.html"><i class="fa-solid fa-folder-open"></i> Document vault</a>
+<a class="btn btn-ghost" href="../medical/first-aid-kit.html"><i class="fa-solid fa-briefcase-medical"></i> First-aid kit checklist</a>
+</div>
+</div>
+
+<h2 class="group-title">Medical emergencies</h2>
+<div class="tile-grid glance-grid">
+
+<div class="glance-card tone-danger">
+<h3>Unconscious &amp; not breathing</h3>
+<ul>
+<li>Shout and tap. No response? Send someone to call emergency services.</li>
+<li>Start CPR: push hard and fast in the center of the chest.</li>
+<li>30 pushes, then 2 breaths. Keep going until help or an AED arrives.</li>
+<li>Tired? Swap rescuers every 2 minutes without long pauses.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-danger">
+<h3>Choking</h3>
+<ul>
+<li>Can they cough or speak? Encourage coughing.</li>
+<li>Cannot breathe: abdominal thrusts, above navel, inward and up.</li>
+<li>Infant: back blows plus chest thrusts, head down.</li>
+<li>They collapse: start CPR and send for help.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-danger">
+<h3><a href="../medical/severe-bleeding.html">Severe bleeding</a></h3>
+<ul>
+<li>Press hard on the wound with any clean cloth.</li>
+<li>Add layers on top. Never take soaked ones off.</li>
+<li>Keep pressing until help takes over.</li>
+<li>Bleeding you cannot stop: tourniquet high and tight above the wound.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-danger">
+<h3><a href="../medical/burns.html">Burns</a></h3>
+<ul>
+<li>Cool with running water for at least 10 minutes.</li>
+<li>Remove rings and tight clothing before swelling starts.</li>
+<li>No ice, butter, or creams.</li>
+<li>Cover loosely with clean, non-fluffy cloth or cling film.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-danger">
+<h3>Stroke — act F.A.S.T.</h3>
+<ul>
+<li>Face droop? Ask them to smile.</li>
+<li>Arm weakness? Ask them to raise both arms.</li>
+<li>Speech slurred? Ask them to repeat a simple sentence.</li>
+<li>Time — note when symptoms started and call emergency services.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-danger">
+<h3>Heart attack</h3>
+<ul>
+<li>Call emergency services immediately. Do not drive yourself.</li>
+<li>Sit them down, half-upright, loosen tight clothing.</li>
+<li>Chew aspirin only if they are not allergic and emergency services agree.</li>
+<li>They become unresponsive: start CPR.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-danger">
+<h3>Severe allergic reaction</h3>
+<ul>
+<li>Use their epinephrine auto-injector into the outer thigh. Now.</li>
+<li>Call emergency services even if they improve.</li>
+<li>Lie them flat, raise the legs. Sitting up can worsen it.</li>
+<li>No improvement after 5–15 minutes: second dose, per device instructions.</li>
+</ul>
+</div>
+
+</div>
+
+<h2 class="group-title">Everyday medical</h2>
+<div class="tile-grid glance-grid">
+
+<div class="glance-card tone-info">
+<h3>Seizure</h3>
+<ul>
+<li>Clear hard objects away. Cushion the head.</li>
+<li>Do not restrain them or put anything in their mouth.</li>
+<li>Note the time. Turn them on their side when movements stop.</li>
+<li>Over 5 minutes, repeats, injured, pregnant, or first seizure: call emergency services.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-info">
+<h3>Head injury</h3>
+<ul>
+<li>Apply a cold pack to the bump, 15 minutes at a time.</li>
+<li>Rest and watch closely for 24 hours.</li>
+<li>Red flags — repeated vomiting, growing confusion, unequal pupils, drowsiness: call emergency services.</li>
+<li>No alcohol or driving until fully recovered.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-info">
+<h3>Poisoning</h3>
+<ul>
+<li>Identify the substance. Keep the container or plant with you.</li>
+<li>Call Poison Control: 1-800-222-1222 (US).</li>
+<li>Do not cause vomiting unless told to by experts.</li>
+<li>Unresponsive or not breathing: call emergency services and start CPR.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-info">
+<h3>Broken bones &amp; sprains</h3>
+<ul>
+<li>Leave the limb as you found it. Do not straighten it.</li>
+<li>Immobilize with padding on both sides of the break.</li>
+<li>Sprain: rest, ice, compression, elevation.</li>
+<li>Numbness, blue skin, visible deformity, or possible spine injury: call emergency services.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-info">
+<h3>Shock</h3>
+<ul>
+<li>Lay them flat and raise the legs, unless an injury says otherwise.</li>
+<li>Keep them warm with a coat or blanket.</li>
+<li>Nothing to eat or drink.</li>
+<li>Call emergency services. Stay and reassure until help arrives.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-info">
+<h3><a href="../medical/fever-sick-care.html">Fever in infants</a></h3>
+<ul>
+<li>Under 3 months with 100.4°F (38°C): emergency care now.</li>
+<li>Measure with a thermometer. Never guess.</li>
+<li>Offer fluids often, in small amounts.</li>
+<li>Dress light. Do not bundle up.</li>
+</ul>
+</div>
+
+</div>
+
+<h2 class="group-title">Environmental</h2>
+<div class="tile-grid glance-grid">
+
+<div class="glance-card tone-warn">
+<h3><a href="../howto/emergency-shelter.html">Hypothermia</a></h3>
+<ul>
+<li>Get out of wind, rain, and cold. Shelter first.</li>
+<li>Remove wet clothing. Layer on dry warmth.</li>
+<li>Warm the core: chest, neck, groin. Not hands and feet first.</li>
+<li>Fully alert: warm sweet drinks. Handle gently. Shivering stops: emergency.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-warn">
+<h3>Heatstroke</h3>
+<ul>
+<li>Move to shade or air conditioning.</li>
+<li>Soak with cool water. Fan. Ice packs to armpits, groin, neck.</li>
+<li>Alert: give cool sips. Confused or not sweating: emergency.</li>
+<li>Do not leave anyone alone to sleep it off.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-warn">
+<h3><a href="../medical/fever-sick-care.html">Dehydration</a></h3>
+<ul>
+<li>Sit in shade. Sip often rather than gulping.</li>
+<li>Use oral rehydration solution for real losses.</li>
+<li>Homemade mix, per recipe guidance: 1 liter clean water, 6 teaspoons sugar, half teaspoon salt.</li>
+<li>Dark urine, dizziness, or confusion means act faster.</li>
+</ul>
+</div>
+
+</div>
+
+<h2 class="group-title">Home hazards</h2>
+<div class="tile-grid glance-grid">
+
+<div class="glance-card tone-warn">
+<h3>House fire</h3>
+<ul>
+<li>Get out first. Crawl low under smoke.</li>
+<li>Feel every door. Hot? Use another way out.</li>
+<li>Gather at your meeting point and count heads.</li>
+<li>Never go back inside. Call from outside.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-warn">
+<h3><a href="../howto/safe-heating-cooking.html">Gas smell / CO alarm</a></h3>
+<ul>
+<li>Do not flip switches, light flames, or phone from inside.</li>
+<li>Leave immediately. Open doors on your way only if it costs no time.</li>
+<li>Call the gas utility from outside, at a safe distance.</li>
+<li>CO alarm sounds: everyone outside to fresh air, then call for help.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-warn">
+<h3>Downed power lines</h3>
+<ul>
+<li>Assume every line is live. Stay at least 35 feet (10 meters) away.</li>
+<li>Never touch a person, vehicle, or fence in contact with a line.</li>
+<li>Line down on a car with people inside: keep them inside, call for rescue.</li>
+<li>Must move away from arcing ground: shuffle with both feet together, tiny steps.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-warn">
+<h3><a href="../howto/water-treatment.html">Water contamination</a></h3>
+<ul>
+<li>Stop drinking the suspect source immediately.</li>
+<li>Boil at a rolling boil for 1 minute — 3 minutes above 6,500 ft (2,000 m).</li>
+<li>Cloudy water: strain through clean cloth first, then treat.</li>
+<li>Clean storage containers too, or the water recontaminates.</li>
+</ul>
+</div>
+
+</div>
+
 </main>
 <footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
 </body>
