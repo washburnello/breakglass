@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="everyday survive stabilize">
+<meta name="bg-priority" content="high">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Family Radio Plan — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<style>
+.bgp-page-head{margin-top:var(--space-6)}
+.bgp-page-head h1{font-size:var(--fs-3xl);margin-bottom:var(--space-2)}
+.bgp-lede{color:var(--text-muted);max-width:70ch;margin-bottom:var(--space-4)}
+.bgp-toolbar{position:sticky;top:calc(var(--space-7) + var(--space-2));z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);margin-top:var(--space-4)}
+.bgp-spacer{flex:1 1 auto}
+.bgp-stack{display:grid;gap:var(--space-4);margin-top:var(--space-4);padding-bottom:var(--space-8)}
+.plan-card{padding:var(--space-5)}
+.plan-card-head{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-3)}
+.plan-card-head h2{font-size:var(--fs-xl)}
+.plan-card-sub{font-size:var(--fs-sm);color:var(--text-muted);max-width:70ch;margin-bottom:var(--space-3)}
+.pace-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--space-4);margin-top:var(--space-4)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-3)}
+.fields>div.full{grid-column:1/-1}
+.roster-table td{vertical-align:middle}
+.roster-table .form-input{min-width:8em}
+@media (max-width:600px){
+  .fields{grid-template-columns:1fr}
+}
+@media print{
+  @page{margin:12mm}
+  .no-print{display:none!important}
+  .plan-card{box-shadow:none;padding:var(--space-2)}
+  .pace-grid{gap:var(--space-3)}
+  .glance-card,.callout,.card,.roster-table tr{break-inside:avoid}
+  .fields .form-input{
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+    background:transparent!important;
+    border:0;border-bottom:1px solid var(--text-muted);
+    border-radius:0;box-shadow:none!important;
+    padding-left:0;padding-right:0;min-height:1.4em;
+  }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<div class="bgp-page-head">
+<h1>Family Radio Plan</h1>
+<p class="bgp-lede">Fill it in once, on screen or on paper, so nobody has to improvise on a bad day.</p>
+<div class="callout callout-info">
+<h4>PACE: four ways home, in order</h4>
+<p>Military and emergency planners build communication plans in layers called PACE. Each layer answers the same question — how do we make contact? — under worse and worse conditions. You move down the ladder only when a layer fails, and everyone knows the trigger for each step before anything goes wrong.</p>
+</div>
+<noscript><style>.bgp-toolbar{display:none!important}</style>
+<div class="callout callout-caution" style="margin-top:var(--space-4)">
+<h4>Printing without JavaScript</h4>
+<p>This sheet fills in and prints with no scripts at all: type or leave blank, then use your browser's own Print command. Autosave and the Save/Open file buttons need JavaScript, so keep the printed copy with your kit instead of trusting browser memory.</p>
+</div></noscript>
+</div>
+<div class="card bgp-toolbar no-print" id="bgp-toolbar">
+<button class="btn btn-primary" type="button" data-action="save-file"><i class="fa-solid fa-download" aria-hidden="true"></i> Save to file</button>
+<button class="btn" type="button" data-action="open-file"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Open file</button>
+<button class="btn btn-ghost" type="button" data-action="print"><i class="fa-solid fa-print" aria-hidden="true"></i> Print</button>
+<input type="file" id="bgp-file" accept=".json,application/json" hidden>
+<span class="bgp-spacer"></span>
+<span class="badge badge-warn" id="bgp-autosave" aria-live="polite">Autosave needs JavaScript</span>
+</div>
+<div class="bgp-stack">
+
+<section class="card plan-card" id="bgp-card-pace" aria-labelledby="bgp-h-pace">
+<div class="plan-card-head"><h2 id="bgp-h-pace">The four layers</h2></div>
+<p class="plan-card-sub">Read these once, then fill the matching rows below. Keep each layer genuinely different — four flavors of texting is not a plan.</p>
+<div class="pace-grid">
+<div class="glance-card tone-info"><h3>Primary — everyday</h3><ul><li>The normal method that already works today</li><li>Usually cell calls or texts</li><li>Fails when towers jam or lose power</li></ul></div>
+<div class="glance-card tone-ok"><h3>Alternate — same idea, other pipe</h3><ul><li>A different network path, not a different habit</li><li>Texts over Wi-Fi, mesh app, second carrier SIM</li><li>Trigger: primary is slow, congested, or dead</li></ul></div>
+<div class="glance-card tone-warn"><h3>Contingency — radios out</h3><ul><li>Phones are gone; two-way radio takes over</li><li>FRS/GMRS channel from your Radio Reference sheet</li><li>Trigger: cell networks are down outright</li></ul></div>
+<div class="glance-card tone-danger"><h3>Emergency — last resort</h3><ul><li>No electronics assumed: runner with a note, fixed meeting point</li><li>Agreed place and time window that never changes</li><li>Trigger: no contact of any kind within the check-in window</li></ul></div>
+</div>
+</section>
+
+<section class="card plan-card" id="bgp-card-layers" aria-labelledby="bgp-h-layers">
+<div class="plan-card-head"><h2 id="bgp-h-layers">Contact sheet</h2></div>
+<div class="fields" style="margin-bottom:var(--space-4)">
+<div class="full"><label class="form-label" for="bgp-household">Household name</label><input class="form-input" type="text" id="bgp-household" data-p="household" placeholder="e.g. Rivera household"></div>
+</div>
+
+<h3 class="plan-card-sub" style="font-weight:700;color:var(--text);font-size:var(--fs-md)">Layer 1 · Primary</h3>
+<div class="fields">
+<div><label class="form-label" for="bgp-primary-method">Method</label><input class="form-input" type="text" id="bgp-primary-method" data-p="primary.method" placeholder="e.g. Cell text"></div>
+<div><label class="form-label" for="bgp-primary-trigger">Switch when…</label><input class="form-input" type="text" id="bgp-primary-trigger" data-p="primary.trigger" placeholder="when texts fail to deliver"></div>
+<div><label class="form-label" for="bgp-primary-channel">Number / channel</label><input class="form-input" type="text" id="bgp-primary-channel" data-p="primary.channel" placeholder="e.g. Mom's mobile number"></div>
+<div><label class="form-label" for="bgp-primary-who">Who calls whom</label><input class="form-input" type="text" id="bgp-primary-who" data-p="primary.who" placeholder="youngest texts out-of-area aunt first"></div>
+</div>
+
+<h3 class="plan-card-sub" style="font-weight:700;color:var(--text);font-size:var(--fs-md);margin-top:var(--space-5)">Layer 2 · Alternate</h3>
+<div class="fields">
+<div><label class="form-label" for="bgp-alternate-method">Method</label><input class="form-input" type="text" id="bgp-alternate-method" data-p="alternate.method" placeholder="e.g. Wi-Fi calling / mesh app"></div>
+<div><label class="form-label" for="bgp-alternate-trigger">Switch when…</label><input class="form-input" type="text" id="bgp-alternate-trigger" data-p="alternate.trigger" placeholder="cell voice is jammed but internet works"></div>
+<div><label class="form-label" for="bgp-alternate-channel">Number / channel</label><input class="form-input" type="text" id="bgp-alternate-channel" data-p="alternate.channel" placeholder="e.g. app handle or VoIP number"></div>
+<div><label class="form-label" for="bgp-alternate-who">Who calls whom</label><input class="form-input" type="text" id="bgp-alternate-who" data-p="alternate.who" placeholder="adults post status, kids listen"></div>
+</div>
+
+<h3 class="plan-card-sub" style="font-weight:700;color:var(--text);font-size:var(--fs-md);margin-top:var(--space-5)">Layer 3 · Contingency</h3>
+<div class="fields">
+<div><label class="form-label" for="bgp-contingency-method">Method</label><input class="form-input" type="text" id="bgp-contingency-method" data-p="contingency.method" placeholder="e.g. FRS/GMRS two-way radio"></div>
+<div><label class="form-label" for="bgp-contingency-trigger">Switch when…</label><input class="form-input" type="text" id="bgp-contingency-trigger" data-p="contingency.trigger" placeholder="cell networks are down entirely"></div>
+<div><label class="form-label" for="bgp-contingency-channel">Frequency / channel</label><input class="form-input" type="text" id="bgp-contingency-channel" data-p="contingency.channel" placeholder="e.g. FRS ch 1 calling, ch 5 working, privacy code 0"></div>
+<div><label class="form-label" for="bgp-contingency-who">Who calls whom</label><input class="form-input" type="text" id="bgp-contingency-who" data-p="contingency.who" placeholder="home base monitors ch 1 at :00 and :30"></div>
+</div>
+
+<h3 class="plan-card-sub" style="font-weight:700;color:var(--text);font-size:var(--fs-md);margin-top:var(--space-5)">Layer 4 · Emergency</h3>
+<div class="fields">
+<div><label class="form-label" for="bgp-emergency-method">Method</label><input class="form-input" type="text" id="bgp-emergency-method" data-p="emergency.method" placeholder="e.g. Runner with written note"></div>
+<div><label class="form-label" for="bgp-emergency-trigger">Switch when…</label><input class="form-input" type="text" id="bgp-emergency-trigger" data-p="emergency.trigger" placeholder="two missed check-in windows in a row"></div>
+<div><label class="form-label" for="bgp-emergency-channel">Meeting point</label><input class="form-input" type="text" id="bgp-emergency-channel" data-p="emergency.channel" placeholder="e.g. mailbox at grandma's church, then town hall steps"></div>
+<div><label class="form-label" for="bgp-emergency-who">Who moves whom</label><input class="form-input" type="text" id="bgp-emergency-who" data-p="emergency.who" placeholder="oldest teen walks route, adults stay findable"></div>
+</div>
+</section>
+
+<section class="card plan-card" id="bgp-card-roster" aria-labelledby="bgp-h-roster">
+<div class="plan-card-head"><h2 id="bgp-h-roster">Roster &amp; assignments</h2></div>
+<p class="plan-card-sub">Give every person one job per layer they can actually do. A seven-year-old "monitors channel 1 with the radio in the kitchen drawer" beats a vague "stay in touch."</p>
+<table class="roster-table">
+<caption>One row per person — print extra copies if the family is bigger than this sheet.</caption>
+<thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Personal PACE assignment</th></tr></thead>
+<tbody>
+<tr><td><label class="form-label no-print" for="bgp-r1-name" hidden>Name 1</label><input class="form-input" type="text" id="bgp-r1-name" data-p="roster.r1.name" placeholder="Name" aria-label="Person 1 name"></td><td><input class="form-input" type="text" id="bgp-r1-role" data-p="roster.r1.role" placeholder="Adult, teen, child…" aria-label="Person 1 role"></td><td><input class="form-input" type="text" id="bgp-r1-pace" data-p="roster.r1.pace" placeholder="Owns layer 1: texts aunt at each check-in" aria-label="Person 1 PACE assignment"></td></tr>
+<tr><td><input class="form-input" type="text" id="bgp-r2-name" data-p="roster.r2.name" placeholder="Name" aria-label="Person 2 name"></td><td><input class="form-input" type="text" id="bgp-r2-role" data-p="roster.r2.role" placeholder="Role" aria-label="Person 2 role"></td><td><input class="form-input" type="text" id="bgp-r2-pace" data-p="roster.r2.pace" placeholder="Assignment" aria-label="Person 2 PACE assignment"></td></tr>
+<tr><td><input class="form-input" type="text" id="bgp-r3-name" data-p="roster.r3.name" placeholder="Name" aria-label="Person 3 name"></td><td><input class="form-input" type="text" id="bgp-r3-role" data-p="roster.r3.role" placeholder="Role" aria-label="Person 3 role"></td><td><input class="form-input" type="text" id="bgp-r3-pace" data-p="roster.r3.pace" placeholder="Assignment" aria-label="Person 3 PACE assignment"></td></tr>
+<tr><td><input class="form-input" type="text" id="bgp-r4-name" data-p="roster.r4.name" placeholder="Name" aria-label="Person 4 name"></td><td><input class="form-input" type="text" id="bgp-r4-role" data-p="roster.r4.role" placeholder="Role" aria-label="Person 4 role"></td><td><input class="form-input" type="text" id="bgp-r4-pace" data-p="roster.r4.pace" placeholder="Assignment" aria-label="Person 4 PACE assignment"></td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="card plan-card" id="bgp-card-schedule" aria-labelledby="bgp-h-schedule">
+<div class="plan-card-head"><h2 id="bgp-h-schedule">Check-in schedule</h2></div>
+<p class="plan-card-sub">A plan without a clock is a wish. Pick a standing drill day and a daily check-in window; during an incident, everyone transmits inside the window whether or not there is news.</p>
+<div class="fields">
+<div><label class="form-label" for="bgp-schedule-drillDay">Drill day</label>
+<select class="form-input" id="bgp-schedule-drillDay" data-p="schedule.drillDay">
+<option value="">Pick a day…</option>
+<option>Sunday</option>
+<option>Monday</option>
+<option>Tuesday</option>
+<option>Wednesday</option>
+<option>Thursday</option>
+<option>Friday</option>
+<option>Saturday</option>
+<option>First of the month</option>
+</select></div>
+<div><label class="form-label" for="bgp-schedule-window">Check-in time window</label><input class="form-input" type="text" id="bgp-schedule-window" data-p="schedule.window" placeholder="e.g. 10:00–10:15 am, every day"></div>
+</div>
+<div class="callout callout-caution" style="margin-top:var(--space-3)">
+<h4>Drill like you mean it</h4>
+<p>On drill day, skip the Primary layer entirely and run one full round-trip on the Contingency layer: radios out, channels matched, five-minute silence window respected. The first real emergency is a bad place to discover the batteries died.</p>
+</div>
+</section>
+
+</div>
+</main>
+<footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+
+<script>
+(function(){
+"use strict";
+var APP_ID="breakglass-comms-plan";
+var VERSION=1;
+var STORE_KEY="bg.comms.plan";
+
+function str(v){return typeof v==="string"?v:(v===null||v===undefined?"":String(v));}
+function isoNow(){return new Date().toISOString();}
+function lsGet(k){try{return window.localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{window.localStorage.setItem(k,v);return true;}catch(e){return false;}}
+
+function fields(){return Array.prototype.slice.call(document.querySelectorAll("[data-p]"));}
+
+function sanitize(raw){
+  var src=(raw&&typeof raw==="object")?raw:{};
+  var out={app:APP_ID,version:VERSION,saved:isoNow(),household:str(src.household),pace:{primary:{},alternate:{},contingency:{},emergency:{}},roster:[],schedule:{drillDay:"",window:""}};
+  var pace=(src.pace&&typeof src.pace==="object")?src.pace:{};
+  ["primary","alternate","contingency","emergency"].forEach(function(layer){
+    var rec=(pace[layer]&&typeof pace[layer]==="object")?pace[layer]:{};
+    ["method","trigger","channel","who"].forEach(function(f){out.pace[layer][f]=str(rec[f]);});
+  });
+  var list=Array.isArray(src.roster)?src.roster:[];
+  for(var i=0;i<4;i++){
+    var r=(list[i]&&typeof list[i]==="object")?list[i]:{};
+    out.roster.push({name:str(r.name),role:str(r.role),pace:str(r.pace)});
+  }
+  var sch=(src.schedule&&typeof src.schedule==="object")?src.schedule:{};
+  out.schedule.drillDay=str(sch.drillDay);
+  out.schedule.window=str(sch.window);
+  return out;
+}
+
+function collect(){
+  var o={app:APP_ID,version:VERSION,saved:isoNow(),household:"",pace:{},roster:[],schedule:{}};
+  fields().forEach(function(el){
+    var path=el.getAttribute("data-p").split(".");
+    var v=str(el.value);
+    var head=path[0];
+    if(head==="household"){o.household=v;return;}
+    if(head==="schedule"){o.schedule[path[1]]=v;return;}
+    if(head==="roster"){
+      while(o.roster.length<parseInt(path[1].slice(1),10))o.roster.push({name:"",role:"",pace:""});
+      o.roster[parseInt(path[1].slice(1),10)-1][path[2]]=v;return;
+    }
+    if(!o.pace[head])o.pace[head]={};
+    o.pace[head][path[1]]=v;
+  });
+  return o;
+}
+
+function apply(data){
+  var v=sanitize(data);
+  fields().forEach(function(el){
+    var path=el.getAttribute("data-p").split(".");
+    var value="";
+    if(path[0]==="household")value=v.household;
+    else if(path[0]==="schedule")value=v.schedule[path[1]]||"";
+    else if(path[0]==="roster"){var r=v.roster[parseInt(path[1].slice(1),10)-1]||{};value=str(r[path[2]]);}
+    else {var rec=v.pace[path[0]]||{};value=str(rec[path[1]]);}
+    el.value=value;
+  });
+  return v;
+}
+
+function exportJSON(plan){
+  return JSON.stringify(sanitize(plan),null,2)+"\n";
+}
+
+function boot(){
+  function $(id){return document.getElementById(id);}
+  var badge=$("bgp-autosave");
+  var fileInput=$("bgp-file");
+  var saveTimer=0;
+
+  function setBadge(text,warn){
+    badge.textContent=text;
+    if(warn)badge.classList.add("badge-warn");
+    else badge.classList.remove("badge-warn");
+  }
+  function clock(){
+    var d=new Date();
+    function p(n){return (n<10?"0":"")+n;}
+    return p(d.getHours())+":"+p(d.getMinutes());
+  }
+
+  function persistNow(){
+    var ok=lsSet(STORE_KEY,exportJSON(collect()));
+    if(ok)setBadge("Autosaved "+clock()+" — this browser only",false);
+    else setBadge("Autosave off — use Save/Open file",true);
+    return ok;
+  }
+
+  function scheduleSave(){
+    if(saveTimer)clearTimeout(saveTimer);
+    saveTimer=setTimeout(function(){saveTimer=0;persistNow();},500);
+  }
+
+  function doSaveFile(){
+    try{
+      var blob=new Blob([exportJSON(collect())],{type:"application/json"});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement("a");
+      a.href=url;
+      a.download="breakglass-comms-plan.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){URL.revokeObjectURL(url);},1000);
+      persistNow();
+      setBadge("Saved to file "+clock(),false);
+    }catch(e){
+      setBadge("Save failed — print a paper copy",true);
+    }
+  }
+
+  function openFile(file){
+    if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      var data=null;
+      try{data=JSON.parse(String(reader.result));}catch(e){}
+      var valid=data&&data.app===APP_ID&&Number(data.version)===VERSION&&data.pace&&typeof data.pace==="object";
+      if(!valid){
+        window.alert("That file is not a BreakGlass Family Radio Plan backup (expected "+APP_ID+" v"+VERSION+"). Nothing was changed.");
+        return;
+      }
+      if(!window.confirm("Replace everything currently on this page with "+(file.name||"this file")+"?"))return;
+      apply(data);
+      persistNow();
+    };
+    reader.readAsText(file);
+  }
+
+  document.addEventListener("click",function(ev){
+    var t=ev.target;
+    if(!t||!t.closest)return;
+    var el=t.closest("[data-action]");
+    if(!el)return;
+    var act=el.getAttribute("data-action");
+    if(act==="save-file")doSaveFile();
+    else if(act==="open-file")fileInput.click();
+    else if(act==="print")window.print();
+  },false);
+
+  document.addEventListener("input",scheduleSave,false);
+  document.addEventListener("change",function(ev){
+    if(ev.target===fileInput){openFile(fileInput.files&&fileInput.files[0]);fileInput.value="";return;}
+    scheduleSave();
+  },false);
+
+  var restored=null;
+  var raw=lsGet(STORE_KEY);
+  if(raw){
+    try{restored=JSON.parse(raw);}catch(e){}
+  }
+  apply(restored);
+
+  if(lsSet(STORE_KEY,exportJSON(collect())))setBadge("Autosave on — this browser only",false);
+  else setBadge("Autosave off — use Save/Open file",true);
+}
+
+if(typeof document!=="undefined"&&document.getElementById){
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,false);
+  else boot();
+}
+})();
+</script>
+</body>
+</html>

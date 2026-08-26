@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="survive stabilize">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Radio Reference — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<p style="font-size:var(--fs-sm)"><a href="index.html">&larr; Comms &amp; Radio</a></p>
+<h1>Radio Reference</h1>
+<div class="callout callout-warning">
+<h4>Licensing is the law — and it is easy</h4>
+<p>FRS radios are license-free for everyone. GMRS requires an FCC license ($35, ten years, one license covers your immediate family, no exam). Amateur radio requires passing written exams. Use only FCC-certified, unmodified equipment on these services, and never transmit on a service you are not licensed for. Listening, on the other hand, is always legal.</p>
+</div>
+<nav class="toc-chips" aria-label="Sections">
+<a href="#frs-gmrs">FRS &amp; GMRS channels</a>
+<a href="#noaa">NOAA Weather Radio</a>
+<a href="#discipline">Traffic discipline</a>
+<a href="#antennas">Antenna &amp; reach</a>
+<a href="#ham-path">Ham next steps</a>
+</nav>
+<div class="keyfacts">
+<p class="keyfacts-title">At a glance</p>
+<ul>
+<li><strong>Channel 1 (462.5625 MHz)</strong> is the universal calling and emergency channel on FRS/GMRS radios.</li>
+<li><strong>FRS power caps at 2 watts</strong> — half a watt on channels 8–14. GMRS reaches 50 watts on channels 15–22 with the license.</li>
+<li><strong>NOAA broadcasts live on seven frequencies,</strong> 162.400–162.550 MHz. Scan until you find yours.</li>
+<li><strong>Raise the antenna before adding power</strong> — height multiplies range better than watts do.</li>
+</ul>
+</div>
+<div class="article">
+<h2 id="frs-gmrs">FRS &amp; GMRS: the shared channel chart</h2>
+<p>Nearly every consumer walkie-talkie in the United States shares one channel plan: 22 numbered channels between 462 and 467 MHz. FRS (Family Radio Service) and GMRS (General Mobile Radio Service) overlap on most of them, which means a license-free FRS radio and a licensed GMRS radio can hear each other perfectly well. The differences are power, antennas, and repeaters.</p>
+<table>
+<caption>All 22 FRS/GMRS channels. Power figures are FCC ceilings — most handhelds transmit well under them.</caption>
+<thead><tr><th scope="col">Ch</th><th scope="col">Frequency</th><th scope="col">Who may talk</th><th scope="col">Power ceiling</th><th scope="col">Typical use</th></tr></thead>
+<tbody id="frs-gmrs-rows">
+<tr><td>1</td><td>462.5625 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 5 W</td><td>Calling &amp; emergency — the channel everyone monitors first</td></tr>
+<tr><td>2</td><td>462.5875 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 5 W</td><td>Travel &amp; trail convoys — first step off the calling channel</td></tr>
+<tr><td>3</td><td>462.6125 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 5 W</td><td>Outdoors calling convention; common group meetup channel</td></tr>
+<tr><td>4</td><td>462.6375 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 5 W</td><td>General family chat</td></tr>
+<tr><td>5</td><td>462.6625 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 5 W</td><td>General family chat</td></tr>
+<tr><td>6</td><td>462.6875 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 5 W</td><td>General family chat</td></tr>
+<tr><td>7</td><td>462.7125 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 5 W</td><td>General family chat</td></tr>
+<tr><td>8</td><td>467.5625 MHz</td><td>FRS only</td><td>0.5 W</td><td>Short-range errands; GMRS stations may not transmit here</td></tr>
+<tr><td>9</td><td>467.5875 MHz</td><td>FRS only</td><td>0.5 W</td><td>Short range</td></tr>
+<tr><td>10</td><td>467.6125 MHz</td><td>FRS only</td><td>0.5 W</td><td>Short range</td></tr>
+<tr><td>11</td><td>467.6375 MHz</td><td>FRS only</td><td>0.5 W</td><td>Short range</td></tr>
+<tr><td>12</td><td>467.6625 MHz</td><td>FRS only</td><td>0.5 W</td><td>Short range</td></tr>
+<tr><td>13</td><td>467.6875 MHz</td><td>FRS only</td><td>0.5 W</td><td>Short range</td></tr>
+<tr><td>14</td><td>467.7125 MHz</td><td>FRS only</td><td>0.5 W</td><td>Short range — the quietest tier of the band</td></tr>
+<tr><td>15</td><td>462.5500 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 50 W</td><td>GMRS main line begins — high-power simplex and repeater outputs</td></tr>
+<tr><td>16</td><td>462.5750 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 50 W</td><td>GMRS simplex</td></tr>
+<tr><td>17</td><td>462.6000 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 50 W</td><td>GMRS simplex</td></tr>
+<tr><td>18</td><td>462.6250 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 50 W</td><td>GMRS simplex</td></tr>
+<tr><td>19</td><td>462.6500 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 50 W</td><td>GMRS simplex</td></tr>
+<tr><td>20</td><td>462.6750 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 50 W</td><td>Travel-tone emergency convention (141.3 Hz) and a popular repeater output</td></tr>
+<tr><td>21</td><td>462.7000 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 50 W</td><td>GMRS simplex</td></tr>
+<tr><td>22</td><td>462.7250 MHz</td><td>FRS + GMRS</td><td>FRS 2 W · GMRS 50 W</td><td>GMRS simplex — top of the shared band</td></tr>
+</tbody>
+</table>
+<div class="callout callout-info">
+<h4>About repeaters</h4>
+<p>A GMRS repeater listens on a 467 MHz input frequency and instantly rebroadcasts on a 462 MHz output — a +5 MHz offset — stretching a handheld's range across a whole county. Only licensed GMRS stations may use them, and only radios with a duplex/repeater setting can talk to one; bubble-pack FRS radios cannot. FRS never gets repeaters.</p>
+</div>
+<div class="callout callout-caution">
+<h4>Power limits are law, not suggestions</h4>
+<p>FRS transmits at 2 watts or less anywhere on the band, dropping to half a watt on channels 8–14, and its antennas must stay attached. GMRS runs up to 5 watts on channels 1–7, is banned entirely from channels 8–14, and may reach 50 watts on channels 15–22 with base or mobile stations. Box claims of "36 miles" describe mountaintop-to-mountaintop tests, not streets.</p>
+</div>
+<h2 id="noaa">NOAA Weather Radio: the one-way lifeline</h2>
+<p>NOAA Weather Radio is a nationwide network of more than a thousand transmitters run by the National Weather Service. It broadcasts forecasts, watches, and warnings around the clock — you can only listen. Every weather-band receiver sold in the U.S. tunes these seven frequencies:</p>
+<table>
+<caption>The seven NOAA weather bands. Each area broadcasts on one to three of them — scan until the voice comes through strongest.</caption>
+<thead><tr><th scope="col">Band</th><th scope="col">Frequency</th><th scope="col">Notes</th></tr></thead>
+<tbody id="wx-rows">
+<tr><td>WX1</td><td>162.400 MHz</td><td>One of the three most-used channels; try this first</td></tr>
+<tr><td>WX2</td><td>162.425 MHz</td><td>Second-most common broadcast</td></tr>
+<tr><td>WX3</td><td>162.450 MHz</td><td>Third-most common broadcast</td></tr>
+<tr><td>WX4</td><td>162.475 MHz</td><td>Active where local coverage needs it</td></tr>
+<tr><td>WX5</td><td>162.500 MHz</td><td>Active where local coverage needs it</td></tr>
+<tr><td>WX6</td><td>162.525 MHz</td><td>Active where local coverage needs it</td></tr>
+<tr><td>WX7</td><td>162.550 MHz</td><td>The original weather channel; still widely used</td></tr>
+</tbody>
+</table>
+<h3>SAME alerts wake the radio up</h3>
+<p>SAME — Specific Area Message Encoding — is the digital preamble that precedes every alert. It names the affected counties by code, so a SAME-capable receiver stays silent until a warning targets <em>your</em> county, then blares a distinctive 1050 Hz attention tone before the spoken message. A dedicated weather radio with SAME programming and battery backup will wake a sleeping household faster than any phone alert that depends on a cell network.</p>
+<div class="callout callout-caution">
+<h4>Hand-crank receivers: buy right, test monthly</h4>
+<p>Choose a crank or solar unit that explicitly lists the NOAA weather band — many emergency radios skip it. Test the crank monthly so charging is not a surprise, keep fresh alkaline batteries as the primary source (cranks charge slowly and age), and confirm the unit also receives AM/FM for news when NOAA transmitters themselves lose power.</p>
+</div>
+<h2 id="discipline">Emergency traffic discipline</h2>
+<p>A radio channel shared by a panicked crowd is worth almost nothing. Discipline is what turns it into a tool, and discipline is mostly restraint:</p>
+<ul>
+<li><strong>Plain language always.</strong> Say "I need help," not codes. Ten-codes vary by agency and mean nothing across groups.</li>
+<li><strong>Identify station and location first.</strong> Name, where you are, status. Everything else can wait.</li>
+<li><strong>Listen before you transmit.</strong> Two stations talking over each other equals zero stations heard. Wait for a pause, then key up.</li>
+<li><strong>Keep transmissions short.</strong> Say it once, clearly, then release the button and listen. Long-winded transmissions block real emergencies.</li>
+<li><strong>Honor minutes-of-silence windows.</strong> Directed nets often hold quiet periods — for example the first five minutes past each hour — when nobody transmits except priority traffic, so weak or distant stations can finally be heard. If a net announces silence windows, respect them absolutely.</li>
+</ul>
+<ol class="steps">
+<li><strong>Listen</strong> on the agreed channel for several seconds — longer if a net is running.</li>
+<li><strong>Say who, where, status:</strong> "Rivera, corner of 5th and Oak, we are fine and staying put."</li>
+<li><strong>Release and wait.</strong> Count to five silently before trying again; the other side may need a moment to respond.</li>
+<li><strong>Move to a working channel</strong> once contact is made, leaving the calling channel clear.</li>
+</ol>
+<h2 id="antennas">Antenna &amp; reach basics</h2>
+<p>Range problems are usually antenna problems wearing a power disguise. These frequencies travel almost line-of-sight: whatever your antenna can "see," it can reach.</p>
+<ul>
+<li><strong>Height beats power.</strong> Climbing to higher ground gains far more range than any wattage bump. A radio on a hill hears a valley; a radio in a valley hears itself.</li>
+<li><strong>Antenna up means range multiplied.</strong> Moving a base antenna from the desk to the attic or roofline can double or triple coverage. On handhelds, extend the antenna fully and hold the radio vertical, away from your body.</li>
+<li><strong>Buildings and terrain kill UHF.</strong> The 462/467 MHz band is easily absorbed by concrete, metal walls, and hillsides. Indoors, move upstairs or near a window; outside, get out of the gulch.</li>
+</ul>
+<table>
+<caption>What two stock handhelds really manage in each terrain — treat box ranges as fiction.</caption>
+<thead><tr><th scope="col">Terrain</th><th scope="col">Realistic range</th></tr></thead>
+<tbody>
+<tr><td>Inside buildings / dense urban blocks</td><td>a few blocks to about half a mile</td></tr>
+<tr><td>Wooded hills</td><td>about half a mile to a mile</td></tr>
+<tr><td>Open flat ground or over water</td><td>roughly two to five miles</td></tr>
+<tr><td>Handheld to home base with rooftop antenna</td><td>five to ten-plus miles, depending on height</td></tr>
+</tbody>
+</table>
+<div class="callout callout-info">
+<h4>Cheap height, ranked</h4>
+<p>Walk uphill. Stand on the vehicle roof line (not while transmitting next to the antenna). Put a window between you and the wall. Hold the radio overhead. Every one of these beats squeezing a bigger battery into a pocket radio.</p>
+</div>
+<details class="fold" id="ham-path">
+<summary>Going further: the ham radio starter path</summary>
+<p>Amateur radio is the only service here that requires study, and that study is why hams run the nets when everything else fails. The entry license is the <strong>Technician class</strong>: one 35-question multiple-choice exam (26 correct to pass), no Morse code requirement, administered locally by volunteer examiners for a small session fee. The FCC issues the license free, and it renews every ten years at no cost. Study guides from ARRL-affiliated publishers and free online practice exams cover everything; most people pass within a few weekends of casual study.</p>
+<p>Why bother: after a real disaster, <strong>ARES</strong> (Amateur Radio Emergency Service) and <strong>RACES</strong> (Radio Amateur Civil Emergency Service) volunteers staff health-and-welfare traffic, shelter reporting, and agency liaison nets when phones and internet are gone. Licensed operators can join that work; anyone with a scanner or even an unlicensed receiver can still listen to it. Getting licensed in calm weather means you arrive useful, not curious.</p>
+</details>
+</div>
+<div class="card" style="margin-top:var(--space-5)"><p style="font-size:var(--fs-sm);color:var(--text-muted)">Grounded in public FCC Part 95 service rules, National Weather Service NOAA Weather Radio documentation, and established ARES net practice. Educational reference — verify current FCC fees and rules before relying on them.</p></div>
+</main>
+<footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+</body>
+</html>
