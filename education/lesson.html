@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="rebuild thrive">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Lesson — BreakGlass Schoolhouse</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<script src="../assets/school-core.js?v=1"></script>
+<script src="../assets/lessons/manifest.js?v=1"></script>
+<style>
+.lg-exit{display:inline-flex;align-items:center;gap:var(--space-2);margin:var(--space-4) 0 0;color:var(--text-muted);font-size:var(--fs-sm);font-weight:600;text-decoration:none;}
+.lg-exit:hover{color:var(--accent);}
+.lg-head{margin-top:var(--space-3);}
+.lg-head h1{font-size:var(--fs-2xl);display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;}
+.lg-head h1 i{color:var(--accent);font-size:var(--fs-xl);}
+.lg-badges{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2);}
+.lg-badge-accent{border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:var(--accent-soft);color:var(--accent);}
+.lg-greet{margin-top:var(--space-2);color:var(--text-muted);font-size:var(--fs-sm);}
+.lg-progressline{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-top:var(--space-3);font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);}
+.lg-bar{height:10px;margin-top:var(--space-1);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-pill);overflow:hidden;}
+.lg-bar-fill{height:100%;width:0;background:var(--accent);border-radius:var(--radius-pill);transition:width var(--dur-slow) var(--ease-out);}
+.lg-card{margin-top:var(--space-5);}
+.lg-kicker{font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:var(--space-2);}
+.lg-steptitle{font-size:var(--fs-xl);margin-bottom:var(--space-3);}
+.lg-svg{margin-bottom:var(--space-4);padding:var(--space-3);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);}
+.lg-svg svg{width:min(420px,100%);height:auto;display:block;margin-inline:auto;color:var(--text);}
+.lg-q{font-size:var(--fs-lg);font-weight:600;margin-bottom:var(--space-3);}
+.lg-choices{display:grid;gap:var(--space-2);}
+.choice-btn{display:flex;align-items:flex-start;gap:var(--space-3);width:100%;text-align:left;padding:var(--space-3) var(--space-4);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);font-size:var(--fs-md);transition:border-color var(--dur-fast) var(--ease-out),background-color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast) var(--ease-out);}
+.choice-btn:hover:not(:disabled){border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow-1);}
+.choice-btn:disabled{cursor:not-allowed;opacity:0.75;}
+.choice-btn .letter{flex:none;display:inline-flex;align-items:center;justify-content:center;width:var(--space-6);height:var(--space-6);border-radius:var(--radius-pill);background:var(--surface-2);border:1px solid var(--border);font-weight:700;font-size:var(--fs-sm);}
+.choice-btn.is-picked{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.choice-btn.is-picked .letter{background:var(--accent);border-color:var(--accent);color:var(--text-on-accent);}
+.choice-btn.is-right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--surface));}
+.choice-btn.is-right .letter{background:var(--ok);border-color:var(--ok);color:var(--text-on-accent);}
+.choice-btn.is-wrong{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 10%,var(--surface));animation:pop-in var(--dur-fast) var(--ease-spring) both;}
+.choice-btn.is-wrong .letter{background:var(--danger);border-color:var(--danger);color:var(--text-on-accent);}
+.lg-inputrow{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;}
+.lg-inputrow .form-input{max-width:280px;}
+.lg-unit{font-weight:700;color:var(--text-muted);}
+.lg-attempts{font-size:var(--fs-xs);color:var(--text-muted);font-weight:600;margin-left:var(--space-2);}
+.feedback-line{margin-top:var(--space-3);min-height:1em;}
+.hint-card{margin-top:var(--space-3);}
+.lg-actions{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-5);}
+.lg-submitted{margin-top:var(--space-3);}
+.wordcount{font-size:var(--fs-sm);color:var(--text-muted);font-weight:600;margin-top:var(--space-1);}
+.wordcount.ok-count{color:var(--ok);}
+.grade-card{margin-top:var(--space-3);}
+.interstitial{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bg) 70%,transparent);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+.interstitial .card{text-align:center;padding:var(--space-6) var(--space-7);max-width:90vw;}
+.interstitial h2{font-size:var(--fs-2xl);color:var(--accent);}
+.stars-sm{font-size:var(--fs-lg);margin-top:var(--space-2);}
+.review-list{list-style:none;padding:0;margin:var(--space-4) 0 0;text-align:left;}
+.review-list li{display:flex;gap:var(--space-3);align-items:flex-start;padding:var(--space-3) 0;border-top:1px dashed var(--border);}
+.review-mark{flex:none;font-size:var(--fs-lg);}
+.review-mark.pass{color:var(--ok);}
+.review-mark.fail{color:var(--danger);}
+.review-body{min-width:0;}
+.review-ans{font-size:var(--fs-sm);color:var(--text-muted);}
+.review-flag{margin-left:var(--space-2);}
+.modal-veil{position:fixed;inset:0;z-index:45;background:color-mix(in srgb,var(--bg) 60%,transparent);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:var(--space-4);}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-2);width:min(860px,96vw);max-height:94vh;display:flex;flex-direction:column;overflow:hidden;}
+.modal-head{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border);}
+.modal-head h3{font-size:var(--fs-md);flex:1;margin:0;}
+.pad-note{padding:var(--space-2) var(--space-4) 0;color:var(--text-muted);font-size:var(--fs-sm);}
+.pad-tools{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;padding:var(--space-2) var(--space-4);border-bottom:1px solid var(--border);}
+.swatch{width:28px;height:28px;padding:0;border:1px solid var(--border);border-radius:var(--radius-sm);}
+.swatch[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px;}
+.pad-canvas{display:block;width:100%;height:auto;background:var(--surface);touch-action:none;cursor:crosshair;}
+.modal-foot{display:flex;justify-content:flex-end;gap:var(--space-2);padding:var(--space-3) var(--space-4);border-top:1px solid var(--border);}
+.center-screen{text-align:center;padding:var(--space-7) var(--space-4);}
+.center-screen h2{font-size:var(--fs-2xl);}
+.center-screen .big-icon{font-size:var(--fs-3xl);color:var(--accent);}
+.center-screen p{margin-inline:auto;}
+.score-num{font-size:var(--fs-3xl);font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;}
+@media print{
+.topbar,.lg-exit,.lg-actions,.interstitial,.modal-veil,.hint-card,.feedback-line,.lg-submitted,.no-print{display:none !important;}
+main{max-width:none;padding:0;}
+.card{border:none;box-shadow:none;}
+body{background:#fff;}
+a{color:inherit;text-decoration:none;}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main id="lesson-root" data-state="boot">
+<noscript><div class="card" style="margin-top:var(--space-5);"><h2>This lesson needs JavaScript</h2><p>The interactive lesson player checks answers, saves progress, and hands out stars — all of it runs right here on your own device, nothing is sent anywhere, but it needs JavaScript turned on.</p><p>The written curriculum works with no JavaScript at all: open the <a href="index.html">Schoolhouse library of printable plans and units</a> and teach from paper.</p></div></noscript>
+</main>
+<footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script id="bg-lesson-script">
+(function () {
+  "use strict";
+
+  /*BEGIN-CORE*/
+  var CORE = {
+    normText: function (s) {
+      return String(s == null ? "" : s).trim().toLowerCase();
+    },
+    checkAccept: function (raw, accept) {
+      var v = CORE.normText(raw);
+      if (!v || !accept || !accept.length) return false;
+      for (var i = 0; i < accept.length; i++) {
+        if (CORE.normText(accept[i]) === v) return true;
+      }
+      return false;
+    },
+    wordCount: function (text) {
+      var t = String(text == null ? "" : text).trim();
+      return t ? t.split(/\s+/).length : 0;
+    },
+    essayReady: function (text, minWords) {
+      var min = typeof minWords === "number" && minWords > 0 ? minWords : 0;
+      return CORE.wordCount(text) >= min;
+    },
+    taskKey: function (kind, n) {
+      return "s" + n + "-" + kind;
+    },
+    testTaskKey: function (n) {
+      return "t" + n;
+    },
+    draftKey: function (lessonId, key) {
+      return "bg.lesson.draft." + String(lessonId) + "." + String(key);
+    },
+    clampStep: function (n, len) {
+      var x = Math.floor(Number(n));
+      if (!isFinite(x)) return 0;
+      if (x < 0) x = 0;
+      if (x >= len) x = len - 1;
+      return x;
+    },
+    resolveStartStep: function (resume, pointer, lessonId, len) {
+      if (!resume || !pointer) return 0;
+      if (pointer.lessonId !== lessonId) return 0;
+      var s = Number(pointer.step);
+      if (!isFinite(s)) return 0;
+      return CORE.clampStep(Math.floor(s), len);
+    },
+    hintAllowed: function (settings, step) {
+      if (!step || !step.hint) return false;
+      if (settings && settings.hintsEnabled === false) return false;
+      return true;
+    },
+    gradeTest: function (answers) {
+      var pts = 0;
+      var n = answers.length;
+      for (var i = 0; i < n; i++) {
+        if (answers[i].correct) pts += answers[i].hintUsed ? 0.5 : 1;
+      }
+      return { points: pts, total: n, pct: n ? Math.round((pts / n) * 100) : 0 };
+    },
+    starsFor: function (pct) {
+      if (pct >= 90) return 3;
+      if (pct >= 70) return 2;
+      if (pct >= 50) return 1;
+      return 0;
+    },
+    ladderCopy: function (pct) {
+      if (pct >= 90) return "Outstanding command!";
+      if (pct >= 70) return "Solid work — review the flagged ones";
+      return "Good start — hints are your friend";
+    },
+    confettiAt: function (pct) {
+      return pct >= 80;
+    },
+    celebration: function (i) {
+      var phrases = ["Nice work!", "You're cruising!", "Halfway hero!", "Keep it rolling!", "Strong pace!", "Star student!"];
+      return phrases[((i % phrases.length) + phrases.length) % phrases.length];
+    },
+    isInterstitialStep: function (zeroBasedIndex) {
+      return zeroBasedIndex > 0 && zeroBasedIndex % 3 === 0;
+    },
+    firstTryStars: function (gradableCount, firstTryCorrectCount) {
+      if (!gradableCount) return 0;
+      return CORE.starsFor(Math.round((firstTryCorrectCount / gradableCount) * 100));
+    },
+    pickGradedFeedback: function (submissions, taskId) {
+      if (!submissions || !submissions.length) return null;
+      var best = null;
+      for (var i = 0; i < submissions.length; i++) {
+        var s = submissions[i];
+        var g = s && s.grade;
+        var hasGrade = g !== null && g !== undefined && g !== false;
+        if (s && s.taskId === taskId && hasGrade) {
+          if (!best || String(s.at || "").localeCompare(String(best.at || "")) >= 0) best = s;
+        }
+      }
+      return best;
+    },
+    pickSubmission: function (submissions, taskId) {
+      if (!submissions || !submissions.length) return null;
+      var best = null;
+      for (var i = 0; i < submissions.length; i++) {
+        var s = submissions[i];
+        if (s && s.taskId === taskId) {
+          if (!best || String(s.at || s.submittedAt || "").localeCompare(String(best.at || best.submittedAt || "")) >= 0) best = s;
+        }
+      }
+      return best;
+    },
+    gradeParts: function (submission) {
+      var g = submission ? submission.grade : null;
+      if (g && typeof g === "object") return { score: g.score, text: g.feedback || g.comment || "" };
+      if (typeof g === "number") return { score: g, text: submission.comment || submission.feedback || "" };
+      return { score: g === undefined ? null : g, text: "" };
+    },
+    letter: function (i) {
+      return String.fromCharCode(65 + (i % 26));
+    }
+  };
+  /*END-CORE*/
+
+  var root = document.getElementById("lesson-root");
+  var params = new URLSearchParams(location.search);
+  var lessonId = params.get("id") || "";
+  var wantResume = params.get("resume") === "1";
+  var wantTestJump = params.get("test") === "1";
+  var api = window.BGSchool || null;
+
+  var lesson = null;
+  var session = null;
+  var settings = { hintsEnabled: true };
+  var progress = {};
+  var stepIdx = 0;
+  var runFirstTry = {};
+  var runHints = {};
+  var gradableOrder = [];
+  var testAnswers = [];
+  var testIdx = 0;
+  var bestScore = null;
+  var padMemory = {};
+  var padLive = null;
+  var chipEls = {};
+  var stage = null;
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+  function txt(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    e.textContent = text;
+    return e;
+  }
+  function icon(name) {
+    return '<i class="fa-solid ' + name + '" aria-hidden="true"></i>';
+  }
+  function esc(s) {
+    var d = el("div");
+    d.textContent = s == null ? "" : String(s);
+    return d.innerHTML;
+  }
+  function safeApi(fnName) {
+    return api && typeof api[fnName] === "function" ? api[fnName] : null;
+  }
+  function guard(fn) {
+    try {
+      return fn();
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  function setState(s) {
+    root.setAttribute("data-state", s);
+  }
+
+  function tokenColor(name) {
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+    return v ? v.trim() : "#888888";
+  }
+
+  function renderCard(title, bodyHtml, linkHref, linkLabel, iconName) {
+    setState("card");
+    root.innerHTML = "";
+    var c = el("div", "card pop-in");
+    c.style.marginTop = "var(--space-5)";
+    c.appendChild(el("h2", null, icon(iconName || "fa-circle-info") + " " + esc(title)));
+    var p = el("p");
+    p.innerHTML = bodyHtml;
+    c.appendChild(p);
+    if (linkHref) {
+      var a = el("a", "btn btn-primary");
+      a.href = linkHref;
+      a.textContent = linkLabel || "Back to the Schoolhouse";
+      a.style.marginTop = "var(--space-3)";
+      c.appendChild(a);
+    }
+    root.appendChild(c);
+  }
+
+  function renderGateNoCore() {
+    renderCard(
+      "Schoolhouse core not loaded",
+      "This lesson player could not find its engine (<code>school-core.js</code>). Nothing is broken on the rest of the stick — the printed curriculum never needs a screen.",
+      "index.html",
+      "Open the Schoolhouse library",
+      "fa-plug-circle-xmark"
+    );
+  }
+  function renderGateNoStudent() {
+    renderCard(
+      "Pick your desk first",
+      "Lessons keep your stars, drafts, and scores in your own student file, so this page needs to know who you are. Choose your name on the dashboard or in the Progress Tracker, then come back — the lesson will be waiting.",
+      "index.html",
+      "Back to the Schoolhouse",
+      "fa-user-graduate"
+    );
+  }
+  function renderUnknown(reason) {
+    var msg =
+      reason === "disabled"
+        ? "That lesson isn't switched on yet — your teacher may be saving it for later."
+        : reason === "shelf"
+        ? "The curriculum shelf for lessons couldn't be opened on this device."
+        : "We searched the curriculum shelf and found no lesson at that address.";
+    renderCard(
+      "Lesson not found",
+      msg + "<br>Every written plan and printable unit still lives in the Schoolhouse library.",
+      "index.html",
+      "Browse all lessons &amp; plans",
+      "fa-book-open"
+    );
+  }
+
+  function localConfetti() {
+    if (safeApi("confettiBurst")) {
+      guard(function () {
+        api.confettiBurst();
+      });
+      return;
+    }
+    guard(function () {
+      var wrap = el("div", "confetti");
+      var colors = [tokenColor("--accent"), tokenColor("--ok"), tokenColor("--info"), tokenColor("--warn")];
+      for (var i = 0; i < 80; i++) {
+        var bit = document.createElement("i");
+        bit.style.left = Math.random() * 100 + "%";
+        bit.style.background = colors[i % colors.length];
+        bit.style.animationDuration = 2.2 + Math.random() * 2 + "s";
+        bit.style.transform = "rotate(" + Math.random() * 360 + "deg)";
+        wrap.appendChild(bit);
+      }
+      document.body.appendChild(wrap);
+      setTimeout(function () {
+        wrap.remove();
+      }, 4800);
+    });
+  }
+
+  function starRow(count, total) {
+    var row = el("div", "star-row");
+    row.setAttribute("aria-label", count + " of " + total + " stars earned");
+    for (var i = 0; i < total; i++) {
+      var s = el("span", i < count ? "earned" : null, icon("fa-star"));
+      if (i >= count) {
+        s.style.opacity = "0.3";
+      } else {
+        s.style.animationDelay = i * 140 + "ms";
+      }
+      row.appendChild(s);
+    }
+    return row;
+  }
+
+  function progressOf() {
+    return progress || {};
+  }
+  function lessonEntry() {
+    var p = progressOf();
+    var e = p[lessonId];
+    return e && typeof e === "object" ? e : null;
+  }
+  function storedPointer() {
+    var e = lessonEntry();
+    if (e && typeof e.step === "number") return { lessonId: lessonId, step: e.step };
+    var p = progressOf();
+    if (p.pointer && typeof p.pointer === "object") return p.pointer;
+    if (p.pointers && p.pointers[lessonId]) return p.pointers[lessonId];
+    return null;
+  }
+  function storedBestScore() {
+    var e = lessonEntry();
+    if (e && typeof e.testScore === "number") return e.testScore;
+    var p = progressOf();
+    var spots = [
+      p.tests && p.tests[lessonId],
+      p.lessons && p.lessons[lessonId],
+      p.scores && p.scores[lessonId]
+    ];
+    for (var i = 0; i < spots.length; i++) {
+      var v = spots[i];
+      if (typeof v === "number") return v;
+      if (v && typeof v === "object" && typeof v.score === "number") return v.score;
+    }
+    return null;
+  }
+  function storedDraft(key) {
+    var p = progressOf();
+    if (p.drafts && p.drafts[key]) return p.drafts[key];
+    try {
+      return localStorage.getItem(CORE.draftKey(lessonId, key));
+    } catch (e) {
+      return null;
+    }
+  }
+  function saveDraft(key, text) {
+    try {
+      localStorage.setItem(CORE.draftKey(lessonId, key), text);
+    } catch (e) {}
+    var f = safeApi("saveDraft") || safeApi("setDraft");
+    if (f) {
+      guard(function () {
+        f(session.id, lessonId, key, text);
+      });
+    }
+  }
+
+  function syncHeader(stepNum, total, label) {
+    var bar = document.getElementById("lg-bar-fill");
+    var count = document.getElementById("lg-stepcount");
+    if (bar) bar.style.width = Math.round((stepNum / Math.max(total, 1)) * 100) + "%";
+    if (count) count.textContent = label;
+  }
+
+  function buildChrome() {
+    root.innerHTML = "";
+    setState("run");
+    var dash = el("a", "lg-exit");
+    dash.href = "student.html?id=" + encodeURIComponent(session.id);
+    dash.innerHTML = icon("fa-arrow-left") + " Back to my dashboard";
+    root.appendChild(dash);
+
+    var head = el("section", "card lg-head");
+    head.appendChild(el("h1", null, icon("fa-chalkboard-user") + " " + esc(lesson.title || "Lesson")));
+    var badges = el("div", "lg-badges");
+    if (lesson.subject) badges.appendChild(txt("span", "badge lg-badge-accent", lesson.subject));
+    if (lesson.band) badges.appendChild(txt("span", "badge", "Band " + lesson.band));
+    if (lesson.minutes) badges.appendChild(txt("span", "badge", icon("fa-clock") + " ~" + lesson.minutes + " min"));
+    if (lesson.steps && lesson.steps.length) badges.appendChild(txt("span", "badge", lesson.steps.length + " steps"));
+    if (lesson.test && lesson.test.length) badges.appendChild(txt("span", "badge", icon("fa-flag-checkered") + " mastery check"));
+    head.appendChild(badges);
+    head.appendChild(txt("p", "lg-greet", "Hi, " + (session.name || "student") + " — ready when you are."));
+    var line = el("div", "lg-progressline");
+    line.appendChild(txt("span", null, "Progress"));
+    var cnt = txt("span", null, "");
+    cnt.id = "lg-stepcount";
+    line.appendChild(cnt);
+    head.appendChild(line);
+    var barWrap = el("div", "lg-bar");
+    var barFill = el("div", "lg-bar-fill");
+    barFill.id = "lg-bar-fill";
+    barWrap.appendChild(barFill);
+    head.appendChild(barWrap);
+    var actions = el("div", "lg-actions");
+    actions.style.marginTop = "var(--space-3)";
+    var printBtn = el("button", "btn btn-ghost no-print", icon("fa-print") + " Print this step");
+    printBtn.type = "button";
+    printBtn.addEventListener("click", function () {
+      window.print();
+    });
+    actions.appendChild(printBtn);
+    head.appendChild(actions);
+    root.appendChild(head);
+
+    stage = el("section", "lg-stage");
+    root.appendChild(stage);
+  }
+
+  function gotoStep(i, suppressParty) {
+    stepIdx = CORE.clampStep(i, lesson.steps.length);
+    var p = safeApi("setPointer");
+    if (p) guard(function () { p(session.id, lessonId, stepIdx); });
+    if (!suppressParty && CORE.isInterstitialStep(stepIdx)) {
+      playInterstitial(renderStep);
+    } else {
+      renderStep();
+    }
+  }
+
+  function playInterstitial(next) {
+    stage.innerHTML = "";
+    var veil = el("div", "interstitial pop-in");
+    var card = el("div", "card");
+    card.appendChild(el("h2", null, CORE.celebration(stepIdx)));
+    var sr = starRow(3, 3);
+    sr.classList.add("stars-sm");
+    card.appendChild(sr);
+    card.appendChild(txt("p", "pad-note", "Onward!"));
+    veil.appendChild(card);
+    document.body.appendChild(veil);
+    var done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      veil.remove();
+      next();
+    }
+    veil.addEventListener("click", finish);
+    setTimeout(finish, 1300);
+  }
+
+  function stepShell(kicker, titleText) {
+    stage.innerHTML = "";
+    var card = el("section", "card lg-card pop-in");
+    card.appendChild(el("p", "lg-kicker", kicker));
+    if (titleText) card.appendChild(el("h2", "lg-steptitle", titleText));
+    stage.appendChild(card);
+    return card;
+  }
+
+  function continueButton(onClick) {
+    var b = el("button", "btn btn-primary", "Continue " + icon("fa-arrow-right"));
+    b.type = "button";
+    b.addEventListener("click", onClick);
+    return b;
+  }
+  function advance() {
+    if (stepIdx + 1 < lesson.steps.length) {
+      gotoStep(stepIdx + 1, false);
+    } else {
+      finishSteps();
+    }
+  }
+
+  function renderStep() {
+    syncHeader(stepIdx, lesson.steps.length, "Step " + (stepIdx + 1) + " of " + lesson.steps.length);
+    var step = lesson.steps[stepIdx];
+    var key = CORE.taskKey(step.type, stepIdx + 1);
+    if (step.type === "read") return renderRead(step);
+    if (step.type === "info") return renderInfo(step);
+    if (step.type === "essay") return renderEssay(step, key);
+    if (step.type === "mc" || step.type === "input" || step.type === "scratch") {
+      return renderQuestionCard(step, key, false);
+    }
+    return renderRead({ html: "<p>(This step type isn't supported by this player yet.)</p>" });
+  }
+
+  function appendSvg(card, svg) {
+    if (!svg) return;
+    var holder = el("div", "lg-svg");
+    holder.innerHTML = svg;
+    card.appendChild(holder);
+  }
+
+  function renderRead(step) {
+    var card = stepShell("Reading · step " + (stepIdx + 1), null);
+    var body = el("div", "article");
+    body.innerHTML = step.html || "";
+    card.appendChild(body);
+    var actions = el("div", "lg-actions");
+    actions.appendChild(continueButton(advance));
+    card.appendChild(actions);
+  }
+
+  function renderInfo(step) {
+    var card = stepShell("Good to know · step " + (stepIdx + 1), esc(step.title || "Quick note"));
+    var body = el("div", "article");
+    body.innerHTML = step.html || "";
+    card.appendChild(body);
+    var actions = el("div", "lg-actions");
+    actions.appendChild(continueButton(advance));
+    card.appendChild(actions);
+  }
+
+  function hintCardEl(step) {
+    var h = el("div", "callout callout-warning hint-card pop-in");
+    h.setAttribute("role", "status");
+    h.appendChild(el("h4", null, icon("fa-lightbulb") + " Hint"));
+    h.appendChild(txt("p", null, step.hint));
+    h.appendChild(txt("p", null, "Try again once — you've got this."));
+    return h;
+  }
+
+  function okBadge(msg) {
+    return '<span class="badge" style="border-color:color-mix(in srgb,var(--ok) 40%,transparent);background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok);">' + icon("fa-circle-check") + " " + msg + "</span>";
+  }
+  function warnBadge(msg) {
+    return '<span class="badge badge-warn">' + icon("fa-rotate-right") + " " + msg + "</span>";
+  }
+
+  function renderQuestionCard(step, key, isTest) {
+    var card = stepShell(
+      isTest
+        ? "Mastery check · question " + (testIdx + 1) + " of " + lesson.test.length
+        : (step.type === "scratch" ? "Work it out · step " : "Practice · step ") + (stepIdx + 1),
+      null
+    );
+    appendSvg(card, step.svg);
+    card.appendChild(el("p", "lg-q", esc(step.q)));
+
+    var attempts = 0;
+    var hintShown = false;
+    var solved = false;
+    var feedback = el("div", "feedback-line");
+    feedback.setAttribute("aria-live", "polite");
+    var attemptsLbl = txt("span", "lg-attempts", "");
+    var actions = el("div", "lg-actions");
+
+    function showHintIfEarned() {
+      if (hintShown || solved) return false;
+      if (!CORE.hintAllowed(settings, step)) return false;
+      hintShown = true;
+      runHints[key] = true;
+      card.insertBefore(hintCardEl(step), actions);
+      return true;
+    }
+    function solveCorrect(firstTry) {
+      solved = true;
+      runFirstTry[key] = !!firstTry;
+      if (gradableOrder.indexOf(key) === -1) gradableOrder.push(key);
+      var rec = safeApi("recordAnswer");
+      if (rec) guard(function () { rec(session.id, lessonId, key, { correct: !!firstTry, hintUsed: !!runHints[key] }); });
+    }
+
+    var field = null;
+    var choicesWrap = null;
+
+    if (step.type === "mc") {
+      choicesWrap = el("div", "lg-choices");
+      (step.choices || []).forEach(function (c, i) {
+        var b = el("button", "choice-btn");
+        b.type = "button";
+        b.appendChild(el("span", "letter", CORE.letter(i)));
+        b.appendChild(txt("span", null, c));
+        b.addEventListener("click", function () {
+          if (isTest) {
+            testAnswers[testIdx] = { correct: i === step.answer, hintUsed: hintShown, yours: c, right: (step.choices || [])[step.answer] };
+            Array.prototype.forEach.call(choicesWrap.children, function (cb) {
+              cb.disabled = true;
+              cb.classList.toggle("is-picked", cb === b);
+            });
+            return;
+          }
+          if (solved || b.disabled) return;
+          attempts++;
+          attemptsLbl.textContent = attempts > 1 ? "Attempt " + attempts : "";
+          if (i === step.answer) {
+            b.classList.add("is-right");
+            solveCorrect(attempts === 1);
+            feedback.innerHTML = okBadge("Correct!");
+            Array.prototype.forEach.call(choicesWrap.children, function (cb) { cb.disabled = true; });
+            var cont = continueButton(advance);
+            actions.appendChild(cont);
+            cont.focus();
+          } else {
+            b.classList.add("is-wrong");
+            b.disabled = true;
+            feedback.innerHTML = warnBadge("Not quite — try another.");
+            showHintIfEarned();
+          }
+        });
+        choicesWrap.appendChild(b);
+      });
+      card.appendChild(choicesWrap);
+    } else {
+      var row = el("div", "lg-inputrow");
+      field = el("input", "form-input");
+      field.type = "text";
+      field.autocomplete = "off";
+      field.setAttribute("aria-label", step.q);
+      row.appendChild(field);
+      if (step.unit) row.appendChild(txt("span", "lg-unit", step.unit));
+      if (!isTest) {
+        var checkBtn = el("button", "btn btn-primary", "Check");
+        checkBtn.type = "button";
+        row.appendChild(checkBtn);
+      }
+      card.appendChild(row);
+
+      if (step.type === "scratch") {
+        var padBtn = el("button", "btn btn-ghost no-print", icon("fa-pen-ruler") + " Open scratch pad");
+        padBtn.type = "button";
+        padBtn.addEventListener("click", function () {
+          openScratchPad(key);
+        });
+        row.appendChild(padBtn);
+        var chip = el("span", "badge lg-submitted");
+        chip.id = "lg-padchip-" + key;
+        chipEls[key] = chip;
+        chip.hidden = !padMemory[key];
+        chip.innerHTML = icon("fa-pen-ruler") + " Show-your-work attached ✓";
+        row.appendChild(chip);
+      }
+
+      function doCheck() {
+        if (solved) return;
+        attempts++;
+        attemptsLbl.textContent = attempts > 1 ? "Attempt " + attempts : "";
+        if (CORE.checkAccept(field.value, step.accept)) {
+          solved = true;
+          solveCorrect(attempts === 1);
+          field.disabled = true;
+          checkBtn.disabled = true;
+          feedback.innerHTML = okBadge("That's it!");
+          if (step.type === "scratch") attachScratchWork(key);
+          var cont = continueButton(advance);
+          actions.appendChild(cont);
+          cont.focus();
+        } else {
+          feedback.innerHTML = warnBadge("Not quite — check it once more.");
+          showHintIfEarned();
+          field.focus();
+          field.select();
+        }
+      }
+      if (!isTest) {
+        checkBtn.addEventListener("click", doCheck);
+        field.addEventListener("keydown", function (ev) {
+          if (ev.key === "Enter") {
+            ev.preventDefault();
+            doCheck();
+          }
+        });
+      }
+    }
+
+    if (CORE.hintAllowed(settings, step)) {
+      var hintBtn = el("button", "btn btn-ghost no-print", icon("fa-lightbulb") + " Hint");
+      hintBtn.addEventListener("click", function () {
+        showHintIfEarned();
+        hintBtn.hidden = true;
+      });
+      actions.appendChild(hintBtn);
+    }
+
+    card.appendChild(attemptsLbl);
+    card.appendChild(feedback);
+    card.appendChild(actions);
+
+    if (isTest) {
+      var nextQ = el("button", "btn btn-primary");
+      nextQ.type = "button";
+      nextQ.innerHTML = (testIdx + 1 < lesson.test.length ? "Next question " : "Finish ") + icon("fa-arrow-right");
+      nextQ.addEventListener("click", goNext);
+      actions.appendChild(nextQ);
+      if (field) {
+        field.addEventListener("keydown", function (ev) {
+          if (ev.key === "Enter") {
+            ev.preventDefault();
+            goNext();
+          }
+        });
+      }
+    }
+
+    function goNext() {
+      if (!testAnswers[testIdx]) {
+        if (step.type === "mc") {
+          testAnswers[testIdx] = { correct: false, hintUsed: hintShown, yours: "(no answer)", right: (step.choices || [])[step.answer] };
+        } else {
+          testAnswers[testIdx] = { correct: CORE.checkAccept(field ? field.value : "", step.accept), hintUsed: hintShown, yours: field ? field.value : "", right: (step.accept || [])[0] };
+        }
+      }
+      var rec = safeApi("recordAnswer");
+      if (rec) {
+        (function (n) {
+          guard(function () {
+            rec(session.id, lessonId, CORE.testTaskKey(n + 1), { correct: !!testAnswers[n].correct, hintUsed: !!testAnswers[n].hintUsed });
+          });
+        })(testIdx);
+      }
+      testIdx++;
+      if (testIdx < lesson.test.length) {
+        renderTestQuestion();
+      } else {
+        finishTest();
+      }
+    }
+  }
+
+  function attachScratchWork(key) {
+    var url = null;
+    if (padLive && padLive.key === key) {
+      guard(function () {
+        url = padLive.canvas.toDataURL("image/png");
+      });
+    }
+    if (!url) url = padMemory[key] || null;
+    if (!url) return;
+    padMemory[key] = url;
+    var sub = safeApi("addSubmission");
+    if (sub) {
+      guard(function () {
+        sub({ studentId: session.id, lessonId: lessonId, taskId: key, kind: "scratch", text: "", img: url, submittedAt: Date.now() });
+      });
+    }
+    padLive = null;
+  }
+
+  function openScratchPad(key) {
+    var oldFocus = document.activeElement;
+    var veil = el("div", "modal-veil");
+    veil.setAttribute("role", "dialog");
+    veil.setAttribute("aria-modal", "true");
+    veil.setAttribute("aria-label", "Scratch pad");
+    var box = el("div", "modal-box pop-in");
+    var head = el("div", "modal-head");
+    head.appendChild(el("h3", null, icon("fa-pen-ruler") + " Scratch pad"));
+    var closeX = el("button", "btn btn-ghost", icon("fa-xmark"));
+    closeX.type = "button";
+    closeX.setAttribute("aria-label", "Close scratch pad");
+    head.appendChild(closeX);
+    box.appendChild(head);
+    box.appendChild(txt("p", "pad-note", "Show your work — your teacher sees this."));
+
+    var W = 800;
+    var H = 480;
+    var tools = el("div", "pad-tools");
+    var canvas = el("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    canvas.className = "pad-canvas";
+    var ctx = canvas.getContext("2d");
+    var surfaceCol = tokenColor("--surface");
+    var cols = [tokenColor("--accent"), tokenColor("--info"), tokenColor("--danger")];
+    var tool = "pen";
+    var col = cols[0];
+    var drawing = false;
+    var lx = 0, ly = 0, mx = 0, my = 0;
+    var undoStack = [];
+    var undoBtn = el("button", "btn btn-ghost", icon("fa-rotate-left") + " Undo");
+    undoBtn.type = "button";
+    undoBtn.disabled = true;
+
+    function paintPaper() {
+      ctx.fillStyle = surfaceCol;
+      ctx.fillRect(0, 0, W, H);
+    }
+    function snap() {
+      try {
+        undoStack.push(ctx.getImageData(0, 0, W, H));
+        if (undoStack.length > 10) undoStack.shift();
+        undoBtn.disabled = undoStack.length === 0;
+      } catch (e) {}
+    }
+    function pos(ev) {
+      var r = canvas.getBoundingClientRect();
+      return { x: (ev.clientX - r.left) * (W / r.width), y: (ev.clientY - r.top) * (H / r.height) };
+    }
+    function strokeCol() {
+      return tool === "eraser" ? surfaceCol : col;
+    }
+    canvas.addEventListener("pointerdown", function (ev) {
+      if (drawing) return;
+      drawing = true;
+      try { canvas.setPointerCapture(ev.pointerId); } catch (e) {}
+      var p = pos(ev);
+      lx = p.x; ly = p.y; mx = p.x; my = p.y;
+      ctx.beginPath();
+      ctx.fillStyle = strokeCol();
+      ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    canvas.addEventListener("pointermove", function (ev) {
+      if (!drawing) return;
+      var p = pos(ev);
+      var nx = (lx + p.x) / 2;
+      var ny = (ly + p.y) / 2;
+      ctx.beginPath();
+      ctx.strokeStyle = strokeCol();
+      ctx.lineWidth = tool === "eraser" ? 18 : 5;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.moveTo(mx, my);
+      ctx.quadraticCurveTo(lx, ly, nx, ny);
+      ctx.stroke();
+      mx = nx; my = ny; lx = p.x; ly = p.y;
+    });
+    function endStroke() {
+      if (!drawing) return;
+      drawing = false;
+      snap();
+    }
+    canvas.addEventListener("pointerup", endStroke);
+    canvas.addEventListener("pointercancel", endStroke);
+
+    undoBtn.addEventListener("click", function () {
+      if (!undoStack.length) return;
+      ctx.putImageData(undoStack.pop(), 0, 0);
+      undoBtn.disabled = undoStack.length === 0;
+    });
+    var clearBtn = el("button", "btn btn-danger", icon("fa-trash") + " Clear");
+    clearBtn.type = "button";
+    clearBtn.addEventListener("click", function () {
+      snap();
+      paintPaper();
+    });
+    var eraserBtn = el("button", "btn btn-ghost", icon("fa-eraser") + " Eraser");
+    eraserBtn.type = "button";
+    eraserBtn.setAttribute("aria-pressed", "false");
+    eraserBtn.addEventListener("click", function () {
+      tool = tool === "eraser" ? "pen" : "eraser";
+      eraserBtn.setAttribute("aria-pressed", tool === "eraser" ? "true" : "false");
+    });
+    tools.appendChild(eraserBtn);
+    tools.appendChild(undoBtn);
+    tools.appendChild(clearBtn);
+    cols.forEach(function (c, i) {
+      var sw = el("button", "swatch");
+      sw.type = "button";
+      sw.style.background = c;
+      sw.setAttribute("aria-label", "Pen color " + (i + 1));
+      sw.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+      sw.addEventListener("click", function () {
+        col = c;
+        tool = "pen";
+        eraserBtn.setAttribute("aria-pressed", "false");
+        Array.prototype.forEach.call(tools.querySelectorAll(".swatch"), function (s2) {
+          s2.setAttribute("aria-pressed", s2 === sw ? "true" : "false");
+        });
+      });
+      tools.appendChild(sw);
+    });
+
+    var foot = el("div", "modal-foot");
+    var doneBtn = el("button", "btn btn-primary", icon("fa-check") + " Done");
+    doneBtn.type = "button";
+    foot.appendChild(doneBtn);
+
+    box.appendChild(tools);
+    box.appendChild(canvas);
+    box.appendChild(foot);
+    veil.appendChild(box);
+    document.body.appendChild(veil);
+
+    paintPaper();
+    var prior = padMemory[key];
+    if (prior) {
+      var im = new Image();
+      im.onload = function () {
+        ctx.drawImage(im, 0, 0, W, H);
+      };
+      im.src = prior;
+    }
+    snap();
+
+    function close() {
+      var url = null;
+      guard(function () {
+        url = canvas.toDataURL("image/png");
+      });
+      if (url) {
+        padMemory[key] = url;
+        padLive = { key: key, canvas: canvas };
+        if (chipEls[key]) chipEls[key].hidden = false;
+      }
+      veil.remove();
+      document.removeEventListener("keydown", onKey);
+      if (oldFocus && oldFocus.focus) oldFocus.focus();
+    }
+    function onKey(ev) {
+      if (ev.key === "Escape") close();
+    }
+    closeX.addEventListener("click", close);
+    doneBtn.addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+    closeX.focus();
+  }
+
+  function renderEssay(step, key) {
+    var card = stepShell("Writing · step " + (stepIdx + 1), null);
+    var prompt = el("div", "callout callout-info");
+    prompt.appendChild(el("h4", null, icon("fa-feather-pointed") + " Your prompt"));
+    prompt.appendChild(txt("p", null, step.prompt));
+    card.appendChild(prompt);
+
+    var subs = progressOf().submissions || [];
+    var prior = CORE.pickSubmission(subs, key);
+    var graded = CORE.pickGradedFeedback(subs, key);
+
+    var ta = el("textarea", "form-input");
+    ta.rows = 7;
+    ta.placeholder = "Write your answer here…";
+    var saved = storedDraft(key);
+    if (saved) ta.value = saved;
+    else if (prior && prior.text) ta.value = prior.text;
+
+    var minWords = typeof step.minWords === "number" ? step.minWords : 0;
+    var wc = txt("p", "wordcount", "");
+    var submitBtn = el("button", "btn btn-primary", icon("fa-paper-plane") + " Submit to teacher");
+    submitBtn.type = "button";
+    var actions = el("div", "lg-actions");
+    var stateLine = el("div", "lg-submitted");
+
+    function refreshCount() {
+      var n = CORE.wordCount(ta.value);
+      wc.textContent = minWords ? n + " / " + minWords + " words" : n + " words";
+      wc.classList.toggle("ok-count", CORE.essayReady(ta.value, minWords));
+      submitBtn.disabled = !CORE.essayReady(ta.value, minWords);
+    }
+    var saveTimer = null;
+    ta.addEventListener("input", function () {
+      refreshCount();
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(function () {
+        saveDraft(key, ta.value);
+      }, 600);
+    });
+
+    function markSubmitted() {
+      ta.disabled = true;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = icon("fa-circle-check") + " Submitted";
+      stateLine.innerHTML = "";
+      var chip = el("span", "badge");
+      chip.style.borderColor = "color-mix(in srgb,var(--ok) 40%,transparent)";
+      chip.style.background = "color-mix(in srgb,var(--ok) 12%,transparent)";
+      chip.style.color = "var(--ok)";
+      chip.innerHTML = icon("fa-circle-check") + " Submitted for teacher review";
+      stateLine.appendChild(chip);
+    }
+
+    submitBtn.addEventListener("click", function () {
+      if (!CORE.essayReady(ta.value, minWords)) return;
+      saveDraft(key, ta.value);
+      var sub = safeApi("addSubmission");
+      if (sub) {
+        guard(function () {
+          sub({
+            studentId: session.id,
+            lessonId: lessonId,
+            taskId: key,
+            kind: "essay",
+            text: ta.value,
+            img: null,
+            submittedAt: Date.now()
+          });
+        });
+      }
+      markSubmitted();
+    });
+
+    if (prior) markSubmitted();
+    refreshCount();
+
+    card.appendChild(ta);
+    card.appendChild(wc);
+    if (step.sourceLink) {
+      var src = el("a", "btn btn-ghost", icon("fa-book-open") + " Open the source reading");
+      src.href = step.sourceLink;
+      src.target = "_blank";
+      src.rel = "noopener";
+      actions.appendChild(src);
+    }
+    actions.appendChild(submitBtn);
+    var spacer = txt("span", "", "");
+    spacer.style.flex = "1";
+    actions.appendChild(spacer);
+    actions.appendChild(continueButton(advance));
+    card.appendChild(actions);
+    card.appendChild(stateLine);
+
+    if (graded) {
+      var parts = CORE.gradeParts(graded);
+      var g = el("div", "callout grade-card");
+      g.style.setProperty("--callout-tone", "var(--ok)");
+      g.appendChild(el("h4", null, icon("fa-stamp") + " Teacher feedback"));
+      g.appendChild(txt("p", null, "Grade: " + (parts.score === null || parts.score === undefined ? "—" : String(parts.score)) + (typeof parts.score === "number" ? "/100" : "")));
+      if (parts.text) g.appendChild(txt("p", null, parts.text));
+      card.appendChild(g);
+    }
+  }
+
+  function finishSteps() {
+    syncHeader(lesson.steps.length, lesson.steps.length, "All " + lesson.steps.length + " steps done");
+    var hasTest = !!(lesson.test && lesson.test.length);
+    bestScore = storedBestScore();
+    if (hasTest && (bestScore === null || bestScore < 70)) {
+      renderOffer();
+    } else if (hasTest) {
+      renderResultsFromStored();
+    } else {
+      renderPlainCompletion(false);
+    }
+  }
+
+  function dashboardLink(primary) {
+    var home = el("a", "btn " + (primary ? "btn-primary" : "btn-ghost"), icon("fa-house") + " Back to my dashboard");
+    home.href = "student.html?id=" + encodeURIComponent(session.id);
+    return home;
+  }
+
+  function renderOffer() {
+    setState("offer");
+    stage.innerHTML = "";
+    var card = el("section", "card center-screen pop-in");
+    card.appendChild(el("p", "big-icon", icon("fa-trophy")));
+    card.appendChild(el("h2", null, "Ready for the mastery check?"));
+    card.appendChild(txt("p", null, "You finished every step of “" + (lesson.title || "this lesson") + "”. The mastery check is " + lesson.test.length + " quick questions — no backtracking, hints allowed, and your best score is kept."));
+    var actions = el("div", "lg-actions");
+    actions.style.justifyContent = "center";
+    var start = el("button", "btn btn-primary", icon("fa-flag-checkered") + " Start the test");
+    start.type = "button";
+    start.addEventListener("click", startTest);
+    var later = el("button", "btn btn-ghost", "Maybe later");
+    later.type = "button";
+    later.addEventListener("click", function () {
+      var cl = safeApi("completeLesson");
+      if (cl && typeof bestScore !== "number") {
+        guard(function () { cl(session.id, lessonId, null); });
+      }
+      renderPlainCompletion(true);
+    });
+    actions.appendChild(start);
+    actions.appendChild(later);
+    actions.appendChild(dashboardLink(false));
+    card.appendChild(actions);
+    stage.appendChild(card);
+  }
+
+  function startTest() {
+    setState("test");
+    testIdx = 0;
+    testAnswers = [];
+    renderTestQuestion();
+  }
+  function renderTestQuestion() {
+    syncHeader(testIdx, lesson.test.length, "Mastery check · question " + (testIdx + 1) + " of " + lesson.test.length);
+    renderQuestionCard(lesson.test[testIdx], CORE.testTaskKey(testIdx + 1), true);
+  }
+
+  function finishTest() {
+    setState("results");
+    var res = CORE.gradeTest(testAnswers);
+    var stars = CORE.starsFor(res.pct);
+    var toStore = bestScore === null ? res.pct : Math.max(bestScore, res.pct);
+    var cl = safeApi("completeLesson");
+    if (cl) guard(function () { cl(session.id, lessonId, toStore); });
+    bestScore = toStore;
+    if (CORE.confettiAt(res.pct)) localConfetti();
+    syncHeader(lesson.steps.length + 1, lesson.steps.length + 1, "Mastery check scored: " + res.pct + "%");
+
+    stage.innerHTML = "";
+    var card = el("section", "card center-screen pop-in");
+    card.appendChild(el("p", "big-icon", icon(res.pct >= 70 ? "fa-medal" : "fa-seedling")));
+    card.appendChild(el("h2", null, CORE.ladderCopy(res.pct)));
+    card.appendChild(txt("p", "score-num", res.pct + "%"));
+    card.appendChild(starRow(stars, 3));
+    var sub = txt("p", "pad-note", res.points + " of " + res.total + " points · best kept score: " + bestScore + "%");
+    card.appendChild(sub);
+
+    var list = el("ul", "review-list");
+    testAnswers.forEach(function (a, i) {
+      var li = el("li");
+      li.appendChild(el("span", "review-mark " + (a.correct ? "pass" : "fail"), icon(a.correct ? "fa-circle-check" : "fa-circle-xmark")));
+      var body = el("div", "review-body");
+      body.appendChild(txt("strong", null, "Q" + (i + 1) + ". " + lesson.test[i].q));
+      body.appendChild(txt("div", "review-ans", "Your answer: " + (a.yours === "" ? "—" : a.yours)));
+      if (!a.correct) body.appendChild(txt("div", "review-ans", "Correct answer: " + (a.right || "—")));
+      if (a.hintUsed) {
+        var flag = el("span", "badge review-flag");
+        flag.innerHTML = icon("fa-lightbulb") + " hint used";
+        body.appendChild(flag);
+      }
+      li.appendChild(body);
+      list.appendChild(li);
+    });
+    card.appendChild(list);
+
+    var actions = el("div", "lg-actions");
+    actions.style.justifyContent = "center";
+    var again = el("button", "btn btn-primary", icon("fa-rotate-right") + " Retake");
+    again.type = "button";
+    again.addEventListener("click", startTest);
+    actions.appendChild(again);
+    actions.appendChild(dashboardLink(false));
+    card.appendChild(actions);
+    stage.appendChild(card);
+  }
+
+  function renderResultsFromStored() {
+    setState("done");
+    stage.innerHTML = "";
+    var card = el("section", "card center-screen pop-in");
+    card.appendChild(el("p", "big-icon", icon("fa-medal")));
+    card.appendChild(el("h2", null, "Lesson complete!"));
+    card.appendChild(txt("p", "score-num", (bestScore || 0) + "%"));
+    card.appendChild(starRow(CORE.starsFor(bestScore || 0), 3));
+    var actions = el("div", "lg-actions");
+    actions.style.justifyContent = "center";
+    var again = el("button", "btn btn-ghost", icon("fa-rotate-right") + " Try the mastery check again");
+    again.type = "button";
+    again.addEventListener("click", startTest);
+    actions.appendChild(again);
+    actions.appendChild(dashboardLink(true));
+    card.appendChild(actions);
+    stage.appendChild(card);
+  }
+
+  function renderPlainCompletion(fromLater) {
+    setState("done");
+    var gradable = gradableOrder.length;
+    var firstTry = gradableOrder.filter(function (k) { return runFirstTry[k]; }).length;
+    var stars = CORE.firstTryStars(gradable, firstTry);
+    if (!fromLater) {
+      var cl = safeApi("completeLesson");
+      if (cl) guard(function () { cl(session.id, lessonId, null); });
+    }
+    stage.innerHTML = "";
+    var card = el("section", "card center-screen pop-in");
+    card.appendChild(el("p", "big-icon", icon("fa-star")));
+    card.appendChild(el("h2", null, "Lesson complete!"));
+    card.appendChild(txt("p", null, fromLater
+      ? "Saved as in-progress-complete. Come back any time — the mastery check will be waiting."
+      : gradable
+        ? "You worked through every step, and nailed " + firstTry + " of " + gradable + " challenges on the first try."
+        : "You worked through every step."));
+    card.appendChild(starRow(stars, 3));
+    var actions = el("div", "lg-actions");
+    actions.style.justifyContent = "center";
+    if (fromLater && lesson.test && lesson.test.length) {
+      var t = el("button", "btn btn-primary", icon("fa-flag-checkered") + " Take the mastery check now");
+      t.type = "button";
+      t.addEventListener("click", startTest);
+      actions.appendChild(t);
+    }
+    actions.appendChild(dashboardLink(!fromLater || !(lesson.test && lesson.test.length)));
+    card.appendChild(actions);
+    stage.appendChild(card);
+  }
+
+  function loadLessonFile(entry, onOk, onFail) {
+    var s = document.createElement("script");
+    s.src = "../assets/lessons/" + entry.file;
+    s.onload = function () {
+      var l = (window.BG_LESSONS || {})[lessonId];
+      if (l && l.steps) onOk(l);
+      else onFail();
+    };
+    s.onerror = onFail;
+    document.head.appendChild(s);
+  }
+
+  function begin() {
+    var gs = safeApi("getSession");
+    if (gs) session = guard(function () { return gs(); }) || null;
+    if (!session || session.role !== "student") return renderGateNoStudent();
+    var st = safeApi("getSettings");
+    if (st) {
+      var s2 = guard(function () { return st(); });
+      if (s2 && s2.hintsEnabled !== undefined) settings.hintsEnabled = !!s2.hintsEnabled;
+    }
+    var gp = safeApi("getProgress");
+    if (gp) progress = guard(function () { return gp(session.id); }) || {};
+    var ls = safeApi("listSubmissions");
+    if (ls) {
+      var subs = guard(function () { return ls({ studentId: session.id, lessonId: lessonId }); });
+      if (subs && subs.length) progress.submissions = subs;
+    }
+    buildChrome();
+    if (wantTestJump && lesson.test && lesson.test.length) {
+      startTest();
+      return;
+    }
+    var startAt = CORE.resolveStartStep(wantResume, storedPointer(), lessonId, lesson.steps.length);
+    gotoStep(startAt, true);
+  }
+
+  function loadLessonThenBegin(entry) {
+    loadLessonFile(entry, function (l) {
+      lesson = l;
+      var initFn = safeApi("init");
+      if (initFn) {
+        guard(function () {
+          initFn(function () {
+            begin();
+          });
+        });
+      } else {
+        begin();
+      }
+    }, function () {
+      renderUnknown("missing");
+    });
+  }
+
+  function findEntry() {
+    var entries = window.BG_LESSONS_MANIFEST;
+    if (!entries || !entries.length) return null;
+    for (var i = 0; i < entries.length; i++) {
+      if (String(entries[i].id) === lessonId) return entries[i];
+    }
+    return null;
+  }
+
+  window.BGLessonCore = CORE;
+
+  function boot() {
+    var entries = window.BG_LESSONS_MANIFEST;
+    if (!entries || !entries.length) return renderUnknown("shelf");
+    var entry = findEntry();
+    if (!entry) return renderUnknown("missing");
+    if (entry.enabled === false) return renderUnknown("disabled");
+    loadLessonThenBegin(entry);
+  }
+
+  if (!api) {
+    renderGateNoCore();
+  } else if (!lessonId) {
+    renderUnknown("missing");
+  } else if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+</body>
+</html>

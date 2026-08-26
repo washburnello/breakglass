@@ -11,6 +11,34 @@
 <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
 <link rel="stylesheet" href="../assets/theme.css?v=2">
 <script src="../assets/shell.js?v=2" defer></script>
+<style>
+.sh-lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--space-4);align-items:start;}
+.sh-lane h2{font-size:var(--fs-lg);margin-bottom:var(--space-2);}
+.sh-lane .tile-icon{font-size:1.3rem;}
+.sh-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);padding:var(--space-2) var(--space-3);margin:var(--space-4) 0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);}
+.sh-session-line{font-size:var(--fs-sm);color:var(--text-muted);font-weight:600;}
+.sh-spacer{flex:1 1 auto;}
+.sh-stu-grid{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3);}
+.sh-stu{display:inline-flex;align-items:center;gap:var(--space-2);padding:var(--space-1) var(--space-3) var(--space-1) var(--space-1);border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--surface);color:var(--text);text-decoration:none;font-weight:600;font-size:var(--fs-sm);transition:border-color var(--dur-fast) var(--ease-out),background-color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-spring);}
+a.sh-stu:hover{border-color:var(--accent);background:var(--accent-soft);}
+a.sh-stu:active{transform:scale(0.97);}
+.sh-stu-name{display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1.2;}
+.sh-overlay{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:var(--space-4);background:color-mix(in srgb, var(--text) 45%, transparent);}
+.sh-overlay[hidden]{display:none;}
+.sh-modal{width:100%;max-width:420px;box-shadow:var(--shadow-2);}
+.sh-modal h3{font-size:var(--fs-lg);margin-bottom:var(--space-2);}
+.sh-actions{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-4);}
+.sh-error{color:var(--danger);font-size:var(--fs-sm);min-height:1.2em;margin-top:var(--space-2);}
+.sh-ok{color:var(--ok);font-size:var(--fs-sm);margin-top:var(--space-2);}
+.sh-tone-row{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-1);}
+.sh-tone{position:relative;display:inline-flex;border-radius:var(--radius-pill);cursor:pointer;}
+.sh-tone input{position:absolute;width:1px;height:1px;opacity:0;}
+.sh-tone input:checked + .avatar{box-shadow:0 0 0 3px var(--accent);}
+.sh-tone input:focus-visible + .avatar{outline:2px solid var(--accent);outline-offset:2px;}
+.sh-del{padding:0 var(--space-2);font-size:var(--fs-xs);}
+.sh-del:hover{background:color-mix(in srgb, var(--danger) 12%, transparent);border-color:color-mix(in srgb, var(--danger) 45%, transparent);color:var(--danger);}
+.sh-note-row{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-4);}
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -21,12 +49,69 @@
 </header>
 <main>
 <h1>Schoolhouse</h1>
-<div class="callout callout-info"><h4>A complete school in a folder</h4><p>The daily plans below are thin but complete — enough to run a real schoolyear today, deepening over time. Everything runs with zero power and zero screens: print a plan, tape it to the wall, and teach with paper and pencils. Progress tracking lives in the Progress Tracker, not on these pages.</p></div>
-<section class="article">
-<h2>How the Schoolhouse teaches</h2>
-<p>Short lessons, real books, honest practice, and recitation out loud. That is the whole method, and it is the oldest one there is. Lessons stay brief because attention is a muscle, not a warehouse; books are real because children rise to good language; practice is daily because skill grows by repetition; recitation is out loud because saying a thing proves you have it.</p>
-<p>It is a one-room school: many ages at one table. Every band studies the same subjects on the same morning — the little ones for minutes, the big ones for hours, each at their own depth. One parent or teacher can run all of it.</p>
+<div class="callout callout-info"><h4>A complete school in a folder</h4><p>A one-room school that runs with zero power and zero screens — and now it keeps records too. Students pick their name below to start work; lessons open in the lesson player. Paper daily plans stay right here for teaching off the wall.</p></div>
+
+<div class="sh-toolbar" id="sh-toolbar" hidden>
+<span class="sh-session-line" id="sh-session-line"></span>
+<span class="sh-spacer"></span>
+<button class="btn btn-ghost" type="button" id="sh-export-btn"><i class="fa-solid fa-file-export" aria-hidden="true"></i> Export</button>
+<button class="btn btn-ghost" type="button" id="sh-import-btn"><i class="fa-solid fa-file-import" aria-hidden="true"></i> Import</button>
+<input type="file" id="sh-import-input" accept=".json,application/json" hidden>
+<button class="btn btn-danger" type="button" id="sh-signout-btn">Sign out</button>
+</div>
+
+<div id="sh-setup-slot"></div>
+
+<div class="sh-lanes">
+<section class="card sh-lane">
+<i class="fa-solid fa-user-group tile-icon" aria-hidden="true"></i>
+<h2>Students</h2>
+<p>Pick a name to sit down at the desk and work.</p>
+<div class="sh-stu-grid" id="sh-stu-grid"></div>
+<details class="fold" id="sh-add-fold">
+<summary><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Add a student</summary>
+<form id="sh-add-form">
+<label class="form-label form-row" for="sh-add-name">Name</label>
+<input class="form-input" id="sh-add-name" type="text" maxlength="40" placeholder="First name is plenty" required>
+<label class="form-label form-row" for="sh-add-band">Band</label>
+<select class="form-input" id="sh-add-band">
+<option value="k2">K–2 · early years</option>
+<option value="35">3–5 · middle grades</option>
+<option value="68">6–8 · middle school</option>
+<option value="912">9–12 · high school</option>
+<option value="adult">Adult learner</option>
+</select>
+<p class="form-label form-row" id="sh-tone-label">Color</p>
+<div class="sh-tone-row" role="radiogroup" aria-labelledby="sh-tone-label" id="sh-tone-row"></div>
+<div class="sh-actions">
+<button class="btn btn-primary" type="submit"><i class="fa-solid fa-check" aria-hidden="true"></i> Add student</button>
+</div>
+<p class="sh-error" id="sh-add-error" role="alert"></p>
+</form>
+</details>
+<p class="sh-error" id="sh-roster-note" style="margin-top:var(--space-2)"></p>
 </section>
+
+<section class="card sh-lane">
+<i class="fa-solid fa-chalkboard-user tile-icon" aria-hidden="true"></i>
+<h2>Teachers</h2>
+<p>Sign in to grade submitted work, manage the roster, and hand out stars. Teacher accounts are created by the administrator.</p>
+<div class="sh-actions">
+<a class="btn btn-primary" href="teacher.html"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Teacher sign-in &amp; desk</a>
+</div>
+</section>
+
+<section class="card sh-lane">
+<i class="fa-solid fa-sliders tile-icon" aria-hidden="true"></i>
+<h2>Administration</h2>
+<p>The administrator sets up teachers, reviews every submission, and exports or restores the whole school file.</p>
+<div class="sh-actions">
+<button class="btn btn-ghost" type="button" id="sh-admin-btn"><i class="fa-solid fa-gear" aria-hidden="true"></i> <span id="sh-admin-btn-label">Administrator sign-in</span></button>
+</div>
+</section>
+</div>
+
+<div class="group-title">Curriculum library</div>
 <div class="tile-grid">
 <a class="tile" href="daily-k2.html"><i class="fa-solid fa-child-reaching tile-icon"></i><span class="tile-name">Daily Plan: K–2</span><span class="tile-blurb">Six short subjects, about two hours, one printed page.</span></a>
 <a class="tile" href="daily-35.html"><i class="fa-solid fa-pen-nib tile-icon"></i><span class="tile-name">Daily Plan: 3–5</span><span class="tile-blurb">Reading, writing, and arithmetic — about three hours a day.</span></a>
@@ -34,19 +119,341 @@
 <a class="tile" href="daily-912.html"><i class="fa-solid fa-graduation-cap tile-icon"></i><span class="tile-name">Daily Plan: 9–12</span><span class="tile-blurb">The high-school plan, worked toward graduation.</span></a>
 <a class="tile" href="one-room-primer.html"><i class="fa-solid fa-school tile-icon"></i><span class="tile-name">One-Room Primer</span><span class="tile-blurb">Teaching several ages at one table, without losing your mind.</span></a>
 <a class="tile" href="adult-literacy.html"><i class="fa-solid fa-spell-check tile-icon"></i><span class="tile-name">Adult Literacy</span><span class="tile-blurb">Learning to read as an adult, step by step.</span></a>
-<a class="tile" href="tracker.html"><i class="fa-solid fa-table-list tile-icon"></i><span class="tile-name">Progress Tracker</span><span class="tile-blurb">Student files, records, and mastery grids.</span></a>
+<a class="tile" href="tracker.html"><i class="fa-solid fa-table-list tile-icon"></i><span class="tile-name">Mastery Tracker</span><span class="tile-blurb">Student files, records, and mastery grids on paper.</span></a>
 <a class="tile" href="../books/index.html"><i class="fa-solid fa-book-open tile-icon"></i><span class="tile-name">Classic Readers</span><span class="tile-blurb">Bundled classic books live in the Book Library.</span></a>
 </div>
-<section class="article">
-<h2>How this section grows</h2>
-<ul>
-<li>Start with the daily plan for your band. Print it — it is designed to be taped to a wall and followed from paper.</li>
-<li>Open-education packs (open textbooks, problem sets, and simulations) arrive over time as optional add-ons; the plans never require them.</li>
-<li>In hosted mode, a video classroom joins later for families that want it. It is a bonus, never a dependency.</li>
-<li>Curriculum here is original and faith-integrated in the plainest sense: an ordinary school day with a daily Bible story or passage, a memory verse, and a character conversation. No denomination, no franchise.</li>
-</ul>
-</section>
+<p style="margin-top:var(--space-3)">Interactive lessons open in the <strong>lesson player</strong>; progress, answers, and graded work are kept by this device. The paper plans above never require it.</p>
+
+<div class="sh-note-row">
+<span class="badge badge-warn"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Honest security note</span>
+<span style="font-size:var(--fs-sm);color:var(--text-muted)">Passwords on a portable copy are deterrent-grade only — anyone holding the folder holds the files. Host the site for real gating. An administrator can switch gating off entirely for file:// use.</span>
+</div>
 </main>
+
+<div class="sh-overlay" id="sh-overlay" hidden>
+<div class="card sh-modal pop-in" id="sh-modal" role="dialog" aria-modal="true" aria-labelledby="sh-modal-title"></div>
+</div>
+
 <footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script src="../assets/school-core.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var S = window.BGSchool;
+  var overlay = document.getElementById("sh-overlay");
+  var modal = document.getElementById("sh-modal");
+  var modalMode = null;
+
+  function el(id) { return document.getElementById(id); }
+  function gatingOn() {
+    var st = S.getSettings();
+    return !(st.adminGatePortable === false && location.protocol === "file:");
+  }
+  function session() { return S.getSession(); }
+  function isStaff() {
+    var s = session();
+    return !!s && (s.role === "admin" || s.role === "teacher");
+  }
+  function canEdit() { return !gatingOn() || isStaff(); }
+  function setupLaterFlag() {
+    try { return window.localStorage.getItem(S.KEYS.setupLater) === "1"; } catch (e) { return false; }
+  }
+
+  function closeModal() {
+    overlay.hidden = true;
+    modal.innerHTML = "";
+    modalMode = null;
+  }
+  function openModal(mode, html) {
+    modalMode = mode;
+    modal.innerHTML = html;
+    overlay.hidden = false;
+    var first = modal.querySelector("input, button");
+    if (first) first.focus();
+  }
+  overlay.addEventListener("click", function (ev) {
+    if (ev.target === overlay && modalMode !== "setup") closeModal();
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape" && !overlay.hidden && modalMode !== "setup") closeModal();
+  });
+
+  function renderSetup() {
+    var slot = el("sh-setup-slot");
+    var db = S.data();
+    if (db.users.admin || setupLaterFlag()) { slot.innerHTML = ""; return; }
+    if (slot.firstChild) return;
+    var card = document.createElement("div");
+    card.className = "card pop-in";
+    card.style.marginBottom = "var(--space-4)";
+    card.innerHTML =
+      '<h3 id="sh-setup-title"><i class="fa-solid fa-gear" aria-hidden="true"></i> Set up your school</h3>' +
+      '<p>Create an administrator account. This account manages teachers, grading, and the school file. One minute, once ever.</p>' +
+      '<form id="sh-setup-form">' +
+      '<label class="form-label form-row" for="sh-admin-name">Administrator name</label>' +
+      '<input class="form-input" id="sh-admin-name" type="text" maxlength="40" autocomplete="off" required>' +
+      '<label class="form-label form-row" for="sh-admin-pw">Password</label>' +
+      '<input class="form-input" id="sh-admin-pw" type="password" autocomplete="new-password" required>' +
+      '<label class="form-label form-row" for="sh-admin-pw2">Confirm password</label>' +
+      '<input class="form-input" id="sh-admin-pw2" type="password" autocomplete="new-password" required>' +
+      '<div class="sh-actions">' +
+      '<button class="btn btn-primary" type="submit">Create administrator</button>' +
+      '<button class="btn btn-ghost" type="button" id="sh-setup-later">Set up later (limited mode)</button>' +
+      '</div>' +
+      '<p class="sh-error" id="sh-setup-error" role="alert"></p>' +
+      '</form>';
+    slot.appendChild(card);
+    card.querySelector("#sh-setup-later").addEventListener("click", function () {
+      try { window.localStorage.setItem(S.KEYS.setupLater, "1"); } catch (e) {}
+      slot.innerHTML = "";
+    });
+    card.querySelector("#sh-setup-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var errEl = card.querySelector("#sh-setup-error");
+      errEl.textContent = "";
+      var name = card.querySelector("#sh-admin-name").value.trim();
+      var pw = card.querySelector("#sh-admin-pw").value;
+      var pw2 = card.querySelector("#sh-admin-pw2").value;
+      if (!name) { errEl.textContent = "A name is required."; return; }
+      if (pw.length < 4) { errEl.textContent = "Password needs at least 4 characters."; return; }
+      if (pw !== pw2) { errEl.textContent = "Passwords do not match."; return; }
+      S.hashPassword(pw).then(function (rec) {
+        db.users.admin = { name: name, hash: rec.hash, salt: rec.salt };
+        S.save();
+        setSessionAdmin(name);
+        slot.innerHTML = "";
+        S.confettiBurst();
+        renderAll();
+      }).catch(function () {
+        errEl.textContent = "Could not create the account on this device.";
+      });
+    });
+  }
+
+  function setSessionAdmin(name) {
+    try {
+      window.sessionStorage.setItem(S.KEYS.session, JSON.stringify({ role: "admin", id: "admin", name: name }));
+    } catch (e) {}
+  }
+
+  function renderToolbar() {
+    var s = session();
+    var bar = el("sh-toolbar");
+    bar.hidden = !s;
+    if (!s) return;
+    var labels = { admin: "Administrator", teacher: "Teacher", student: "Student" };
+    el("sh-session-line").textContent = "Signed in as " + s.name + " (" + (labels[s.role] || s.role) + ")";
+  }
+
+  function toneRow(containerId, groupName) {
+    var row = document.getElementById(containerId);
+    row.innerHTML = "";
+    for (var t = 0; t <= 4; t++) {
+      var label = document.createElement("label");
+      label.className = "sh-tone";
+      var input = document.createElement("input");
+      input.type = "radio";
+      input.name = groupName;
+      input.value = String(t);
+      if (t === 0) input.checked = true;
+      var av = document.createElement("span");
+      av.className = "avatar";
+      av.setAttribute("data-tone", String(t));
+      av.textContent = "A";
+      label.appendChild(input);
+      label.appendChild(av);
+      row.appendChild(label);
+    }
+  }
+
+  function pickedTone(groupName) {
+    var checked = document.querySelector('input[name="' + groupName + '"]:checked');
+    return checked ? parseInt(checked.value, 10) : 0;
+  }
+
+  function renderStudents() {
+    var grid = el("sh-stu-grid");
+    var db = S.data();
+    grid.innerHTML = "";
+    var edit = canEdit();
+    if (!db.students.length) {
+      var none = document.createElement("p");
+      none.style.color = "var(--text-muted)";
+      none.style.fontSize = "var(--fs-sm)";
+      none.textContent = "No students yet — add one below.";
+      grid.appendChild(none);
+    }
+    db.students.forEach(function (st) {
+      var chip = document.createElement("a");
+      chip.className = "sh-stu";
+      chip.href = "student.html?id=" + encodeURIComponent(st.id);
+      var av = document.createElement("span");
+      av.className = "avatar";
+      av.setAttribute("data-tone", String(st.tone || 0));
+      av.textContent = (st.name || "?").charAt(0).toUpperCase();
+      var wrap = document.createElement("span");
+      wrap.className = "sh-stu-name";
+      var nm = document.createElement("span");
+      nm.textContent = st.name;
+      var bd = document.createElement("span");
+      bd.className = "badge";
+      bd.style.fontSize = "var(--fs-xs)";
+      bd.textContent = S.BAND_LABELS[st.band] || st.band;
+      wrap.appendChild(nm);
+      wrap.appendChild(bd);
+      chip.appendChild(av);
+      chip.appendChild(wrap);
+      chip.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        S.loginStudent(st.id);
+        location.href = chip.href;
+      });
+      grid.appendChild(chip);
+      if (edit) {
+        var del = document.createElement("button");
+        del.type = "button";
+        del.className = "btn btn-ghost sh-del";
+        del.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+        del.setAttribute("aria-label", "Remove " + st.name);
+        del.title = "Remove " + st.name;
+        del.addEventListener("click", function () {
+          if (window.confirm("Remove " + st.name + " and their saved progress from this device?")) {
+            S.removeStudent(st.id);
+            renderStudents();
+          }
+        });
+        grid.appendChild(del);
+      }
+    });
+    var note = el("sh-roster-note");
+    note.textContent = "";
+    if (!edit) {
+      note.style.color = "var(--text-muted)";
+      note.textContent = "Adding students is open for convenience; removing and editing them needs a signed-in teacher or administrator.";
+    }
+  }
+
+  function adminLoginModal() {
+    openModal("admin-login",
+      '<h3 id="sh-modal-title"><i class="fa-solid fa-gear" aria-hidden="true"></i> Administrator sign-in</h3>' +
+      '<form id="sh-alogin-form">' +
+      '<label class="form-label" for="sh-alogin-name">Name</label>' +
+      '<input class="form-input" id="sh-alogin-name" type="text" autocomplete="off" required>' +
+      '<label class="form-label form-row" for="sh-alogin-pw">Password</label>' +
+      '<input class="form-input" id="sh-alogin-pw" type="password" autocomplete="current-password" required>' +
+      '<div class="sh-actions">' +
+      '<button class="btn btn-primary" type="submit">Sign in</button>' +
+      '<button class="btn btn-ghost" type="button" data-close>Cancel</button>' +
+      '</div>' +
+      '<p class="sh-error" id="sh-alogin-error" role="alert"></p>' +
+      '</form>');
+    modal.querySelector("[data-close]").addEventListener("click", closeModal);
+    modal.querySelector("#sh-alogin-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var errEl = modal.querySelector("#sh-alogin-error");
+      errEl.textContent = "";
+      S.loginAdmin(modal.querySelector("#sh-alogin-name").value.trim(), modal.querySelector("#sh-alogin-pw").value)
+        .then(function () { closeModal(); renderAll(); })
+        .catch(function (err) { errEl.textContent = err.message; });
+    });
+  }
+
+  function adminPanelModal() {
+    var s = session();
+    openModal("admin-panel",
+      '<h3 id="sh-modal-title"><i class="fa-solid fa-gear" aria-hidden="true"></i> Administrator</h3>' +
+      '<p>Signed in as <strong></strong>.</p>' +
+      '<details class="fold"><summary>Change password</summary>' +
+      '<form id="sh-apass-form">' +
+      '<label class="form-label form-row" for="sh-apass-old">Current password</label>' +
+      '<input class="form-input" id="sh-apass-old" type="password" autocomplete="current-password" required>' +
+      '<label class="form-label form-row" for="sh-apass-new">New password</label>' +
+      '<input class="form-input" id="sh-apass-new" type="password" autocomplete="new-password" required>' +
+      '<div class="sh-actions"><button class="btn btn-primary" type="submit">Change password</button></div>' +
+      '<p class="sh-error" id="sh-apass-msg" role="alert"></p>' +
+      '</form></details>' +
+      '<div class="sh-actions">' +
+      '<button class="btn btn-danger" type="button" id="sh-asignout">Sign out</button>' +
+      '<button class="btn btn-ghost" type="button" data-close>Close</button>' +
+      '</div>');
+    modal.querySelector("p strong").textContent = s ? s.name : "";
+    modal.querySelector("[data-close]").addEventListener("click", closeModal);
+    modal.querySelector("#sh-asignout").addEventListener("click", function () {
+      S.logout();
+      closeModal();
+      location.reload();
+    });
+    modal.querySelector("#sh-apass-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var msg = modal.querySelector("#sh-apass-msg");
+      msg.classList.remove("sh-ok");
+      msg.style.color = "";
+      msg.textContent = "";
+      S.changeOwnPassword("admin", "admin",
+        modal.querySelector("#sh-apass-old").value,
+        modal.querySelector("#sh-apass-new").value)
+        .then(function () {
+          msg.style.color = "var(--ok)";
+          msg.textContent = "Password changed.";
+          ev.target.reset();
+        })
+        .catch(function (err) { msg.textContent = err.message; });
+    });
+  }
+
+  function wireStaticEvents() {
+    el("sh-admin-btn").addEventListener("click", function () {
+      var s = session();
+      if (s && s.role === "admin") adminPanelModal();
+      else adminLoginModal();
+    });
+    el("sh-signout-btn").addEventListener("click", function () {
+      S.logout();
+      location.reload();
+    });
+    el("sh-export-btn").addEventListener("click", function () { S.exportFile(); });
+    el("sh-import-btn").addEventListener("click", function () { el("sh-import-input").click(); });
+    el("sh-import-input").addEventListener("change", function () {
+      var input = el("sh-import-input");
+      var file = input.files && input.files[0];
+      if (!file) return;
+      S.importFile(file, function (err) {
+        input.value = "";
+        if (err) { window.alert(err.message); return; }
+        location.reload();
+      });
+    });
+    el("sh-add-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var errEl = el("sh-add-error");
+      errEl.textContent = "";
+      var name = el("sh-add-name").value.trim();
+      if (!name) { errEl.textContent = "A name is required."; return; }
+      var band = el("sh-add-band").value;
+      var id = S.addStudent(name, band, pickedTone("sh-tone-row"));
+      if (!id) { errEl.textContent = "Could not add the student on this device."; return; }
+      el("sh-add-name").value = "";
+      toneRow("sh-tone-row", "sh-tone-row");
+      document.getElementById("sh-add-fold").open = false;
+      renderStudents();
+    });
+  }
+
+  function renderAll() {
+    var db = S.data();
+    el("sh-admin-btn-label").textContent = (session() && session().role === "admin") ? "Administrator tools" : "Administrator sign-in";
+    renderSetup();
+    renderToolbar();
+    renderStudents();
+    void db;
+  }
+
+  S.init(function () {
+    toneRow("sh-tone-row", "sh-tone-row");
+    wireStaticEvents();
+    renderAll();
+  });
+})();
+</script>
 </body>
 </html>

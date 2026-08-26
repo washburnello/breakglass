@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="rebuild thrive">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Teacher Portal — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/school-core.js"></script>
+<script src="../assets/shell.js?v=2" defer></script>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<div id="gate"></div>
+<div id="app" hidden>
+<nav class="toc-chips" id="tabs" aria-label="Portal sections">
+<a href="#review" data-tab="review">Review <span class="badge" id="pending-badge" hidden>0</span></a>
+<a href="#students" data-tab="students">Students</a>
+<a href="#lessons" data-tab="lessons">Lessons</a>
+<a href="#settings" data-tab="settings">Settings</a>
+<a href="#admin" data-tab="admin" id="admin-tab" hidden>Admin</a>
+</nav>
+<section id="tab-review" class="tabpane">
+<h2>Review queue</h2>
+<div id="review-pending"></div>
+<h3 style="margin-top:var(--space-6)">Graded history</h3>
+<div id="history-filter"></div>
+<div id="review-history"></div>
+</section>
+<section id="tab-students" class="tabpane" hidden>
+<h2>Students</h2>
+<div class="card" style="margin-bottom:var(--space-4)">
+<div class="form-row"><label class="form-label" for="ns-name">Add a student</label>
+<div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
+<input class="form-input" id="ns-name" type="text" placeholder="Name" style="flex:1;min-width:160px">
+<select class="form-input" id="ns-band" style="max-width:180px"></select>
+<button class="btn btn-primary" id="ns-add" type="button">Add</button>
+</div></div>
+</div>
+<div id="roster"></div>
+<div id="drawer" hidden></div>
+</section>
+<section id="tab-lessons" class="tabpane" hidden>
+<h2>Lessons</h2>
+<p style="color:var(--text-muted);font-size:var(--fs-sm);margin-bottom:var(--space-3)">Unticked lessons are hidden from student dashboards. Preview opens the player (a student session is needed to interact).</p>
+<div id="lesson-list"></div>
+</section>
+<section id="tab-settings" class="tabpane" hidden>
+<h2>Settings</h2>
+<div class="card" style="margin-bottom:var(--space-4)">
+<label style="display:flex;align-items:flex-start;gap:var(--space-3);cursor:pointer">
+<input type="checkbox" id="set-hints" style="margin-top:0.35em;width:1.1em;height:1.1em">
+<span><strong>Hint system</strong><br><span style="color:var(--text-muted);font-size:var(--fs-sm)">When ON, a wrong first answer offers one hint and one retry worth partial credit.</span></span>
+</label>
+</div>
+<div class="card" id="portable-gate-card" style="margin-bottom:var(--space-4)" hidden>
+<label style="display:flex;align-items:flex-start;gap:var(--space-3);cursor:pointer">
+<input type="checkbox" id="set-gate" style="margin-top:0.35em;width:1.1em;height:1.1em">
+<span><strong>Require administrator sign-in on portable copies</strong><br><span style="color:var(--text-muted);font-size:var(--fs-sm)">OFF removes all gating when the kit runs as plain files. Passwords on portable copies are deterrence, not real security — the hosted site enforces properly.</span></span>
+</label>
+</div>
+<div class="card" style="max-width:420px">
+<h3>Change my password</h3>
+<div class="form-row"><label class="form-label" for="pw-old">Current password</label><input class="form-input" id="pw-old" type="password" autocomplete="current-password"></div>
+<div class="form-row"><label class="form-label" for="pw-new">New password</label><input class="form-input" id="pw-new" type="password" autocomplete="new-password"></div>
+<div class="form-row"><label class="form-label" for="pw-new2">Confirm new password</label><input class="form-input" id="pw-new2" type="password" autocomplete="new-password"></div>
+<p><button class="btn btn-primary form-row" id="pw-save" type="button">Update password</button></p>
+<p id="pw-msg" style="font-size:var(--fs-sm)"></p>
+</div>
+</section>
+<section id="tab-admin" class="tabpane" hidden>
+<h2>Administration</h2>
+<div class="card" style="margin-bottom:var(--space-4)">
+<h3>Teachers</h3>
+<p style="color:var(--text-muted);font-size:var(--fs-sm)">Teachers sign in here with their own passwords and can grade and manage students.</p>
+<div id="teacher-list"></div>
+<div class="form-row"><label class="form-label" for="t-name">Create teacher account</label>
+<div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
+<input class="form-input" id="t-name" type="text" placeholder="Display name" style="flex:1;min-width:140px">
+<input class="form-input" id="t-pw" type="password" placeholder="Password" style="max-width:170px">
+<button class="btn btn-primary" id="t-add" type="button">Create</button>
+</div></div>
+<p id="t-msg" style="font-size:var(--fs-sm)"></p>
+</div>
+<div class="card" style="margin-bottom:var(--space-4)">
+<h3>School data</h3>
+<p><button class="btn btn-ghost" id="export-btn" type="button"><i class="fa-solid fa-download"></i> Export school file</button>
+<input type="file" id="import-file" accept=".json" hidden>
+<button class="btn btn-ghost" id="import-btn" type="button"><i class="fa-solid fa-folder-open"></i> Import school file</button></p>
+</div>
+<div class="callout callout-danger">
+<h4>Danger zone</h4>
+<p>Factory reset wipes every student, submission, and setting. A backup file downloads automatically first.</p>
+<p><button class="btn btn-danger" id="factory-btn" type="button">Factory reset school database</button></p>
+</div>
+</section>
+</div>
+</main>
+<footer class="status-line"><span><a href="index.html">&larr; Schoolhouse</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<style>
+.tabpane{margin-top:var(--space-5)}
+.sub-row{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.sub-row:last-child{border-bottom:none}
+.roster-row{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.roster-row:last-child{border-bottom:none}
+.muted{color:var(--text-muted)}
+.grade-pane{background:var(--surface-2);border-radius:var(--radius-sm);padding:var(--space-3);margin-top:var(--space-2)}
+.scratch-stage img{max-width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff}
+@media print{#tabs,.grade-actions,#drawer,[data-noprint]{display:none!important}}
+</style>
+<script>
+(function(){
+"use strict";
+var S=window.BGSchool;
+var el=function(id){return document.getElementById(id)};
+var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+function toast(msg,tone){var d=document.createElement("div");d.className="callout pop-in "+(tone||"callout-ok");d.style.position="fixed";d.style.right="16px";d.style.bottom="16px";d.style.zIndex="60";d.textContent=msg;document.body.appendChild(d);setTimeout(function(){d.remove()},2600)}
+function fmtDate(iso){try{return new Date(iso).toLocaleDateString(undefined,{month:"short",day:"numeric"})}catch(e){return""}}
+function starsHtml(n){var s="";for(var i=0;i<4;i++)s+='<span class="'+(i<n?"earned":"")+'">&#9733;</span>';return '<span class="star-row" style="justify-content:flex-start;font-size:var(--fs-md)">'+s+"</span>"}
+
+var MANIFEST=[];
+function loadManifest(cb){
+ if(window.BG_LESSONS_MANIFEST)return cb(window.BG_LESSONS_MANIFEST);
+ var s=document.createElement("script");s.src="../assets/lessons/manifest.js";
+ s.onload=function(){cb(window.BG_LESSONS_MANIFEST||[])};
+ s.onerror=function(){cb([])};
+ document.head.appendChild(s);
+}
+function lessonTitle(id){
+ for(var i=0;i<MANIFEST.length;i++)if(MANIFEST[i].id===id)return MANIFEST[i].title;
+ return id||"—";
+}
+function enabledMap(){var s=S.getSettings();return Object.assign({},s.enabledLessons||{})}
+function isEnabled(id){var m=enabledMap();return m[id]!==false}
+
+var session=null;
+
+function renderGate(mode,err){
+ var g=el("gate");
+ el("app").hidden=true;
+ var adminMissing=!S.data().users.admin;
+ var relaxed=(location.protocol==="file:"&&S.getSettings().adminGatePortable===false);
+ g.innerHTML="";
+ if(relaxed){
+  var note=document.createElement("div");
+  note.className="callout callout-info";note.style.marginBottom="var(--space-4)";
+  note.innerHTML="<h4>Gating relaxed on this portable copy</h4><p>An administrator turned off sign-in requirements for plain-file use. Everything below works without passwords here. The hosted copy enforces accounts properly.</p>";
+  g.appendChild(note);
+  session={role:"teacher",id:"local",name:"Local Teacher"};
+  enter();
+  return;
+ }
+ var card=document.createElement("div");card.className="card pop-in";card.style.maxWidth="440px";
+ var h=document.createElement("h1");h.textContent="Teacher Portal";card.appendChild(h);
+ var p=document.createElement("p");p.className="muted";p.style.color="var(--text-muted)";p.textContent="Sign in with your teacher or administrator account.";card.appendChild(p);
+ if(adminMissing){
+  p=document.createElement("p");p.innerHTML="<strong>First run:</strong> create the administrator account.";card.appendChild(p);
+ }else if(err){p=document.createElement("p");p.style.color="var(--danger)";p.textContent=err;card.appendChild(p);}
+ function field(id,label,type){var w=document.createElement("div");w.className="form-row";var l=document.createElement("label");l.className="form-label";l.setAttribute("for",id);l.textContent=label;var i=document.createElement("input");i.className="form-input";i.id=id;i.type=type||"text";if(type==="password")i.autocomplete="current-password";w.appendChild(l);w.appendChild(i);card.appendChild(w);return i}
+ var nameI=field("g-name",adminMissing?"Administrator name":"Name");
+ var passI=field("g-pass","Password"+(adminMissing?" (choose one)":""),"password");
+ var btn=document.createElement("button");btn.type="button";btn.className="btn btn-primary form-row";
+ btn.textContent=adminMissing?"Create administrator":"Sign in";
+ btn.onclick=function(){
+  btn.disabled=true;
+  var done=function(msg){btn.disabled=false;if(msg){g.innerHTML="";renderGate(null,msg)}};
+  if(adminMissing){
+   if(!nameI.value||passI.value.length<4){done("Name plus a password of at least 4 characters.");return}
+   S.hashPassword(passI.value).then(function(r){
+    S.data().users.admin={name:nameI.value.trim(),hash:r.hash,salt:r.salt};S.save();
+    return S.loginAdmin(nameI.value.trim(),passI.value);
+   }).then(enter).catch(function(e){done(e.message)});
+  }else{
+   S.loginTeacher(nameI.value.trim(),passI.value).then(function(sess){session=sess;enter()}).catch(function(){
+    S.loginAdmin(nameI.value.trim(),passI.value).then(function(sess){session=sess;enter()}).catch(function(){done("Wrong name or password.")});
+   });
+  }
+ };
+ card.appendChild(btn);
+ if(!adminMissing){
+  var back=document.createElement("p");back.style.marginTop="var(--space-3)";
+  back.innerHTML='<a href="index.html">&larr; Back to Schoolhouse</a>';
+  card.appendChild(back);
+ }
+ g.appendChild(card);
+}
+
+function enter(){
+ el("gate").innerHTML="";
+ el("app").hidden=false;
+ el("admin-tab").hidden=session.role!=="admin";
+ loadManifest(function(m){MANIFEST=m;route()});
+}
+
+function route(){
+ var h=(location.hash.replace(/^#/,"")||"review");
+ var tabs=["review","students","lessons","settings","admin"];
+ if(tabs.indexOf(h)===-1)h="review";
+ if(h==="admin"&&session.role!=="admin")h="review";
+ ["review","students","lessons","settings","admin"].forEach(function(t){el("tab-"+t).hidden=t!==h});
+ var chips=el("tabs").querySelectorAll("[data-tab]");
+ for(var i=0;i<chips.length;i++)chips[i].style.borderColor=(chips[i].getAttribute("data-tab")===h)?"var(--accent)":"";
+ if(h==="review")renderReview();
+ else if(h==="students")renderRoster();
+ else if(h==="lessons")renderLessons();
+ else if(h==="settings")renderSettings();
+ else renderAdmin();
+ updatePendingBadge();
+}
+
+function updatePendingBadge(){
+ var pending=S.listSubmissions({graded:false});
+ var b=el("pending-badge");
+ b.hidden=pending.length===0;b.textContent=pending.length;
+}
+
+function subViewer(sub){
+ var wrap=document.createElement("div");
+ var meta=document.createElement("p");meta.className="muted";meta.style.color="var(--text-muted)";meta.style.fontSize="var(--fs-xs)";
+ var who=S.data().students.filter(function(s){return s.id===sub.studentId})[0];
+ meta.textContent=(who?who.name:"Student")+" · "+lessonTitle(sub.lessonId)+" · "+fmtDate(sub.at);
+ wrap.appendChild(meta);
+ if(sub.text){
+  var pre=document.createElement("div");pre.className="grade-pane";
+  pre.style.whiteSpace="pre-wrap";pre.textContent=sub.text;
+  wrap.appendChild(pre);
+ }
+ if(sub.img){
+  var stage=document.createElement("div");stage.className="scratch-stage";stage.style.marginTop="var(--space-2)";
+  stage.innerHTML='<p class="muted" style="font-size:var(--fs-xs);color:var(--text-muted);margin-bottom:4px">Scratch pad — their working:</p>';
+  var im=new Image();im.src=sub.img;im.alt="Student scratch pad";im.style.cursor="zoom-in";
+  im.onclick=function(){var lb=document.createElement("div");lb.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:70;display:flex;align-items:center;justify-content:center;padding:24px";lb.innerHTML='<img style="max-width:100%;max-height:100%;border-radius:8px;background:#fff" alt="Scratch pad enlarged">';lb.onclick=function(){lb.remove()};document.body.appendChild(lb)};
+  stage.appendChild(im);wrap.appendChild(stage);
+ }
+ return wrap;
+}
+
+function gradeForm(sub,onDone){
+ var f=document.createElement("div");f.className="grade-actions grade-pane";
+ var score=document.createElement("input");score.type="number";score.min=0;score.max=100;score.placeholder="Score 0–100";score.className="form-input";score.style.maxWidth="150px";
+ var fb=document.createElement("textarea");fb.className="form-input";fb.rows=2;fb.placeholder="Feedback for the student…";fb.style.marginTop="8px";
+ var ok=document.createElement("button");ok.type="button";ok.className="btn btn-primary";ok.style.marginTop="8px";ok.textContent="Grade & release";
+ ok.onclick=function(){
+  var v=parseInt(score.value,10);
+  if(isNaN(v)||v<0||v>100){toast("Enter a score from 0 to 100.","callout-warning");return}
+  S.gradeSubmission(sub.sid,v,fb.value.trim(),session.name);
+  toast("Graded — "+(who2(sub)).name+" will see it on their dashboard.");
+  onDone();
+ };
+ f.appendChild(score);f.appendChild(fb);f.appendChild(ok);
+ return f;
+}
+function who2(sub){return S.data().students.filter(function(s){return s.id===sub.studentId})[0]||{name:"Student"}}
+
+function renderReview(){
+ var pend=S.listSubmissions({graded:false});
+ var box=el("review-pending");box.innerHTML="";
+ if(!pend.length){box.innerHTML='<div class="callout callout-info"><p>Nothing waiting for review. Submitted work lands here.</p></div>';}
+ pend.forEach(function(sub){
+  var c=document.createElement("div");c.className="card";c.style.marginBottom="var(--space-3)";
+  c.appendChild(subViewer(sub));
+  c.appendChild(gradeForm(sub,function(){route()}));
+  box.appendChild(c);
+ });
+ var hist=S.listSubmissions({}).filter(function(s){return s.grade});
+ var hf=el("history-filter");hf.innerHTML="";
+ var sel=document.createElement("select");sel.className="form-input";sel.style.maxWidth="240px";
+ sel.innerHTML='<option value="">All students</option>';
+ S.data().students.forEach(function(st){sel.innerHTML+='<option value="'+st.id+'">'+esc(st.name)+"</option>"});
+ sel.onchange=function(){drawHistory(sel.value)};
+ hf.appendChild(sel);
+ drawHistory("");
+ function drawHistory(filter){
+  var hb=el("review-history");hb.innerHTML="";
+  hist.filter(function(s){return !filter||s.studentId===filter}).slice(0,30).forEach(function(sub){
+   var r=document.createElement("div");r.className="sub-row";
+   var who=who2(sub);
+   r.innerHTML='<span>'+esc(who.name)+" · "+esc(lessonTitle(sub.lessonId))+"</span>"+
+    '<span class="badge">'+sub.grade.score+"%</span>"+
+    (sub.hintUsed?'<span class="badge badge-warn">used hint</span>':"")+
+    '<span class="muted" style="color:var(--text-muted);font-size:var(--fs-xs);flex:1">'+esc(sub.grade.feedback||"")+"</span>";
+   hb.appendChild(r);
+  });
+  if(!hb.children.length)hb.innerHTML='<p class="muted" style="color:var(--text-muted)">No graded work yet.</p>';
+ }
+}
+
+function currentPlaceText(st){
+ var cl=st.currentLesson;
+ if(cl&&cl.id)return lessonTitle(cl.id)+" — step "+((cl.step||0)+1);
+ return "Not started";
+}
+function studentStars(st){
+ var pr=S.getProgress(st.id)||{};var n=0;
+ Object.keys(pr).forEach(function(k){if(pr[k].status==="complete")n+=S.starsFor(pr[k].testScore)});
+ return n;
+}
+function completedCount(st){var pr=S.getProgress(st.id)||{};var n=0;Object.keys(pr).forEach(function(k){if(pr[k].status==="complete")n++});return n}
+
+function renderRoster(){
+ var wrap=el("roster");wrap.innerHTML="";
+ var bandSel=el("ns-band");bandSel.innerHTML="";
+ (S.BANDS||[]).forEach(function(b){bandSel.innerHTML+='<option value="'+b+'">'+((S.BAND_LABELS||{})[b]||b)+"</option>"});
+ el("ns-add").onclick=function(){
+  var nm=el("ns-name").value.trim();
+  if(!nm){toast("Give the student a name.","callout-warning");return}
+  S.addStudent(nm,bandSel.value);
+  el("ns-name").value="";toast(nm+" added — they can sign in from the Schoolhouse page.");
+  renderRoster();
+ };
+ var db=S.data().students;
+ if(!db.length){wrap.innerHTML='<p class="muted" style="color:var(--text-muted)">No students yet — add the first one above.</p>';return}
+ db.forEach(function(st){
+  var r=document.createElement("div");r.className="roster-row";
+  var av=document.createElement("span");av.className="avatar";av.dataset.tone=String(st.tone||0);av.textContent=st.name.charAt(0).toUpperCase();
+  r.appendChild(av);
+  var nm=document.createElement("input");nm.value=st.name;nm.className="form-input";nm.style.maxWidth="200px";
+  nm.onchange=function(){st.name=nm.value.trim()||st.name;nm.value=st.name;S.save()};
+  r.appendChild(nm);
+  var bs=document.createElement("select");bs.className="form-input";bs.style.maxWidth="150px";
+  (S.BANDS||[]).forEach(function(b){bs.innerHTML+='<option value="'+b+'"'+(st.band===b?" selected":"")+">"+((S.BAND_LABELS||{})[b]||b)+"</option>"});
+  bs.onchange=function(){S.setBand(st.id,bs.value);toast("Band updated.")};
+  r.appendChild(bs);
+  var info=document.createElement("span");info.className="muted";info.style.cssText="color:var(--text-muted);font-size:var(--fs-xs);flex:1";
+  info.textContent=currentPlaceText(st)+" · "+completedCount(st)+" complete";
+  r.appendChild(info);
+  r.insertAdjacentHTML("beforeend",starsHtml(studentStars(st)));
+  var open=document.createElement("button");open.type="button";open.className="btn btn-ghost";open.textContent="Progress";
+  open.onclick=function(){toggleDrawer(st)};
+  r.appendChild(open);
+  var del=document.createElement("button");del.type="button";del.className="btn btn-danger";del.textContent="Remove";
+  del.onclick=function(){if(confirm("Remove "+st.name+" and all their progress?")){S.removeStudent(st.id);renderRoster()}};
+  r.appendChild(del);
+  wrap.appendChild(r);
+ });
+}
+
+function toggleDrawer(st){
+ var d=el("drawer");
+ if(d.hidden===false&&d.dataset.sid===st.id){d.hidden=true;return}
+ d.hidden=false;d.dataset.sid=st.id;d.innerHTML="";
+ var c=document.createElement("div");c.className="card pop-in";
+ c.innerHTML="<h3>"+esc(st.name)+" — progress</h3>";
+ var pr=S.getProgress(st.id)||{};
+ var keys=Object.keys(pr);
+ if(!keys.length)c.innerHTML+="<p class='muted' style='color:var(--text-muted)'>Nothing yet.</p>";
+ keys.forEach(function(lid){
+  var row=document.createElement("div");row.className="sub-row";
+  row.innerHTML="<span>"+esc(lessonTitle(lid))+"</span><span class='badge'>"+(pr[lid].testScore!=null?pr[lid].testScore+"%":"in progress")+"</span>";
+  var rst=document.createElement("button");rst.type="button";rst.className="btn btn-ghost";rst.textContent="Reset";
+  rst.onclick=function(){delete pr[lid];var st2=S.data().students.filter(function(x){return x.id===st.id})[0];
+   if(st2&&st2.currentLesson&&st2.currentLesson.id===lid)st2.currentLesson={id:null,step:0};
+   S.save();toggleDrawer(st);toggleDrawer(st)};
+  row.appendChild(rst);c.appendChild(row);
+ });
+ d.appendChild(c);
+}
+
+function renderLessons(){
+ var wrap=el("lesson-list");wrap.innerHTML="";
+ if(!MANIFEST.length){wrap.innerHTML='<div class="callout callout-warning"><p>No lesson manifest found yet.</p></div>';return}
+ var map=enabledMap();
+ MANIFEST.forEach(function(L){
+  var r=document.createElement("div");r.className="sub-row";
+  var cb=document.createElement("input");cb.type="checkbox";cb.checked=isEnabled(L.id);cb.style.width="1.1em";cb.style.height="1.1em";
+  cb.onchange=function(){
+   var m=enabledMap();m[L.id]=cb.checked;S.setSetting("enabledLessons",m);
+   toast(cb.checked?L.title+" shown to students":L.title+" hidden from students");
+  };
+  r.appendChild(cb);
+  var lab=document.createElement("span");lab.style.flex="1";
+  lab.innerHTML="<strong>"+esc(L.title)+"</strong> <span class='badge'>"+esc((S.BAND_LABELS||{})[L.band]||L.band)+"</span> <span class='badge'>"+L.minutes+" min</span>";
+  r.appendChild(lab);
+  var pv=document.createElement("a");pv.className="btn btn-ghost";pv.href="lesson.html?id="+encodeURIComponent(L.id);pv.textContent="Preview";
+  r.appendChild(pv);
+  wrap.appendChild(r);
+ });
+}
+
+function renderSettings(){
+ el("set-hints").checked=S.getSettings().hintsEnabled!==false;
+ el("set-hints").onchange=function(){S.setSetting("hintsEnabled",el("set-hints").checked);toast(el("set-hints").checked?"Hints ON":"Hints OFF")};
+ var isAdmin=session.role==="admin";
+ el("portable-gate-card").hidden=!isAdmin;
+ if(isAdmin){
+  el("set-gate").checked=S.getSettings().adminGatePortable!==false;
+  el("set-gate").onchange=function(){S.setSetting("adminGatePortable",el("set-gate").checked);toast(el("set-gate").checked?"Gating required on portable copies":"Gating relaxed on portable copies")};
+ }
+ el("pw-save").onclick=function(){
+  el("pw-msg").textContent="";
+  if(el("pw-new").value!==el("pw-new2").value){el("pw-msg").textContent="New passwords don't match.";el("pw-msg").style.color="var(--danger)";return}
+  S.changeOwnPassword(session.role,session.id,el("pw-old").value,el("pw-new").value).then(function(){
+   el("pw-msg").textContent="Password updated.";el("pw-msg").style.color="var(--ok)";
+   el("pw-old").value=el("pw-new").value=el("pw-new2").value="";
+  }).catch(function(e){el("pw-msg").textContent=e.message;el("pw-msg").style.color="var(--danger)"});
+ };
+}
+
+function renderAdmin(){
+ var wrap=el("teacher-list");wrap.innerHTML="";
+ var ts=S.data().users.teachers||[];
+ if(!ts.length)wrap.innerHTML='<p class="muted" style="color:var(--text-muted)">No teachers yet.</p>';
+ ts.forEach(function(tc){
+  var r=document.createElement("div");r.className="sub-row";
+  r.innerHTML="<strong>"+esc(tc.name)+"</strong><span class='muted' style='color:var(--text-muted);font-size:var(--fs-xs);flex:1'>teacher</span>";
+  var del=document.createElement("button");del.type="button";del.className="btn btn-danger";del.textContent="Remove";
+  del.onclick=function(){if(confirm("Remove teacher "+tc.name+"?")){S.removeTeacher(tc.id);renderAdmin()}};
+  r.appendChild(del);wrap.appendChild(r);
+ });
+ el("t-add").onclick=function(){
+  el("t-msg").textContent="";
+  if(!el("t-name").value.trim()||el("t-pw").value.length<4){el("t-msg").textContent="Name plus a 4+ character password.";el("t-msg").style.color="var(--danger)";return}
+  S.addTeacher(el("t-name").value.trim(),el("t-pw").value).then(function(){
+   el("t-name").value="";el("t-pw").value="";el("t-msg").textContent="Teacher created.";el("t-msg").style.color="var(--ok)";
+   renderAdmin();
+  }).catch(function(e){el("t-msg").textContent=e.message;el("t-msg").style.color="var(--danger)"});
+ };
+ el("export-btn").onclick=function(){S.exportFile()};
+ el("import-btn").onclick=function(){el("import-file").click()};
+ el("import-file").onchange=function(){
+  if(!this.files[0])return;
+  if(!confirm("Importing replaces ALL school data with this file. Continue?"))return;
+  S.importFile(this.files[0],function(err){
+   if(err){toast("Import failed: "+err,"callout-danger");return}
+   location.reload();
+  });
+ };
+ el("factory-btn").onclick=function(){
+  if(!confirm("Really wipe everything? A backup downloads first."))return;
+  if(!confirm("Last chance — this cannot be undone. Wipe now?"))return;
+  try{S.exportFile()}catch(e){}
+  localStorage.removeItem(S.KEYS.db);localStorage.removeItem(S.KEYS.session);
+  location.href="index.html";
+ };
+}
+
+window.addEventListener("hashchange",function(){if(session)route()});
+document.addEventListener("DOMContentLoaded",function(){
+ S.init(function(){
+  var sess=S.getSession();
+  var relaxed=(location.protocol==="file:"&&S.getSettings().adminGatePortable===false);
+  if(sess&&(sess.role==="teacher"||sess.role==="admin")){session=sess;enter()}
+  else if(relaxed){renderGate()}
+  else renderGate();
+ });
+});
+})();
+</script>
+</body>
+</html>

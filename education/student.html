@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="rebuild thrive">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Student Desk — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<style>
+.sd-hero{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-4);margin-bottom:var(--space-5);}
+.sd-avatar-big{width:var(--space-8);height:var(--space-8);font-size:var(--fs-2xl);}
+.sd-hero-main{flex:1 1 260px;}
+.sd-hero-main h1{font-size:var(--fs-2xl);}
+.sd-greeting{color:var(--text-muted);}
+.sd-stats{display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;}
+.sd-star-stat{display:flex;align-items:center;gap:var(--space-2);font-size:var(--fs-xl);font-weight:700;color:var(--accent);}
+.sd-section{margin-top:var(--space-6);}
+.sd-section > h2{font-size:var(--fs-lg);margin-bottom:var(--space-2);}
+.sd-continue{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-3);}
+.sd-empty{color:var(--text-muted);background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-md);padding:var(--space-4);text-align:center;}
+.sd-fb{margin-top:var(--space-3);}
+.sd-fb-head{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-1);}
+.sd-score{border-color:color-mix(in srgb, var(--ok) 40%, transparent);background:color-mix(in srgb, var(--ok) 12%, transparent);color:var(--ok);}
+.sd-fb-quote{margin:var(--space-2) 0;padding-left:var(--space-3);border-left:3px solid var(--accent);color:var(--text);}
+.sd-fb-meta{font-size:var(--fs-xs);color:var(--text-muted);}
+.sd-blurb{font-size:var(--fs-sm);color:var(--text-muted);}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<div class="sd-hero">
+<span class="avatar sd-avatar-big" id="sd-avatar">?</span>
+<div class="sd-hero-main">
+<h1 id="sd-name">…</h1>
+<p class="sd-greeting" id="sd-greeting"></p>
+</div>
+<div class="sd-stats">
+<span class="sd-star-stat"><i class="fa-solid fa-star" aria-hidden="true"></i><span id="sd-star-count">0</span><span style="font-size:var(--fs-sm);font-weight:600;color:var(--text-muted)">stars earned</span></span>
+<button class="btn btn-ghost" type="button" id="sd-signout"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Sign out</button>
+</div>
+</div>
+
+<section class="card sd-section" id="sd-continue-card" hidden style="margin-top:0">
+<h2>Pick up where you left off</h2>
+<div class="sd-continue">
+<div>
+<p id="sd-continue-title" style="font-weight:700;margin-bottom:0"></p>
+<p class="sd-blurb" id="sd-continue-meta"></p>
+</div>
+<a class="btn btn-primary" id="sd-continue-btn" href="#"><i class="fa-solid fa-play" aria-hidden="true"></i> Continue lesson</a>
+</div>
+</section>
+
+<section class="sd-section">
+<h2><i class="fa-solid fa-book" aria-hidden="true"></i> Pick a lesson</h2>
+<p class="sd-blurb">Lessons for your band. Finish one and its stars land here.</p>
+<div class="tile-grid" id="sd-lessons"></div>
+<div class="sd-empty" id="sd-lessons-empty" hidden>No lessons are stocked for your band yet — the shelf is being filled.</div>
+</section>
+
+<section class="sd-section">
+<h2><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Notes from your teacher</h2>
+<div id="sd-feedback"></div>
+<div class="sd-empty" id="sd-feedback-empty" hidden>Nothing graded yet. Turn work in and it will show up here.</div>
+</section>
+</main>
+
+<footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script src="../assets/school-core.js?v=2"></script>
+<script>
+(function () {
+  "use strict";
+  var S = window.BGSchool;
+  var sid = null;
+  try {
+    var m = /[?&]id=([^&]*)/.exec(location.search);
+    if (m) sid = decodeURIComponent(m[1]);
+  } catch (e) { sid = null; }
+  if (!sid) { location.replace("index.html"); return; }
+
+  function el(id) { return document.getElementById(id); }
+
+  function gatingOn() {
+    var st = S.getSettings();
+    return !(st.adminGatePortable === false && location.protocol === "file:");
+  }
+
+  function manifest() {
+    var list = window.BG_LESSONS_MANIFEST;
+    return (list && list.length) ? list : [];
+  }
+
+  function lessonTitle(id) {
+    var list = manifest();
+    for (var i = 0; i < list.length; i++) {
+      if (list[i] && list[i].id === id) return list[i].title || id;
+    }
+    if (window.BG_LESSONS && window.BG_LESSONS[id] && window.BG_LESSONS[id].title) {
+      return window.BG_LESSONS[id].title;
+    }
+    return id;
+  }
+
+  function greetingLine(name) {
+    var h = new Date().getHours();
+    var part;
+    if (h < 5) part = "Burning the midnight oil";
+    else if (h < 12) part = "Good morning";
+    else if (h < 18) part = "Good afternoon";
+    else part = "Good evening";
+    return part + ", " + name + ". Your desk is ready.";
+  }
+
+  function renderHero(student) {
+    var av = el("sd-avatar");
+    av.setAttribute("data-tone", String(student.tone || 0));
+    av.textContent = (student.name || "?").charAt(0).toUpperCase();
+    el("sd-name").textContent = student.name;
+    el("sd-greeting").textContent = greetingLine(student.name);
+    var bandBadge = document.createElement("span");
+    bandBadge.className = "badge";
+    bandBadge.style.marginLeft = "var(--space-2)";
+    bandBadge.textContent = S.BAND_LABELS[student.band] || student.band;
+    el("sd-name").appendChild(bandBadge);
+  }
+
+  function renderContinue(student) {
+    var card = el("sd-continue-card");
+    var cur = student.currentLesson;
+    if (!cur || !cur.id) { card.hidden = true; return; }
+    card.hidden = false;
+    el("sd-continue-title").textContent = lessonTitle(cur.id);
+    el("sd-continue-meta").textContent = cur.step > 0
+      ? ("You were on step " + (cur.step + 1) + ".")
+      : "Fresh start — first step ahead.";
+    var btn = el("sd-continue-btn");
+    btn.href = "lesson.html?id=" + encodeURIComponent(cur.id) + "&resume";
+  }
+
+  function renderLessons(student, progress) {
+    var grid = el("sd-lessons");
+    var empty = el("sd-lessons-empty");
+    grid.innerHTML = "";
+    var mine = manifest().filter(function (l) {
+      return l && l.enabled !== false && l.band === student.band;
+    });
+    if (!mine.length) { empty.hidden = false; return; }
+    empty.hidden = true;
+    mine.forEach(function (l) {
+      var tile = document.createElement("a");
+      tile.className = "tile";
+      tile.href = "lesson.html?id=" + encodeURIComponent(l.id);
+      var icon = document.createElement("i");
+      icon.className = "fa-solid fa-book-open tile-icon";
+      icon.setAttribute("aria-hidden", "true");
+      var name = document.createElement("span");
+      name.className = "tile-name";
+      name.textContent = l.title || l.id;
+      var blurb = document.createElement("span");
+      blurb.className = "tile-blurb";
+      var p = progress[l.id];
+      var bits = [];
+      if (l.subject) bits.push(l.subject);
+      if (l.minutes) bits.push(l.minutes + " min");
+      if (p && p.status === "complete") {
+        var stars = S.starsFor(p.testScore);
+        var row = document.createElement("span");
+        row.className = "star-row";
+        for (var i = 0; i < 4; i++) {
+          var star = document.createElement("span");
+          if (i < stars) star.className = "earned";
+          star.innerHTML = i < stars ? "&#9733;" : "&#9734;";
+          row.appendChild(star);
+        }
+        bits.push(p.testScore == null ? "Complete" : "Complete · " + p.testScore + "%");
+        blurb.textContent = bits.join(" · ");
+        tile.appendChild(icon);
+        tile.appendChild(name);
+        tile.appendChild(blurb);
+        tile.appendChild(row);
+        grid.appendChild(tile);
+        return;
+      }
+      if (p && p.status === "in-progress") bits.push("In progress · step " + ((p.step || 0) + 1));
+      blurb.textContent = bits.join(" · ") || "Open the lesson player";
+      tile.appendChild(icon);
+      tile.appendChild(name);
+      tile.appendChild(blurb);
+      grid.appendChild(tile);
+    });
+  }
+
+  function totalStars(progress) {
+    var sum = 0;
+    for (var lessonId in progress) {
+      if (Object.prototype.hasOwnProperty.call(progress, lessonId)) {
+        var p = progress[lessonId];
+        if (p && p.status === "complete") sum += S.starsFor(p.testScore);
+      }
+    }
+    return sum;
+  }
+
+  function renderFeedback(sidVal) {
+    var wrap = el("sd-feedback");
+    var empty = el("sd-feedback-empty");
+    wrap.innerHTML = "";
+    var graded = S.listSubmissions({ studentId: sidVal, graded: true }).slice(0, 6);
+    if (!graded.length) { empty.hidden = false; return; }
+    empty.hidden = true;
+    graded.forEach(function (sub) {
+      var card = document.createElement("div");
+      card.className = "card sd-fb pop-in";
+      var head = document.createElement("div");
+      head.className = "sd-fb-head";
+      var title = document.createElement("strong");
+      title.textContent = lessonTitle(sub.lessonId) || "Your work";
+      var badge = document.createElement("span");
+      badge.className = "badge sd-score";
+      badge.textContent = sub.grade.score + "%";
+      head.appendChild(title);
+      head.appendChild(badge);
+      card.appendChild(head);
+      if (sub.grade.feedback) {
+        var quote = document.createElement("blockquote");
+        quote.className = "sd-fb-quote";
+        quote.textContent = sub.grade.feedback;
+        card.appendChild(quote);
+      }
+      var meta = document.createElement("p");
+      meta.className = "sd-fb-meta";
+      meta.textContent = sub.grade.by
+        ? "Graded by " + sub.grade.by + " · " + String(sub.at).slice(0, 10)
+        : String(sub.at).slice(0, 10);
+      card.appendChild(meta);
+      wrap.appendChild(card);
+    });
+  }
+
+  function celebrateNewGrades(sidVal) {
+    var graded = S.listSubmissions({ studentId: sidVal, graded: true });
+    if (!graded.length) return;
+    var newest = graded[0].at;
+    var seen = null;
+    try { seen = window.localStorage.getItem(S.KEYS.seenGrades); } catch (e) {}
+    if (!seen || String(newest) > String(seen)) {
+      S.confettiBurst();
+      try { window.localStorage.setItem(S.KEYS.seenGrades, new Date().toISOString()); } catch (e) {}
+    }
+  }
+
+  function start() {
+    var student = null;
+    var db = S.data();
+    for (var i = 0; i < db.students.length; i++) {
+      if (db.students[i].id === sid) { student = db.students[i]; break; }
+    }
+    if (!student) { location.replace("index.html"); return; }
+    var sess = S.getSession();
+    var allowed = sess && sess.role === "student" && sess.id === sid;
+    if (!allowed) {
+      if (!gatingOn()) {
+        S.loginStudent(sid);
+      } else {
+        location.replace("index.html");
+        return;
+      }
+    }
+    document.title = student.name + " — Student Desk — BreakGlass";
+    renderHero(student);
+    var progress = S.getProgress(sid);
+    el("sd-star-count").textContent = String(totalStars(progress));
+    renderContinue(student);
+    renderLessons(student, progress);
+    renderFeedback(sid);
+    celebrateNewGrades(sid);
+    el("sd-signout").addEventListener("click", function () {
+      S.logout();
+      location.href = "index.html";
+    });
+  }
+
+  S.init(function () { start(); });
+})();
+</script>
+</body>
+</html>
