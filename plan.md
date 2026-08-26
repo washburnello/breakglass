@@ -363,4 +363,4 @@ deep content so the live URL shapes decisions.
   from Town Builder). Security honesty: portable-copy passwords are
   deterrence-only; hosted copy enforces; admin can relax gating per copy.
   GCompris consulted as design inspiration only (GPL, not bundled).
-- Pets and animals page needs documents and informaiton on domesticating and raising animals. How to raise chickens, train dogs and cats, raise train and ride horses etc.- Pets expansion IN PROGRESS: domestication/raising docs — chickens, dog & cat training, horses.
+- Pets and animals page needs documents and informaiton on domesticating and raising animals. How to raise chickens, train dogs and cats, raise train and ride horses etc.- [DONE] Pets expansion IN PROGRESS → complete: domestication/raising docs — chickens (brooder→eggs), dog training (four pillars), cat training, horses (reality check + basics).
