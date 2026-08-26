@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="survive stabilize">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Compass Basics — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<style>@media print{.steps li,.keyfacts li,table{break-inside:avoid}}</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<p style="font-size:var(--fs-sm)"><a href="index.html">&larr; Maps &amp; Navigation</a></p>
+<h1>Compass Basics</h1>
+<div class="callout callout-info">
+<h4>A compass does one thing, perfectly</h4>
+<p>It tells you where magnetic north is. Everything else on this page — bearings, declination, orienting the map — is just putting that one honest answer to work. No batteries, no signal, no update cycle.</p>
+</div>
+<nav class="toc-chips" aria-label="Sections">
+<a href="#parts-of-the-compass">Parts of the compass</a>
+<a href="#taking-a-bearing">Taking a bearing</a>
+<a href="#following-a-bearing-in-visibility">Following a bearing you can see along</a>
+<a href="#declination-magnetic-vs-true">Declination: magnetic vs true</a>
+<a href="#orienting-the-map">Orienting the map</a>
+<a href="#route-planning-concepts">Route planning concepts</a>
+</nav>
+<div class="keyfacts">
+<p class="keyfacts-title">At a glance</p>
+<ul>
+<li><strong>Red in the shed:</strong> the red end of the needle always points to magnetic north. When the needle floats inside the outlined orienting arrow ("the shed"), your reading is set.</li>
+<li><strong>Declination:</strong> magnetic north and true north are not in the same place. Adjust for the difference or deliberately ignore it — never just forget about it.</li>
+<li><strong>Pace counting:</strong> an average adult covers 100 m in <strong>62–70 paces</strong> on level ground. A pace is two steps. Count yours once on a measured field or track.</li>
+<li>No compass at all? The sky still points — see <a href="sun-and-stars.html">Sun &amp; Stars</a>.</li>
+</ul>
+</div>
+<div class="article">
+<h2 id="parts-of-the-compass">Parts of the compass</h2>
+<p>An inexpensive baseplate compass contains everything a navigator needs:</p>
+<table>
+<caption>Anatomy of a baseplate compass</caption>
+<thead><tr><th>Part</th><th>What it is / what it does</th></tr></thead>
+<tbody>
+<tr><td>Baseplate</td><td>The clear rectangle everything sits on. Its straight edges draw and measure route lines on a map.</td></tr>
+<tr><td>Direction-of-travel arrow</td><td>Fixed arrow on the baseplate. Aim it at your target; walk the way it points.</td></tr>
+<tr><td>Rotating bezel (azimuth ring)</td><td>The dial marked 0–360°. Turning it sets the bearing you want.</td></tr>
+<tr><td>Magnetic needle</td><td>The floating magnetized needle. Its <strong>red end always seeks magnetic north</strong>, wherever you stand.</td></tr>
+<tr><td>Orienting arrow ("the shed")</td><td>The outline drawn on the capsule floor. "Put red in the shed" means aligning needle with outline so the bezel reads true.</td></tr>
+<tr><td>Orienting lines</td><td>Parallel lines in the capsule floor, used to square the bezel with a map's north–south grid lines.</td></tr>
+<tr><td>Index line</td><td>The mark where the direction-of-travel arrow crosses the bezel — where you read degrees.</td></tr>
+<tr><td>Declination screw (if fitted)</td><td>Sets your local declination into the bezel once, so every later reading self-corrects.</td></tr>
+</tbody>
+</table>
+<h2 id="taking-a-bearing">Taking a bearing</h2>
+<p>A bearing is an angle measured clockwise from north toward something you can see. Taking one from the world around you:</p>
+<ol class="steps">
+<li><strong>Aim the direction-of-travel arrow</strong> at a visible object — a peak, a lone tree, a water tower.</li>
+<li><strong>Hold the compass level</strong> at chest height, well away from knives, phones, buckles, and vehicle hoods — metal drags the needle.</li>
+<li><strong>Turn the bezel</strong> until red is in the shed: the red end floats exactly inside the orienting arrow.</li>
+<li><strong>Read the number at the index line.</strong> That figure — say 240° — fixes your line to the object as precisely as any coordinate.</li>
+</ol>
+<p>To take a bearing <em>from a map instead</em>: lay the baseplate's edge along the line between where you are and where you're going, turn the bezel until its orienting lines run parallel to the map's north–south grid lines with the bezel's north mark pointing to map north, then read the bearing at the index line.</p>
+<h2 id="following-a-bearing-in-visibility">Following a bearing you can see along</h2>
+<p>Walking a straight compass line while glued to the dial makes people drift — every glance sideways bends your path. Use intermediate landmarks instead:</p>
+<ol class="steps">
+<li><strong>Set your bearing</strong> on the bezel and point the direction-of-travel arrow along it.</li>
+<li><strong>Pick a landmark</strong> that sits exactly on your line — a distinctive rock, snag, or bush as far ahead as you can clearly see.</li>
+<li><strong>Put the compass away and walk to that landmark.</strong> Look up, watch your footing, move like a person instead of a robot.</li>
+<li><strong>Repeat</strong>: sight the next on-line landmark from there, walk to it, again. A thousand-meter leg becomes a chain of short honest walks.</li>
+<li><strong>In a group,</strong> send one person ahead as the landmark; call them left or right until they stand on the bearing, then walk to them.</li>
+</ol>
+<div class="callout callout-caution">
+<h4>Obstacles happen</h4>
+<p>When a lake, cliff, or deadfall blocks the line, box around it: walk 90° off your bearing counting paces, resume the original bearing past the obstacle, then walk the opposite 90° the same pace count to return to your line. The paces you counted are how you get back on track — this is where pace counting earns its keep.</p>
+</div>
+<h2 id="declination-magnetic-vs-true">Declination: magnetic vs true north</h2>
+<p>Your compass needle does not point at the geographic North Pole — it points at magnetic north, a spot in arctic Canada that wanders. The angle between the two is called <strong>declination</strong>, and it changes with where you are:</p>
+<ul>
+<li>Much of the U.S. East Coast runs about 10–15° <strong>west</strong> declination (the needle points west of true north).</li>
+<li>The West Coast runs about 10–15° <strong>east</strong>.</li>
+<li>A rough zero line runs through the middle of the country where the two norths briefly agree.</li>
+</ul>
+<p>Good topographic maps print the local declination and its date in the margin. It drifts slowly year over year, so an old map's number is close but not exact.</p>
+<p><strong>Adjust or ignore — but choose on purpose:</strong> if you're navigating long legs with map and compass (especially cross-country or in poor visibility), set the declination screw or apply the correction every time you move between map and world. If you're holding a general direction over short distances where being five degrees off lands you within sight of your target anyway, ignoring it is fine — just know that's what you're doing. Over a mile, five degrees of error puts you more than a hundred meters wide of your mark.</p>
+<details class="fold">
+<summary>The math, with worked examples</summary>
+<p style="margin-top:var(--space-2)">Converting a compass reading to a true (map) bearing: <strong>subtract east declination, add west declination</strong>. Going the other way, map to compass, reverse it.</p>
+<ul>
+<li>Local declination 12° east. Compass reads 100° to a ridge. True bearing = 100 − 12 = <strong>88°</strong>.</li>
+<li>Local declination 15° west. Compass reads 100°. True bearing = 100 + 15 = <strong>115°</strong>.</li>
+<li>Map says your escape route runs 220° true, declination 8° east. Set the compass to 220 + 8 = <strong>228°</strong> and walk red-in-the-shed.</li>
+</ul>
+<p>If your compass has a declination screw, set the local value once and never think about arithmetic again: with adjustment set, red-in-the-shed readings are already true bearings both ways. Mnemonic some navigators use: <em>"east is least, west is best"</em> when going from map bearings to compass dial settings.</p>
+</details>
+<h2 id="orienting-the-map">Orienting the map</h2>
+<p>An oriented map lies flat and turned so its features line up with the real world around you — north on the paper points at actual north. Decisions get dramatically easier when the map matches the terrain:</p>
+<ol class="steps">
+<li><strong>Set your declination first</strong> (screw adjustment) if the compass has one, so map-north handling stays consistent.</li>
+<li><strong>Lay the map flat</strong> and place the compass on it, direction-of-travel arrow pointing toward the map's top edge.</li>
+<li><strong>Turn bezel and body together</strong> until red sits in the shed while the capsule's orienting lines run parallel to the map's north–south grid lines.</li>
+<li><strong>Rotate the whole map</strong> — not the compass — until everything agrees. Now ridges on paper match ridges on the horizon; the stream to your left is the squiggle on your left.</li>
+</ol>
+<p>No compass handy? Orient roughly by eye: find the sun-and-shadow direction or a known peak, then twist the map until its features match what you see. Imperfect, but far better than navigating on an upside-down mental picture.</p>
+<h2 id="route-planning-concepts">Route planning concepts</h2>
+<p>Experienced navigators plan routes as a chain of simple, hard-to-miss features rather than one heroic straight line. Three ideas carry most of the weight:</p>
+<table>
+<caption>Three planning ideas that do most of the work</caption>
+<thead><tr><th>Concept</th><th>What it means</th><th>Example</th></tr></thead>
+<tbody>
+<tr><td>Handrail</td><td>A long linear feature you follow alongside, checking it now and then like a handrail on a staircase.</td><td>Walk with a river on your right; a trail underfoot; below a powerline cut.</td></tr>
+<tr><td>Attack point</td><td>A big, unmistakable feature near your objective that you aim for first, making the final leg short and precise.</td><td>Reach the bridge everyone can find, then take a careful 400 m bearing to the campsite.</td></tr>
+<tr><td>Backstop</td><td>A feature you cannot miss lying <em>beyond</em> your objective — hitting it means you overshot; turn around.</td><td>If you reach the road junction, you've gone too far; the spring was back 300 m.</td></tr>
+</tbody>
+</table>
+<p>Sketch the plan before leaving: handrails to travel along, an attack point near each waypoint, a backstop behind each attack point, plus rough distance between them so pace counting can flag "should be there by now." A route built this way forgives error — every feature is a chance to notice and correct.</p>
+<p>Rigging camp at the end of the route is its own skill — see <a href="essential-knots.html">Essential Knots</a>.</p>
+</div>
+</main>
+<footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+</body>
+</html>

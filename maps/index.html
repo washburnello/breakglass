@@ -11,6 +11,11 @@
 <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
 <link rel="stylesheet" href="../assets/theme.css?v=2">
 <script src="../assets/shell.js?v=2" defer></script>
+<style>
+.glance-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.tier-badge{display:flex;justify-content:space-between;align-items:center;gap:var(--space-2)}
+@media print{.glance-card{break-inside:avoid}}
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -21,8 +26,62 @@
 </header>
 <main>
 <h1>Maps &amp; Navigation</h1>
-<div class="callout callout-info"><p>This section is under construction. Content ships in phases — see plan.md.</p></div>
-<div class="card"><p>Maps &amp; Navigation provides offline maps, compass skills and route planning so you can find your way without any signal.</p></div>
+<div class="callout callout-info">
+<h4>Skills first — satellites second</h4>
+<p>GPS is fragile: batteries die, screens crack, signals bounce off canyons and vanish under heavy tree cover — and in a real disruption the constellation itself may not be on your side. The skills in this section need a ten-dollar baseplate compass and the sky. People crossed continents with less. Learn them before you need them.</p>
+</div>
+<div class="tile-grid">
+<a class="tile" href="compass-basics.html"><i class="fa-solid fa-compass tile-icon"></i><span class="tile-name">Compass Basics</span><span class="tile-blurb">Bearings, declination, orienting the map, route planning.</span></a>
+<a class="tile" href="sun-and-stars.html"><i class="fa-solid fa-star tile-icon"></i><span class="tile-name">Sun &amp; Stars</span><span class="tile-blurb">Find direction with no tools at all — day or night.</span></a>
+<a class="tile" href="essential-knots.html"><i class="fa-solid fa-link tile-icon"></i><span class="tile-name">Essential Knots</span><span class="tile-blurb">Six knots that cover almost every camp job.</span></a>
+</div>
+<section class="article">
+<h2 id="map-packs">Map packs: what ships now, what comes later</h2>
+<p>This section ships its skills today and documents its map-data tiers honestly. The heavier digital-map layers are later media-pack work — when they arrive they will simply appear here. Nothing below is a promise of features that pretend to exist.</p>
+</section>
+<h2 class="group-title">The three tiers</h2>
+<div class="tile-grid glance-grid">
+
+<div class="glance-card tone-ok">
+<h3 class="tier-badge"><span>Tier 1 — Paper &amp; compass</span> <span class="badge">Bundled now</span></h3>
+<ul>
+<li><strong>Adds:</strong> map reading, taking and following bearings, declination handling, orienting a map to the terrain.</li>
+<li>Celestial fallback for days without any map at all.</li>
+<li>Knots to rig tarps, lines, and loads.</li>
+<li>Works from a printed page in a plastic sleeve.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-warn">
+<h3 class="tier-badge"><span>Tier 2 — State raster packs</span> <span class="badge badge-warn">Arrives with the media pack</span></h3>
+<ul>
+<li><strong>Adds:</strong> offline topographic map images of your home state as local tile files.</li>
+<li>Scrollable and zoomable in the browser, fully file://-native.</li>
+<li>Roughly 1–5 GB per state depending on detail level.</li>
+<li>Ships when the map-tile portion of the media pack lands.</li>
+</ul>
+</div>
+
+<div class="glance-card tone-info">
+<h3 class="tier-badge"><span>Tier 3 — Server vector streaming</span> <span class="badge">Needs network mode</span></h3>
+<ul>
+<li><strong>Adds:</strong> smooth full-detail vector maps streamed from your own home server.</li>
+<li>Nation-scale coverage plus USGS topo quads, served locally.</li>
+<li>Largest footprint (tens of gigabytes) — lives on the storage drive, not the USB stick.</li>
+<li>Only reachable when BreakGlass runs in server mode at home.</li>
+</ul>
+</div>
+
+</div>
+<section class="article">
+<h2 id="phones">Phones count too</h2>
+<p>A phone with maps stored <em>before</em> you leave is a legitimate navigation tool — it just should never be your only one. Two free apps do this well and both work with every radio off:</p>
+<ul>
+<li><strong>OsmAnd</strong> — downloads country or state vector maps; works offline including search and routing.</li>
+<li><strong>Organic Maps</strong> — same idea, simpler interface; offline search and turn-by-turn.</li>
+</ul>
+<p>The rule either way: download the region while you still have Wi-Fi, carry a power bank, and keep the compass skills above sharp for the moment the screen goes dark.</p>
+</section>
 </main>
 <footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
 </body>
