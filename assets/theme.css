@@ -685,6 +685,74 @@ textarea.form-input {
   letter-spacing: 0.02em;
 }
 
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-7);
+  height: var(--space-7);
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-weight: 700;
+  flex: none;
+}
+
+.avatar[data-tone="1"] { background: color-mix(in srgb, var(--ok) 22%, transparent); }
+.avatar[data-tone="2"] { background: color-mix(in srgb, var(--info) 22%, transparent); }
+.avatar[data-tone="3"] { background: color-mix(in srgb, var(--warn) 22%, transparent); }
+.avatar[data-tone="4"] { background: color-mix(in srgb, var(--danger) 18%, transparent); }
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.85); }
+}
+
+.pop-in {
+  animation: pop-in var(--dur-base) var(--ease-spring) both;
+}
+
+.star-row {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  font-size: var(--fs-2xl);
+}
+
+.star-row .earned {
+  color: var(--accent);
+  animation: pop-in var(--dur-slow) var(--ease-spring) both;
+}
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 50;
+}
+
+.confetti i {
+  position: absolute;
+  top: -3vh;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0.9;
+  animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+  to { transform: translateY(110vh) rotate(660deg); opacity: 0.7; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop-in,
+  .star-row .earned,
+  .confetti i {
+    animation: none !important;
+  }
+}
+
 .status-line {
   display: flex;
   align-items: center;
