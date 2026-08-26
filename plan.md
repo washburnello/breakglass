@@ -347,11 +347,12 @@ deep content so the live URL shapes decisions.
   original plan (tile existed, section did not). Authored clean-room: radio
   reference w/ FCC-accurate FRS/GMRS power limits, NOAA SAME, PACE family
   plan builder. All five stub tiles (reference/calc/comms/id/maps) now real.
-- I want to seriously consider getting all the wiki pages to be just html pages.
+- [IN DESIGN] I want to seriously consider getting all the wiki pages to be just html pages.
+- [IN DESIGN] If running in server mode, we should offer server side saving in any page that offers offline saving
 - If running in server mode, we should offer server side saving in any page that offers offline saving
-- ID page needs images of the dangers
-- Calculators page pills don't appear to do anything
-- We need a tile for food growing, preservation, and cooking
+- [DONE] ID page needs images of the dangers
+- [DONE] Calculators page pills don't appear to do anything (anchor ids were mismatched)
+- [DONE] We need a tile for food growing, preservation, and cooking (Grow & Cook landing tile + three guides)
 - 2026-08-25 — Schoolhouse LMS built on top of Phase 9: school-core data
   layer (hashed teacher/admin accounts, student roster, progress pointers,
   submissions/grading, JSON export/import), role-gated portal pages
@@ -362,4 +363,4 @@ deep content so the live URL shapes decisions.
   from Town Builder). Security honesty: portable-copy passwords are
   deterrence-only; hosted copy enforces; admin can relax gating per copy.
   GCompris consulted as design inspiration only (GPL, not bundled).
-
+- Pets and animals page needs documents and informaiton on domesticating and raising animals. How to raise chickens, train dogs and cats, raise train and ride horses etc.- Pets expansion IN PROGRESS: domestication/raising docs — chickens, dog & cat training, horses.
