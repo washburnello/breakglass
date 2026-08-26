@@ -320,6 +320,9 @@ deep content so the live URL shapes decisions.
 - System field-guide memory rules apply to any browser-heavy verification.
 
 ## Todo adds by Wash the server maintainer
+- Arcade Page: I want filter and view options for the lists of games. List View: What we have now. Just a text listing. Grid View: A grid of boxart with the name, favotire stars and other info etc.
+- Add a row of alphabet buttons at the top that will filter allthe games that start with that letter.
+- I want to manual/booklet viewable under the game when you open a game to play it. That way you can pause the game, scroll down and flip through pages of the bookelt
 - I want a clickable line of text in the footer called "How to use this site" that links to a page that describes how the site is designed and intended to be used.
   - Done 2026-08-25: root `how-to-use.html` authored (modes, finding things, phases, printing, data ownership, safety framing); footer link swept across all pages.
 - The iFixit repair guides ZIM has an error when loading
@@ -344,4 +347,19 @@ deep content so the live URL shapes decisions.
   original plan (tile existed, section did not). Authored clean-room: radio
   reference w/ FCC-accurate FRS/GMRS power limits, NOAA SAME, PACE family
   plan builder. All five stub tiles (reference/calc/comms/id/maps) now real.
+- I want to seriously consider getting all the wiki pages to be just html pages.
+- If running in server mode, we should offer server side saving in any page that offers offline saving
+- ID page needs images of the dangers
+- Calculators page pills don't appear to do anything
+- We need a tile for food growing, preservation, and cooking
+- 2026-08-25 — Schoolhouse LMS built on top of Phase 9: school-core data
+  layer (hashed teacher/admin accounts, student roster, progress pointers,
+  submissions/grading, JSON export/import), role-gated portal pages
+  (education/{index,student,lesson,teacher}.html), interactive lesson player
+  with essay/multiple-choice/scratchpad steps + hint system + auto-graded
+  mastery tests + celebration animations, and five seed lessons (incl. an
+  adult first-aid course derived from our medical pages and a civics lesson
+  from Town Builder). Security honesty: portable-copy passwords are
+  deterrence-only; hosted copy enforces; admin can relax gating per copy.
+  GCompris consulted as design inspiration only (GPL, not bundled).
 
