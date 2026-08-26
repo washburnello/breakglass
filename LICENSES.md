@@ -26,6 +26,7 @@ Every bundled asset's license is recorded here before shipping; attribution is a
 | World English Bible (WEB), 2020 stable text edition | Public Domain; "World English Bible" is a trademark of eBible.org | https://ebible.org | **Bundled** (`assets/bible/`, from eng-web_vpl); text unaltered |
 | Bible translations KJV/ASV/YLT/Douay-Rheims (public-domain editions via eBible.org) | Public Domain | https://ebible.org/Scriptures/ | **Bundled** (`assets/bible/`, alongside WEB; five translations ≈19 MiB shards) |
 | ESV | Crossway non-commercial license — APPLICATION SUBMITTED/PENDING approval | https://crossway.org/permissions/ | Blocked until approved |
+| ID Browser photos (41 hazard/species images) | Public Domain / CC0 / CC BY / CC BY-SA — per-image ledger with source URL + author at `tools/cache/id-images.json` | https://commons.wikimedia.org | **Bundled** (`media/id/*.jpg`, fetched by `tools/fetch-id-images.py`) |
 | US Army FMs / FEMA / CDC / NOAA / ready.gov works | Public Domain (US gov) | various | Pending |
 | Easy Peasy homeschool curriculum | NOT BUNDLED — All Rights Reserved; link-only if ever | allinonehomeschool.com | Excluded by choice |
 

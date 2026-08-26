@@ -53,10 +53,10 @@ served over HTTP, and live permanently at **https://breakglass.w4sh.net**
 - `EMERGENCY.html` always mirrors the Emergency Hub at site root and force-pins
   Survive phase.
 
-## Canonical tile map (19)
+## Canonical tile map (20)
 
 SURVIVAL: Emergency Hub · Medical & Health · How-To & Skills · Food & Water ·
-Comms & Radio ‖ KNOWLEDGE: Offline Wiki · Book Library · Faith & Bible ·
+Grow & Cook · Comms & Radio ‖ KNOWLEDGE: Offline Wiki · Book Library · Faith & Bible ·
 Education (Schoolhouse) · Ask-the-Kit · ID Browser ‖ REBUILD: Town Builder ·
 Maps & Navigation · Pets & Animals ‖ TOOLS: Quick Reference · Pocket Apps ·
 Calculators · Kit Admin ‖ MORALE: Arcade
