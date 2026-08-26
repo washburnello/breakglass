@@ -230,7 +230,46 @@ th,td{padding:var(--space-2);border-bottom:1px solid var(--border);text-align:le
   <section id="article-prose">
     <h2>Article prose</h2>
     <p class="sg-lede" style="margin-bottom:var(--space-3)">Wrap long-form page content in <code>.article</code> — it restores vertical rhythm (the site reset zeroes all margins) using only spacing tokens. Headings, lists, tables, and paragraphs space themselves; no inline margins.</p>
-    <div class="card article" style="max-width:60ch">
+    <p class="sg-lede" style="margin-bottom:var(--space-3)">Long articles pair <code>.article</code> with four scanning aids, demonstrated below: <code>.toc-chips</code> (section jump-links), <code>.keyfacts</code> (at-a-glance essentials), <code>.steps</code> (numbered procedures), and <code>&lt;details class="fold"&gt;</code> (optional depth that stays printable).</p>
+
+    <div class="sg-stack">
+      <div>
+        <p class="sg-label">.toc-chips — section jump links under the h1</p>
+        <nav class="toc-chips">
+          <a href="#article-prose">Section one</a>
+          <a href="#article-prose">Section two</a>
+          <a href="#article-prose">When things go wrong</a>
+        </nav>
+      </div>
+      <div>
+        <p class="sg-label">.keyfacts — the numbers and rules a reader needs first</p>
+        <div class="keyfacts">
+          <p class="keyfacts-title">At a glance</p>
+          <ul>
+            <li><strong>1 gallon</strong> per person per day — half drinking, half hygiene</li>
+            <li><strong>Boil 1 minute</strong> below 6,500 ft; <strong>3 minutes</strong> above</li>
+            <li>Unopened fridge keeps food safe <strong>4 hours</strong></li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <p class="sg-label">ol.steps — procedures get accent-numbered circles</p>
+        <ol class="steps">
+          <li><strong>Press hard</strong> on the wound with clean cloth.</li>
+          <li><strong>Add layers</strong> — never remove soaked ones.</li>
+          <li><strong>Keep pressure</strong> for ten full minutes.</li>
+        </ol>
+      </div>
+      <div>
+        <p class="sg-label">details.fold — optional depth, closed by default, prints open</p>
+        <details class="fold">
+          <summary>Why this works (background)</summary>
+          <p style="margin-top:var(--space-2)">Deeper explanation lives here, off the main scanning path but present for readers who want it — and it still appears when the page is printed.</p>
+        </details>
+      </div>
+    </div>
+
+    <div class="card article" style="max-width:60ch;margin-top:var(--space-5)">
       <h3 style="font-size:var(--fs-lg)">Cool the burn first</h3>
       <p>Hold the burned skin under cool running water for ten to twenty minutes. This does more good than any cream.</p>
       <ol>
