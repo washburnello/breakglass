@@ -14,6 +14,8 @@
 <script src="../assets/school-core.js?v=1"></script>
 <script src="../assets/lessons/manifest.js?v=1"></script>
 <style>
+.lg-previewbar{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-4);padding:var(--space-2) var(--space-3);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:var(--accent-soft);color:var(--accent);font-size:var(--fs-sm);border-radius:var(--radius-md);}
+.lg-previewbar a{color:var(--accent);font-weight:700;}
 .lg-exit{display:inline-flex;align-items:center;gap:var(--space-2);margin:var(--space-4) 0 0;color:var(--text-muted);font-size:var(--fs-sm);font-weight:600;text-decoration:none;}
 .lg-exit:hover{color:var(--accent);}
 .lg-head{margin-top:var(--space-3);}
@@ -227,6 +229,8 @@ a{color:inherit;text-decoration:none;}
   var lessonId = params.get("id") || "";
   var wantResume = params.get("resume") === "1";
   var wantTestJump = params.get("test") === "1";
+  var previewMode = params.get("preview") === "1";
+  var LIVE = !previewMode;
   var api = window.BGSchool || null;
 
   var lesson = null;
@@ -267,6 +271,9 @@ a{color:inherit;text-decoration:none;}
   }
   function safeApi(fnName) {
     return api && typeof api[fnName] === "function" ? api[fnName] : null;
+  }
+  function apiWrite(fnName) {
+    return LIVE ? safeApi(fnName) : null;
   }
   function guard(fn) {
     try {
@@ -420,6 +427,7 @@ a{color:inherit;text-decoration:none;}
     }
   }
   function saveDraft(key, text) {
+    if (!LIVE) return;
     try {
       localStorage.setItem(CORE.draftKey(lessonId, key), text);
     } catch (e) {}
@@ -438,13 +446,27 @@ a{color:inherit;text-decoration:none;}
     if (count) count.textContent = label;
   }
 
+  function buildPreviewBanner() {
+    var bar = el("div", "lg-previewbar no-print");
+    bar.setAttribute("role", "status");
+    bar.innerHTML = icon("fa-eye") + " <strong>Preview mode</strong> — nothing will be saved.";
+    var back = el("a", null, "Back to Teacher Portal");
+    back.href = "teacher.html#lessons";
+    bar.appendChild(back);
+    return bar;
+  }
+
   function buildChrome() {
     root.innerHTML = "";
     setState("run");
-    var dash = el("a", "lg-exit");
-    dash.href = "student.html?id=" + encodeURIComponent(session.id);
-    dash.innerHTML = icon("fa-arrow-left") + " Back to my dashboard";
-    root.appendChild(dash);
+    if (previewMode) {
+      root.appendChild(buildPreviewBanner());
+    } else {
+      var dash = el("a", "lg-exit");
+      dash.href = "student.html?id=" + encodeURIComponent(session.id);
+      dash.innerHTML = icon("fa-arrow-left") + " Back to my dashboard";
+      root.appendChild(dash);
+    }
 
     var head = el("section", "card lg-head");
     head.appendChild(el("h1", null, icon("fa-chalkboard-user") + " " + esc(lesson.title || "Lesson")));
@@ -484,7 +506,7 @@ a{color:inherit;text-decoration:none;}
 
   function gotoStep(i, suppressParty) {
     stepIdx = CORE.clampStep(i, lesson.steps.length);
-    var p = safeApi("setPointer");
+    var p = apiWrite("setPointer");
     if (p) guard(function () { p(session.id, lessonId, stepIdx); });
     if (!suppressParty && CORE.isInterstitialStep(stepIdx)) {
       playInterstitial(renderStep);
@@ -624,7 +646,7 @@ a{color:inherit;text-decoration:none;}
       solved = true;
       runFirstTry[key] = !!firstTry;
       if (gradableOrder.indexOf(key) === -1) gradableOrder.push(key);
-      var rec = safeApi("recordAnswer");
+      var rec = apiWrite("recordAnswer");
       if (rec) guard(function () { rec(session.id, lessonId, key, { correct: !!firstTry, hintUsed: !!runHints[key] }); });
     }
 
@@ -767,7 +789,7 @@ a{color:inherit;text-decoration:none;}
           testAnswers[testIdx] = { correct: CORE.checkAccept(field ? field.value : "", step.accept), hintUsed: hintShown, yours: field ? field.value : "", right: (step.accept || [])[0] };
         }
       }
-      var rec = safeApi("recordAnswer");
+      var rec = apiWrite("recordAnswer");
       if (rec) {
         (function (n) {
           guard(function () {
@@ -794,7 +816,7 @@ a{color:inherit;text-decoration:none;}
     if (!url) url = padMemory[key] || null;
     if (!url) return;
     padMemory[key] = url;
-    var sub = safeApi("addSubmission");
+    var sub = apiWrite("addSubmission");
     if (sub) {
       guard(function () {
         sub({ studentId: session.id, lessonId: lessonId, taskId: key, kind: "scratch", text: "", img: url, submittedAt: Date.now() });
@@ -1029,7 +1051,7 @@ a{color:inherit;text-decoration:none;}
     submitBtn.addEventListener("click", function () {
       if (!CORE.essayReady(ta.value, minWords)) return;
       saveDraft(key, ta.value);
-      var sub = safeApi("addSubmission");
+      var sub = apiWrite("addSubmission");
       if (sub) {
         guard(function () {
           sub({
@@ -1046,7 +1068,10 @@ a{color:inherit;text-decoration:none;}
       markSubmitted();
     });
 
-    if (prior) markSubmitted();
+    if (previewMode) {
+      ta.readOnly = true;
+      submitBtn.hidden = true;
+    } else if (prior) markSubmitted();
     refreshCount();
 
     card.appendChild(ta);
@@ -1059,6 +1084,11 @@ a{color:inherit;text-decoration:none;}
       actions.appendChild(src);
     }
     actions.appendChild(submitBtn);
+    if (previewMode) {
+      var pvBadge = el("span", "badge", "");
+      pvBadge.innerHTML = icon("fa-eye") + " Preview — submitting disabled";
+      actions.insertBefore(pvBadge, submitBtn);
+    }
     var spacer = txt("span", "", "");
     spacer.style.flex = "1";
     actions.appendChild(spacer);
@@ -1091,6 +1121,11 @@ a{color:inherit;text-decoration:none;}
   }
 
   function dashboardLink(primary) {
+    if (previewMode) {
+      var tp = el("a", "btn " + (primary ? "btn-primary" : "btn-ghost"), icon("fa-chalkboard") + " Back to Teacher Portal");
+      tp.href = "teacher.html#lessons";
+      return tp;
+    }
     var home = el("a", "btn " + (primary ? "btn-primary" : "btn-ghost"), icon("fa-house") + " Back to my dashboard");
     home.href = "student.html?id=" + encodeURIComponent(session.id);
     return home;
@@ -1111,7 +1146,7 @@ a{color:inherit;text-decoration:none;}
     var later = el("button", "btn btn-ghost", "Maybe later");
     later.type = "button";
     later.addEventListener("click", function () {
-      var cl = safeApi("completeLesson");
+      var cl = apiWrite("completeLesson");
       if (cl && typeof bestScore !== "number") {
         guard(function () { cl(session.id, lessonId, null); });
       }
@@ -1140,7 +1175,7 @@ a{color:inherit;text-decoration:none;}
     var res = CORE.gradeTest(testAnswers);
     var stars = CORE.starsFor(res.pct);
     var toStore = bestScore === null ? res.pct : Math.max(bestScore, res.pct);
-    var cl = safeApi("completeLesson");
+    var cl = apiWrite("completeLesson");
     if (cl) guard(function () { cl(session.id, lessonId, toStore); });
     bestScore = toStore;
     if (CORE.confettiAt(res.pct)) localConfetti();
@@ -1209,7 +1244,7 @@ a{color:inherit;text-decoration:none;}
     var firstTry = gradableOrder.filter(function (k) { return runFirstTry[k]; }).length;
     var stars = CORE.firstTryStars(gradable, firstTry);
     if (!fromLater) {
-      var cl = safeApi("completeLesson");
+      var cl = apiWrite("completeLesson");
       if (cl) guard(function () { cl(session.id, lessonId, null); });
     }
     stage.innerHTML = "";
@@ -1250,7 +1285,9 @@ a{color:inherit;text-decoration:none;}
   function begin() {
     var gs = safeApi("getSession");
     if (gs) session = guard(function () { return gs(); }) || null;
-    if (!session || session.role !== "student") return renderGateNoStudent();
+    var isStudent = session && session.role === "student";
+    var isStaffPreview = previewMode && session && (session.role === "teacher" || session.role === "admin");
+    if (!isStudent && !isStaffPreview) return renderGateNoStudent();
     var st = safeApi("getSettings");
     if (st) {
       var s2 = guard(function () { return st(); });
@@ -1299,15 +1336,41 @@ a{color:inherit;text-decoration:none;}
     return null;
   }
 
+  function loadCustomThenBegin() {
+    lesson = (window.BG_LESSONS || {})[lessonId];
+    var initFn = safeApi("init");
+    if (initFn) {
+      guard(function () {
+        initFn(function () {
+          begin();
+        });
+      });
+    } else {
+      begin();
+    }
+  }
+
   window.BGLessonCore = CORE;
 
   function boot() {
-    var entries = window.BG_LESSONS_MANIFEST;
-    if (!entries || !entries.length) return renderUnknown("shelf");
     var entry = findEntry();
-    if (!entry) return renderUnknown("missing");
-    if (entry.enabled === false) return renderUnknown("disabled");
-    loadLessonThenBegin(entry);
+    if (entry) {
+      if (entry.enabled === false && !previewMode) return renderUnknown("disabled");
+      return loadLessonThenBegin(entry);
+    }
+    var rec = null;
+    if (api && typeof api.getCustomLesson === "function") {
+      rec = guard(function () { return api.getCustomLesson(lessonId); });
+    }
+    if (rec && rec.steps) {
+      if (rec.enabled === false && !previewMode) return renderUnknown("disabled");
+      window.BG_LESSONS = window.BG_LESSONS || {};
+      window.BG_LESSONS[lessonId] = rec;
+      return loadCustomThenBegin();
+    }
+    var shelf = window.BG_LESSONS_MANIFEST;
+    if (!shelf || !shelf.length) return renderUnknown("shelf");
+    return renderUnknown("missing");
   }
 
   if (!api) {

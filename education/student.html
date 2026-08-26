@@ -29,6 +29,12 @@
 .sd-fb-quote{margin:var(--space-2) 0;padding-left:var(--space-3);border-left:3px solid var(--accent);color:var(--text);}
 .sd-fb-meta{font-size:var(--fs-xs);color:var(--text-muted);}
 .sd-blurb{font-size:var(--fs-sm);color:var(--text-muted);}
+.sd-asn{display:flex;align-items:flex-start;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-3);}
+.sd-asn-main{flex:1 1 240px;min-width:0;}
+.sd-asn-main a{font-weight:700;}
+.sd-asn-note{font-size:var(--fs-sm);color:var(--text-muted);margin-top:var(--space-1);}
+.sd-asn-badges{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2);}
+.sd-due-over{color:var(--danger);border-color:var(--danger);}
 </style>
 </head>
 <body>
@@ -62,6 +68,11 @@
 </div>
 </section>
 
+<section class="sd-section" id="sd-assignments-section" hidden>
+<h2><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Assigned work</h2>
+<div id="sd-assignments"></div>
+</section>
+
 <section class="sd-section">
 <h2><i class="fa-solid fa-book" aria-hidden="true"></i> Pick a lesson</h2>
 <p class="sd-blurb">Lessons for your band. Finish one and its stars land here.</p>
@@ -78,6 +89,7 @@
 
 <footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
 <script src="../assets/school-core.js?v=2"></script>
+<script src="../assets/lessons/manifest.js?v=1"></script>
 <script>
 (function () {
   "use strict";
@@ -101,13 +113,39 @@
     return (list && list.length) ? list : [];
   }
 
-  function lessonTitle(id) {
+  function catalog(student) {
+    var out = [];
+    var settings = S.getSettings();
+    var hidden = (settings && settings.enabledLessons) ? settings.enabledLessons : {};
     var list = manifest();
     for (var i = 0; i < list.length; i++) {
-      if (list[i] && list[i].id === id) return list[i].title || id;
+      var l = list[i];
+      if (!l || l.enabled === false || hidden[l.id] === false) continue;
+      if (l.band !== student.band) continue;
+      out.push({ id: l.id, title: l.title || l.id, subject: l.subject || "", minutes: l.minutes || null, custom: false });
+    }
+    var customs = [];
+    try { customs = S.listCustomLessons() || []; } catch (e) { customs = []; }
+    for (var j = 0; j < customs.length; j++) {
+      var c = customs[j];
+      if (!c || c.enabled === false || c.band !== student.band) continue;
+      out.push({ id: c.id, title: c.title || c.id, subject: c.subject || "", minutes: c.minutes || null, custom: true });
+    }
+    return out;
+  }
+
+  function lessonTitle(id) {
+    var m = manifest();
+    for (var i = 0; i < m.length; i++) {
+      if (m[i] && m[i].id === id) return m[i].title || id;
     }
     if (window.BG_LESSONS && window.BG_LESSONS[id] && window.BG_LESSONS[id].title) {
       return window.BG_LESSONS[id].title;
+    }
+    var customs = [];
+    try { customs = S.listCustomLessons() || []; } catch (e) { customs = []; }
+    for (var j = 0; j < customs.length; j++) {
+      if (customs[j] && customs[j].id === id) return customs[j].title || id;
     }
     return id;
   }
@@ -152,9 +190,7 @@
     var grid = el("sd-lessons");
     var empty = el("sd-lessons-empty");
     grid.innerHTML = "";
-    var mine = manifest().filter(function (l) {
-      return l && l.enabled !== false && l.band === student.band;
-    });
+    var mine = catalog(student);
     if (!mine.length) { empty.hidden = false; return; }
     empty.hidden = true;
     mine.forEach(function (l) {
@@ -210,6 +246,117 @@
       }
     }
     return sum;
+  }
+
+  function fmtDue(iso) {
+    try {
+      return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    } catch (e) { return ""; }
+  }
+
+  function isOverdue(dueAt, prog) {
+    if (!dueAt) return false;
+    if (prog && prog.status === "complete") return false;
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var d = new Date(dueAt);
+    if (isNaN(d.getTime())) return false;
+    d.setHours(0, 0, 0, 0);
+    return d < today;
+  }
+
+  function statusBadge(prog) {
+    var b = document.createElement("span");
+    b.className = "badge";
+    if (prog && prog.status === "complete") {
+      b.textContent = typeof prog.testScore === "number" ? "Complete · " + prog.testScore + "%" : "Complete";
+    } else if (prog && prog.status === "in-progress") {
+      b.textContent = "In progress · step " + ((prog.step || 0) + 1);
+    } else {
+      b.textContent = "Not started";
+    }
+    return b;
+  }
+
+  function renderAssignments(student, progress) {
+    var section = el("sd-assignments-section");
+    var wrap = el("sd-assignments");
+    wrap.innerHTML = "";
+    var list = [];
+    try { list = S.assignmentsForStudent(student.id) || []; } catch (e) { list = []; }
+    if (!list.length) { section.hidden = true; return; }
+    var cat = catalog(student);
+    var rows = [];
+    for (var i = 0; i < list.length; i++) {
+      var a = list[i];
+      var p = progress[a.lessonId];
+      rows.push({ a: a, p: (p && typeof p === "object") ? p : null });
+    }
+    rows.sort(function (x, y) {
+      var xc = x.p && x.p.status === "complete" ? 1 : 0;
+      var yc = y.p && y.p.status === "complete" ? 1 : 0;
+      if (xc !== yc) return xc - yc;
+      return String(x.a.dueAt || "9999").localeCompare(String(y.a.dueAt || "9999"));
+    });
+    section.hidden = false;
+    rows.forEach(function (item) {
+      var rec = null;
+      for (var k = 0; k < cat.length; k++) {
+        if (cat[k].id === item.a.lessonId) { rec = cat[k]; break; }
+      }
+      var card = document.createElement("div");
+      card.className = "card sd-asn pop-in";
+
+      var main = document.createElement("div");
+      main.className = "sd-asn-main";
+      var titleLink = document.createElement("a");
+      titleLink.href = "lesson.html?id=" + encodeURIComponent(item.a.lessonId) +
+        (item.p && item.p.status === "in-progress" ? "&resume=1" : "");
+      titleLink.textContent = rec ? rec.title : lessonTitle(item.a.lessonId);
+      main.appendChild(titleLink);
+      if (item.a.note) {
+        var note = document.createElement("p");
+        note.className = "sd-asn-note";
+        note.textContent = item.a.note;
+        main.appendChild(note);
+      }
+      var badges = document.createElement("div");
+      badges.className = "sd-asn-badges";
+      if (rec && rec.subject) {
+        var sb = document.createElement("span");
+        sb.className = "badge";
+        sb.textContent = rec.subject;
+        badges.appendChild(sb);
+      }
+      if (rec && rec.minutes) {
+        var mb = document.createElement("span");
+        mb.className = "badge";
+        mb.innerHTML = '<i class="fa-solid fa-clock" aria-hidden="true"></i> ' + rec.minutes + " min";
+        badges.appendChild(mb);
+      }
+      if (item.a.dueAt) {
+        var db2 = document.createElement("span");
+        db2.className = "badge" + (isOverdue(item.a.dueAt, item.p) ? " sd-due-over" : "");
+        db2.innerHTML = '<i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Due ' + fmtDue(item.a.dueAt);
+        badges.appendChild(db2);
+      }
+      badges.appendChild(statusBadge(item.p));
+      main.appendChild(badges);
+      card.appendChild(main);
+
+      var go = document.createElement("a");
+      go.className = "btn btn-primary";
+      var inProgress = item.p && item.p.status === "in-progress";
+      go.href = "lesson.html?id=" + encodeURIComponent(item.a.lessonId) + (inProgress ? "&resume=1" : "");
+      go.innerHTML = inProgress
+        ? '<i class="fa-solid fa-play" aria-hidden="true"></i> Resume'
+        : (item.p && item.p.status === "complete"
+          ? '<i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Again'
+          : '<i class="fa-solid fa-book-open" aria-hidden="true"></i> Start');
+      card.appendChild(go);
+
+      wrap.appendChild(card);
+    });
   }
 
   function renderFeedback(sidVal) {
@@ -282,6 +429,7 @@
     var progress = S.getProgress(sid);
     el("sd-star-count").textContent = String(totalStars(progress));
     renderContinue(student);
+    renderAssignments(student, progress);
     renderLessons(student, progress);
     renderFeedback(sid);
     celebrateNewGrades(sid);

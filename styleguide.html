@@ -398,7 +398,31 @@ th,td{padding:var(--space-2);border-bottom:1px solid var(--border);text-align:le
     <p>The whole motion budget is three durations (--dur-fast, --dur-base, --dur-slow) and two easings (--ease-out, --ease-spring). Nothing else moves. Under prefers-reduced-motion every animation freezes site-wide while the kit stays fully usable.</p>
   </section>
 
+  <section id="reader-shell">
+    <h2>Reader shell &amp; embedded theming</h2>
+    <p class="sg-lede">Full-viewport reading surfaces (the ZIM wiki reader at <code>wiki/read.html</code>) use an app-shell layout: standard topbar on top, a slim toolbar row, then a content stage that flexes to fill all remaining height. Status badges live in the footer line, never in the toolbar.</p>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="sg-rd-toolbar">
+        <span class="sg-rd-cluster"><i class="fa-solid fa-arrow-left"></i><i class="fa-solid fa-house"></i></span>
+        <span class="sg-rd-title">Article title — centered, ellipsized</span>
+        <span class="sg-rd-search"><i class="fa-solid fa-magnifying-glass"></i> Search this archive…</span>
+        <span class="sg-rd-cluster"><i class="fa-solid fa-print"></i><i class="fa-solid fa-plus"></i><i class="fa-solid fa-minus"></i></span>
+      </div>
+      <div class="sg-rd-stage">content stage — flex:1, fills remaining viewport height</div>
+      <div class="status-line"><span>How to use this site</span><span class="badge-slot"><span class="badge">Server mode</span><span class="badge">archive.zim</span></span><span>BreakGlass © 2026</span></div>
+    </div>
+    <p style="margin-top:var(--space-3)">Sandboxed third-party articles (Wikipedia ZIMs) are themed by bridging tokens: <code>assets/wiki-theme.js</code> reads computed token values from this document, writes them as <code>--bgw-*</code> variables onto the iframe root, and applies a scoped override sheet (<code>.bg-wiki</code>). Theme toggles re-paint live via a <code>data-theme</code> observer. Web-capture archives get color-scheme basics only (<code>.bg-wiki-zimit</code>). List rows for pickable packs use <code>.kit-entry</code>; a requested pack highlights with <code>.kit-requested</code>.</p>
+  </section>
+
 </main>
+
+<style>
+.sg-rd-toolbar{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--border);background:var(--surface)}
+.sg-rd-cluster{display:inline-flex;gap:var(--space-2);color:var(--text-muted)}
+.sg-rd-title{flex:1;text-align:center;font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sg-rd-search{display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-1) var(--space-3);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-pill);color:var(--text-muted);font-size:var(--fs-xs);max-width:14rem}
+.sg-rd-stage{display:flex;align-items:center;justify-content:center;min-height:7rem;background:var(--bg);color:var(--text-muted);font-size:var(--fs-sm)}
+</style>
 
 <footer>
   <div class="status-line"><span><a href="how-to-use.html">How to use this site</a></span>

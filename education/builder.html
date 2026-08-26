@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="rebuild thrive">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Lesson Builder — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/school-core.js"></script>
+<script src="../assets/shell.js?v=2" defer></script>
+<style>
+.tabpane{margin-top:var(--space-5)}
+.muted{color:var(--text-muted)}
+.bd-toolbar{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-4)}
+.bd-toolbar .bd-back{margin-right:auto;font-weight:600;text-decoration:none;color:var(--text-muted)}
+.bd-toolbar .bd-back:hover{color:var(--accent)}
+.bd-title-display{font-size:var(--fs-lg);font-weight:700;margin-right:var(--space-2)}
+.bd-step{border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3);margin-top:var(--space-3);background:var(--surface)}
+.bd-step-head{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-2)}
+.bd-step-head strong{flex:1}
+.bd-choice{display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-2)}
+.bd-preview{border:1px dashed var(--border);border-radius:var(--radius-sm);padding:var(--space-3);margin-top:var(--space-2);background:var(--surface-2)}
+.bd-addrow{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-4)}
+.bd-errors ul{margin:0;padding-left:var(--space-5)}
+@media print{.bd-toolbar,.no-print{display:none!important}.card{border:none;box-shadow:none}}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main>
+<div id="gate"></div>
+<div id="app" hidden>
+<div class="bd-toolbar no-print">
+<a class="bd-back" href="teacher.html#lessons">&larr; Back to Teacher Portal</a>
+<span class="bd-title-display" id="bd-title-display">New lesson</span>
+<button class="btn btn-primary" id="bd-save" type="button">Save</button>
+<button class="btn btn-ghost" id="bd-preview" type="button">Preview</button>
+<button class="btn btn-ghost" id="bd-export-json" type="button">Export JSON</button>
+<button class="btn btn-ghost" id="bd-import-json" type="button">Import JSON</button>
+<input type="file" id="bd-import-file" accept=".json,application/json" hidden>
+<button class="btn btn-ghost" id="bd-export-js" type="button">Export .js</button>
+<button class="btn btn-danger" id="bd-discard" type="button">Discard changes</button>
+</div>
+<div class="callout callout-danger" id="bd-load-error" hidden></div>
+<div class="card" id="bd-meta" style="margin-bottom:var(--space-4)">
+<h3>Lesson details</h3>
+<div class="form-row"><label class="form-label" for="bd-title">Title</label><input class="form-input" id="bd-title" type="text" maxlength="120"></div>
+<div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+<div class="form-row" style="flex:1;min-width:160px"><label class="form-label" for="bd-subject">Subject</label><input class="form-input" id="bd-subject" type="text" maxlength="60"></div>
+<div class="form-row" style="max-width:180px"><label class="form-label" for="bd-band">Band</label><select class="form-input" id="bd-band"></select></div>
+<div class="form-row" style="max-width:140px"><label class="form-label" for="bd-minutes">Minutes</label><input class="form-input" id="bd-minutes" type="number" min="1" max="600" step="1"></div>
+</div>
+<div class="form-row"><label class="form-label" for="bd-intro">Intro shown before step one</label><textarea class="form-input" id="bd-intro" rows="3" maxlength="2000"></textarea></div>
+</div>
+<div class="card" id="bd-steps-card" style="margin-bottom:var(--space-4)">
+<h3>Steps</h3>
+<p class="muted" style="font-size:var(--fs-sm)">Students walk these in order. Reading and notes move them along; questions, practice, scratch work, and writing ask for answers.</p>
+<div id="bd-steps-list"></div>
+<div class="bd-addrow"><span class="muted" style="font-size:var(--fs-sm);font-weight:700">Add:</span>
+<button class="btn btn-ghost" type="button" data-add-step="read">Reading</button>
+<button class="btn btn-ghost" type="button" data-add-step="info">Good to know</button>
+<button class="btn btn-ghost" type="button" data-add-step="mc">Multiple choice</button>
+<button class="btn btn-ghost" type="button" data-add-step="input">Type-in</button>
+<button class="btn btn-ghost" type="button" data-add-step="scratch">Scratch practice</button>
+<button class="btn btn-ghost" type="button" data-add-step="essay">Writing</button>
+</div>
+</div>
+<div class="card" id="bd-test-card" style="margin-bottom:var(--space-4)">
+<h3>Mastery check</h3>
+<label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer">
+<input type="checkbox" id="bd-has-test" style="width:1.1em;height:1.1em">
+<span><strong>Include mastery check</strong><br><span class="muted" style="font-size:var(--fs-sm)">A short end-of-lesson quiz. Multiple choice and type-in questions only.</span></span>
+</label>
+<div id="bd-test-list" hidden></div>
+<div class="bd-addrow" id="bd-test-add" hidden><span class="muted" style="font-size:var(--fs-sm);font-weight:700">Add:</span>
+<button class="btn btn-ghost" type="button" data-add-test="mc">Multiple choice</button>
+<button class="btn btn-ghost" type="button" data-add-test="input">Type-in</button>
+</div>
+</div>
+<div class="callout callout-warning" id="bd-errors" hidden></div>
+</div>
+</main>
+<footer class="status-line"><span><a href="index.html">&larr; Schoolhouse</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function(){
+"use strict";
+var S=window.BGSchool;
+var el=function(id){return document.getElementById(id)};
+var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+function toast(msg,tone){var d=document.createElement("div");d.className="callout pop-in "+(tone||"callout-ok");d.style.position="fixed";d.style.right="16px";d.style.bottom="16px";d.style.zIndex="60";d.textContent=msg;document.body.appendChild(d);setTimeout(function(){d.remove()},2600)}
+
+var session=null;
+var L=null;
+
+function newBlank(){
+ return {title:"",subject:"",band:"35",minutes:20,intro:"",steps:[],test:null,enabled:false};
+}
+function cloneObj(o){return JSON.parse(JSON.stringify(o))}
+function slugify(t){
+ var s=String(t||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+/,"").replace(/-+$/,"");
+ return s||"lesson";
+}
+function exportBase(){return L.id||slugify(L.title)}
+function letterAt(i){return String.fromCharCode(65+(i%26))}
+function typeLabel(t){
+ return ({read:"Reading",info:"Good to know",mc:"Multiple choice",input:"Type-in",scratch:"Scratch practice",essay:"Writing"})[t]||t;
+}
+
+function download(name,text,mime){
+ try{
+  var blob=new Blob([text],{type:mime||"application/json"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url;a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url)},2000);
+  return true;
+ }catch(e){toast("Download failed in this browser.","callout-danger");return false}
+}
+
+/* ---------- validation ---------- */
+
+function validateMcItem(it,label,errs){
+ if(!String(it.q||"").trim())errs.push(label+": question is empty.");
+ var ch=Array.isArray(it.choices)?it.choices:[];
+ var filled=0;
+ for(var i=0;i<ch.length;i++){if(String(ch[i]||"").trim())filled++}
+ if(filled<2)errs.push(label+": needs at least two filled-in choices.");
+ var ans=it.answer;
+ if(typeof ans!=="number"||Math.floor(ans)!==ans||ans<0||ans>=ch.length){
+  errs.push(label+": mark one choice as the correct answer.");
+ }
+}
+function validateInputItem(it,label,errs){
+ if(!String(it.q||"").trim())errs.push(label+": question is empty.");
+ var acc=Array.isArray(it.accept)?it.accept:[];
+ var ok=false;
+ for(var i=0;i<acc.length;i++){if(String(acc[i]||"").trim()){ok=true;break}}
+ if(!ok)errs.push(label+": needs at least one accepted answer.");
+}
+function validateLesson(obj){
+ var errs=[];
+ if(!String(obj.title||"").trim())errs.push("Title is required.");
+ var mins=Number(obj.minutes);
+ if(!isFinite(mins)||Math.floor(mins)!==mins||mins<5||mins>180)errs.push("Minutes must be a whole number from 5 to 180.");
+ if((S.BANDS||[]).indexOf(obj.band)===-1)errs.push("Pick a band.");
+ var steps=Array.isArray(obj.steps)?obj.steps:[];
+ if(!steps.length)errs.push("Add at least one step.");
+ for(var i=0;i<steps.length;i++){
+  var st=steps[i];
+  var lab="Step "+(i+1)+" ("+typeLabel(st.type)+")";
+  if(st.type==="read"){
+   if(!String(st.html||"").trim())errs.push(lab+": reading text is empty.");
+  }else if(st.type==="info"){
+   if(!String(st.title||"").trim())errs.push(lab+": needs a short title.");
+   if(!String(st.html||"").trim())errs.push(lab+": note text is empty.");
+  }else if(st.type==="mc"){
+   validateMcItem(st,lab,errs);
+  }else if(st.type==="input"||st.type==="scratch"){
+   validateInputItem(st,lab,errs);
+  }else if(st.type==="essay"){
+   if(!String(st.prompt||"").trim())errs.push(lab+": writing prompt is empty.");
+   var mw=Number(st.minWords);
+   if(!isFinite(mw)||Math.floor(mw)!==mw||mw<10||mw>500)errs.push(lab+": minimum words must be a whole number from 10 to 500.");
+  }else{
+   errs.push(lab+": unknown step type.");
+  }
+ }
+ if(Array.isArray(obj.test)){
+  for(var j=0;j<obj.test.length;j++){
+   var it=obj.test[j];
+   var lab2="Check question "+(j+1);
+   if(it.type==="mc")validateMcItem(it,lab2,errs);
+   else if(it.type==="input")validateInputItem(it,lab2,errs);
+   else errs.push(lab2+": only multiple choice and type-in questions are allowed here.");
+  }
+ }
+ return errs;
+}
+
+function refreshValidate(){
+ var panel=el("bd-errors");
+ var errs=L?validateLesson(L):["Nothing loaded."];
+ var saveBtn=el("bd-save");
+ if(errs.length){
+  var h="<h4>Fix before saving</h4><ul>";
+  for(var i=0;i<errs.length;i++)h+="<li>"+esc(errs[i])+"</li>";
+  panel.innerHTML=h+"</ul>";
+  panel.hidden=false;
+  saveBtn.disabled=true;
+ }else{
+  panel.innerHTML="";
+  panel.hidden=true;
+  saveBtn.disabled=false;
+ }
+}
+
+function refreshHeader(){
+ el("bd-title-display").textContent=(L&&L.title)?L.title:(L&&L.id?"Untitled lesson":"New lesson");
+}
+
+/* ---------- field builders ---------- */
+
+function textField(labelText,value,oninput,maxLen){
+ var w=document.createElement("div");w.className="form-row";
+ var lb=document.createElement("label");lb.className="form-label";lb.textContent=labelText;
+ var inp=document.createElement("input");inp.className="form-input";inp.type="text";inp.value=value||"";
+ if(maxLen)inp.maxLength=maxLen;
+ inp.addEventListener("input",oninput);
+ w.appendChild(lb);w.appendChild(inp);
+ return w;
+}
+function areaField(labelText,value,oninput,rows){
+ var w=document.createElement("div");w.className="form-row";
+ var lb=document.createElement("label");lb.className="form-label";lb.textContent=labelText;
+ var ta=document.createElement("textarea");ta.className="form-input";ta.rows=rows||4;ta.value=value||"";
+ ta.addEventListener("input",oninput);
+ w.appendChild(lb);w.appendChild(ta);
+ return w;
+}
+function numField(labelText,value,oninput,min,max){
+ var w=document.createElement("div");w.className="form-row";
+ var lb=document.createElement("label");lb.className="form-label";lb.textContent=labelText;
+ var inp=document.createElement("input");inp.className="form-input";inp.type="number";inp.min=min;inp.max=max;inp.step=1;inp.value=(value===null||value===undefined)?"":value;
+ inp.addEventListener("input",oninput);
+ w.appendChild(lb);w.appendChild(inp);
+ return w;
+}
+function ghostBtn(label,onClick,danger){
+ var b=document.createElement("button");b.type="button";b.className="btn btn-ghost"+(danger?" btn-danger":"");
+ b.textContent=label;b.addEventListener("click",onClick);
+ return b;
+}
+function htmlAreaWithPreview(getHtml,setHtml,labelText){
+ var wrap=document.createElement("div");
+ wrap.appendChild(areaField(labelText||"Text (basic HTML allowed)",getHtml(),function(){setHtml(this.value);prev.innerHTML=this.value||"";refreshValidate()},6));
+ var prev=document.createElement("div");prev.className="bd-preview";
+ prev.innerHTML=getHtml()||"";
+ wrap.appendChild(prev);
+ return wrap;
+}
+
+/* ---------- shared question editors ---------- */
+
+function mcEditor(item,prefix){
+ var wrap=document.createElement("div");
+ var qInp=textField("Question",item.q,function(){item.q=this.value;refreshValidate()});
+ wrap.appendChild(qInp);
+ var chLabel=document.createElement("p");chLabel.className="form-label";chLabel.textContent="Choices — tick the correct one:";
+ wrap.appendChild(chLabel);
+ var chWrap=document.createElement("div");
+ wrap.appendChild(chWrap);
+ function drawChoices(){
+  chWrap.innerHTML="";
+  if(!Array.isArray(item.choices))item.choices=[];
+  item.choices.forEach(function(c,i){
+   var line=document.createElement("div");line.className="bd-choice";
+   var r=document.createElement("input");r.type="radio";r.name="ans-"+prefix;r.checked=item.answer===i;
+   r.setAttribute("aria-label","Mark choice "+(i+1)+" correct");
+   r.addEventListener("change",function(){item.answer=i;refreshValidate()});
+   var t=document.createElement("input");t.className="form-input";t.type="text";t.value=c||"";
+   t.placeholder="Choice "+letterAt(i);
+   t.addEventListener("input",function(){item.choices[i]=this.value;refreshValidate()});
+   var x=document.createElement("button");x.type="button";x.className="btn btn-ghost";
+   x.innerHTML='<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+   x.setAttribute("aria-label","Remove choice "+(i+1));
+   x.addEventListener("click",function(){
+    item.choices.splice(i,1);
+    if(item.answer===i)item.answer=0;
+    else if(item.answer>i)item.answer--;
+    drawChoices();refreshValidate();
+   });
+   line.appendChild(r);line.appendChild(t);line.appendChild(x);
+   chWrap.appendChild(line);
+  });
+ }
+ drawChoices();
+ var addCh=ghostBtn("Add choice",function(){
+  if(!Array.isArray(item.choices))item.choices=[];
+  if(item.choices.length>=6){toast("Six choices is the limit.","callout-warning");return}
+  item.choices.push("");drawChoices();refreshValidate();
+ });
+ var addRow=document.createElement("div");addRow.className="bd-addrow";addRow.style.marginTop="var(--space-2)";
+ addRow.appendChild(addCh);
+ wrap.appendChild(addRow);
+ wrap.appendChild(textField("Hint (optional)",item.hint,function(){item.hint=this.value;refreshValidate()}));
+ var fold=document.createElement("details");
+ var sum=document.createElement("summary");sum.textContent="Image (SVG source, optional)";
+ fold.appendChild(sum);
+ var svgTa=document.createElement("textarea");svgTa.className="form-input";svgTa.rows=4;svgTa.value=item.svg||"";
+ svgTa.placeholder="<svg viewBox='0 0 100 60'>…</svg>";
+ svgTa.addEventListener("input",function(){item.svg=this.value;refreshValidate()});
+ fold.appendChild(svgTa);
+ wrap.appendChild(fold);
+ return wrap;
+}
+
+function inputishEditor(item){
+ var wrap=document.createElement("div");
+ wrap.appendChild(textField("Question",item.q,function(){item.q=this.value;refreshValidate()}));
+ wrap.appendChild(areaField("Accepted answers (one per line)",(Array.isArray(item.accept)?item.accept:[]).join("\n"),function(){
+  item.accept=this.value.split(/\r?\n/);refreshValidate();
+ },3));
+ var twoCol=document.createElement("div");twoCol.style.display="flex";twoCol.style.gap="var(--space-3)";twoCol.style.flexWrap="wrap";
+ var unitWrap=textField("Unit (optional)",item.unit,function(){item.unit=this.value;refreshValidate()});
+ unitWrap.style.flex="1";unitWrap.style.minWidth="140px";
+ var hintWrap=textField("Hint (optional)",item.hint,function(){item.hint=this.value;refreshValidate()});
+ hintWrap.style.flex="1";hintWrap.style.minWidth="140px";
+ twoCol.appendChild(unitWrap);twoCol.appendChild(hintWrap);
+ wrap.appendChild(twoCol);
+ return wrap;
+}
+
+/* ---------- step cards ---------- */
+
+function stepBody(st,idx){
+ var wrap=document.createElement("div");
+ if(st.type==="read"){
+  wrap.appendChild(htmlAreaWithPreview(function(){return st.html},function(v){st.html=v},"Reading text (basic HTML allowed)"));
+ }else if(st.type==="info"){
+  wrap.appendChild(textField("Short title",st.title,function(){st.title=this.value;refreshValidate()},120));
+  wrap.appendChild(htmlAreaWithPreview(function(){return st.html},function(v){st.html=v},"Note text (basic HTML allowed)"));
+ }else if(st.type==="mc"){
+  wrap.appendChild(mcEditor(st,"s"+idx));
+ }else if(st.type==="input"||st.type==="scratch"){
+  wrap.appendChild(inputishEditor(st));
+ }else if(st.type==="essay"){
+  wrap.appendChild(areaField("Writing prompt",st.prompt,function(){st.prompt=this.value;refreshValidate()},4));
+  var mw=numField("Minimum words (10–500)",st.minWords,function(){
+   st.minWords=this.value===""?"":parseInt(this.value,10);refreshValidate();
+  },10,500);
+  mw.style.maxWidth="220px";
+  wrap.appendChild(mw);
+  wrap.appendChild(textField("Source link (optional)",st.sourceLink,function(){st.sourceLink=this.value}));
+ }
+ return wrap;
+}
+
+function renderSteps(){
+ var list=el("bd-steps-list");
+ list.innerHTML="";
+ for(var i=0;i<L.steps.length;i++){
+  (function(idx){
+   var st=L.steps[idx];
+   var card=document.createElement("div");card.className="bd-step";
+   var head=document.createElement("div");head.className="bd-step-head";
+   var nm=document.createElement("strong");nm.textContent="Step "+(idx+1);
+   head.appendChild(nm);
+   var tb=document.createElement("span");tb.className="badge";tb.textContent=typeLabel(st.type);
+   head.appendChild(tb);
+   var up=ghostBtn("Up",function(){
+    if(idx===0)return;
+    var t=L.steps[idx-1];L.steps[idx-1]=L.steps[idx];L.steps[idx]=t;
+    renderSteps();refreshValidate();
+   });
+   up.disabled=idx===0;
+   var down=ghostBtn("Down",function(){
+    if(idx>=L.steps.length-1)return;
+    var t=L.steps[idx+1];L.steps[idx+1]=L.steps[idx];L.steps[idx]=t;
+    renderSteps();refreshValidate();
+   });
+   down.disabled=idx===L.steps.length-1;
+   var dup=ghostBtn("Duplicate",function(){
+    L.steps.splice(idx+1,0,cloneObj(st));
+    renderSteps();refreshValidate();
+   });
+   var del=ghostBtn("Delete",function(){
+    L.steps.splice(idx,1);
+    renderSteps();refreshValidate();
+   },true);
+   head.appendChild(up);head.appendChild(down);head.appendChild(dup);head.appendChild(del);
+   card.appendChild(head);
+   card.appendChild(stepBody(st,idx));
+   list.appendChild(card);
+  })(i);
+ }
+ if(!L.steps.length){
+  var emptyP=document.createElement("p");emptyP.className="muted";emptyP.textContent="No steps yet — add the first one below.";
+  list.appendChild(emptyP);
+ }
+}
+
+/* ---------- mastery check ---------- */
+
+function testItemBody(it,idx){
+ var wrap=document.createElement("div");
+ if(it.type==="mc")wrap.appendChild(mcEditor(it,"t"+idx));
+ else wrap.appendChild(inputishEditor(it));
+ return wrap;
+}
+
+function renderTest(){
+ var has=Array.isArray(L.test);
+ el("bd-has-test").checked=has;
+ el("bd-test-list").hidden=!has;
+ el("bd-test-add").hidden=!has;
+ if(!has)return;
+ var list=el("bd-test-list");
+ list.innerHTML="";
+ for(var i=0;i<L.test.length;i++){
+  (function(idx){
+   var it=L.test[idx];
+   var card=document.createElement("div");card.className="bd-step";
+   var head=document.createElement("div");head.className="bd-step-head";
+   var nm=document.createElement("strong");nm.textContent="Q"+(idx+1);
+   head.appendChild(nm);
+   var tb=document.createElement("span");tb.className="badge";tb.textContent=typeLabel(it.type);
+   head.appendChild(tb);
+   var up=ghostBtn("Up",function(){
+    if(idx===0)return;
+    var t=L.test[idx-1];L.test[idx-1]=L.test[idx];L.test[idx]=t;
+    renderTest();refreshValidate();
+   });
+   up.disabled=idx===0;
+   var down=ghostBtn("Down",function(){
+    if(idx>=L.test.length-1)return;
+    var t=L.test[idx+1];L.test[idx+1]=L.test[idx];L.test[idx]=t;
+    renderTest();refreshValidate();
+   });
+   down.disabled=idx===L.test.length-1;
+   var del=ghostBtn("Delete",function(){
+    L.test.splice(idx,1);
+    renderTest();refreshValidate();
+   },true);
+   head.appendChild(up);head.appendChild(down);head.appendChild(del);
+   card.appendChild(head);
+   card.appendChild(testItemBody(it,idx));
+   list.appendChild(card);
+  })(i);
+ }
+ if(!L.test.length){
+  var emptyP=document.createElement("p");emptyP.className="muted";emptyP.textContent="No questions yet — add one below.";
+  list.appendChild(emptyP);
+ }
+}
+
+/* ---------- whole-editor render ---------- */
+
+function renderAll(){
+ el("bd-title").value=L.title||"";
+ el("bd-subject").value=L.subject||"";
+ el("bd-band").value=(S.BANDS.indexOf(L.band)!==-1)?L.band:"35";
+ el("bd-minutes").value=(L.minutes===null||L.minutes===undefined)?"":L.minutes;
+ el("bd-intro").value=L.intro||"";
+ refreshHeader();
+ renderSteps();
+ renderTest();
+ refreshValidate();
+}
+
+/* ---------- persistence actions ---------- */
+
+function doSave(){
+ var errs=validateLesson(L);
+ if(errs.length){
+  refreshValidate();
+  toast("Fix the listed problems first.","callout-warning");
+  return null;
+ }
+ var rec=S.saveCustomLesson(Object.assign({},L));
+ if(!rec){toast("Could not save — storage refused the write.","callout-danger");return null}
+ var isNew=!L.id;
+  L.id=rec.id;
+  try{history.replaceState(null,"","builder.html?id="+encodeURIComponent(rec.id))}catch(e){}
+ refreshHeader();
+ toast(isNew?"Saved — students can find it once you switch it on in the portal.":"Saved.");
+ return rec;
+}
+function doPreview(){
+ var rec=doSave();
+ if(rec)location.href="lesson.html?id="+encodeURIComponent(rec.id)+"&preview=1";
+}
+function doExportJson(){
+ download(exportBase()+".lesson.json",JSON.stringify(Object.assign({},L),null,2));
+}
+function doExportJs(){
+ var key=L.id||slugify(L.title);
+ var out='window.BG_LESSONS=window.BG_LESSONS||{};\nwindow.BG_LESSONS["'+key+'"]='+JSON.stringify(Object.assign({},L))+";";
+ download(key+".js",out,"application/javascript");
+}
+function doImportFile(file){
+ if(!file)return;
+ var fr=new FileReader();
+ fr.onload=function(){
+  var parsed=null;
+  try{parsed=JSON.parse(String(fr.result))}catch(e){}
+  if(!parsed||typeof parsed!=="object"||!Array.isArray(parsed.steps)){
+   toast("That file does not look like a lesson (no steps array).","callout-danger");
+   return;
+  }
+  var fresh=Object.assign(newBlank(),parsed);
+  fresh.steps=parsed.steps;
+  fresh.test=Array.isArray(parsed.test)?parsed.test:null;
+  delete fresh.id;
+  fresh.enabled=false;
+  delete fresh.createdAt;
+  delete fresh.updatedAt;
+  L=fresh;
+  try{history.replaceState(null,"","builder.html")}catch(e){}
+  renderAll();
+  toast("Loaded \""+(fresh.title||"lesson")+"\" as a fresh unsaved copy.");
+ };
+ fr.onerror=function(){toast("Could not read that file.","callout-danger")};
+ fr.readAsText(file);
+}
+function doDiscard(){
+ if(!confirm("Throw away every unsaved change on this page?"))return;
+ location.replace("builder.html");
+}
+
+/* ---------- bundled lesson loading ---------- */
+
+function loadBundled(bid,cb){
+ function afterManifest(){
+  var f=null;
+  var mf=window.BG_LESSONS_MANIFEST||[];
+  for(var i=0;i<mf.length;i++){if(mf[i].id===bid){f=mf[i];break}}
+  if(!f)return cb(null);
+  if(window.BG_LESSONS&&window.BG_LESSONS[bid])return cb(window.BG_LESSONS[bid]);
+  var s=document.createElement("script");
+  s.src="../assets/lessons/"+f.file;
+  s.onload=function(){cb((window.BG_LESSONS||{})[bid]||null)};
+  s.onerror=function(){cb(null)};
+  document.head.appendChild(s);
+ }
+ if(window.BG_LESSONS_MANIFEST){afterManifest();return}
+ var sm=document.createElement("script");
+ sm.src="../assets/lessons/manifest.js";
+ sm.onload=afterManifest;
+ sm.onerror=function(){cb(null)};
+ document.head.appendChild(sm);
+}
+
+function showLoadError(msg){
+ var box=el("bd-load-error");
+ box.innerHTML="<h4>Note</h4><p>"+esc(msg)+"</p>";
+ box.hidden=false;
+}
+
+/* ---------- boot ---------- */
+
+function fillBandSelect(){
+ var sel=el("bd-band");
+ sel.innerHTML="";
+ (S.BANDS||[]).forEach(function(b){
+  var o=document.createElement("option");
+  o.value=b;o.textContent=(S.BAND_LABELS||{})[b]||b;
+  sel.appendChild(o);
+ });
+}
+
+function wireStatic(){
+ el("bd-title").addEventListener("input",function(){L.title=this.value;refreshHeader();refreshValidate()});
+ el("bd-subject").addEventListener("input",function(){L.subject=this.value;refreshValidate()});
+ el("bd-band").addEventListener("change",function(){L.band=this.value;refreshValidate()});
+ el("bd-minutes").addEventListener("input",function(){L.minutes=this.value;refreshValidate()});
+ el("bd-intro").addEventListener("input",function(){L.intro=this.value;refreshValidate()});
+ el("bd-has-test").addEventListener("change",function(){
+  if(this.checked){
+   if(!Array.isArray(L.test))L.test=[];
+  }else{
+   if(Array.isArray(L.test)&&L.test.length&&!confirm("Turn off the mastery check and drop its "+L.test.length+" question(s)?")){this.checked=true;return}
+   L.test=null;
+  }
+  renderTest();refreshValidate();
+ });
+ var addBtns=document.querySelectorAll("[data-add-step]");
+ for(var i=0;i<addBtns.length;i++){
+  (function(btn){
+   btn.addEventListener("click",function(){
+    var t=btn.getAttribute("data-add-step");
+    var st={type:t};
+    if(t==="read")st={type:"read",html:""};
+    else if(t==="info")st={type:"info",title:"",html:""};
+    else if(t==="mc")st={type:"mc",q:"",choices:["",""],answer:0,hint:""};
+    else if(t==="input")st={type:"input",q:"",accept:[""],unit:"",hint:""};
+    else if(t==="scratch")st={type:"scratch",q:"",accept:[""],unit:"",hint:""};
+    else if(t==="essay")st={type:"essay",prompt:"",minWords:50,sourceLink:""};
+    L.steps.push(st);
+    renderSteps();refreshValidate();
+    var cards=el("bd-steps-list").querySelectorAll(".bd-step");
+    if(cards.length)cards[cards.length-1].scrollIntoView({behavior:"smooth",block:"start"});
+   });
+  })(addBtns[i]);
+ }
+ var testBtns=document.querySelectorAll("[data-add-test]");
+ for(var j=0;j<testBtns.length;j++){
+  (function(btn){
+   btn.addEventListener("click",function(){
+    if(!Array.isArray(L.test))L.test=[];
+    var t=btn.getAttribute("data-add-test");
+    if(t==="mc")L.test.push({type:"mc",q:"",choices:["",""],answer:0,hint:""});
+    else L.test.push({type:"input",q:"",accept:[""]});
+    renderTest();refreshValidate();
+   });
+  })(testBtns[j]);
+ }
+ el("bd-save").addEventListener("click",doSave);
+ el("bd-preview").addEventListener("click",doPreview);
+ el("bd-export-json").addEventListener("click",doExportJson);
+ el("bd-import-json").addEventListener("click",function(){el("bd-import-file").click()});
+ el("bd-import-file").addEventListener("change",function(){doImportFile(this.files[0]);this.value=""});
+ el("bd-export-js").addEventListener("click",doExportJs);
+ el("bd-discard").addEventListener("click",doDiscard);
+}
+
+function enter(){
+ el("gate").innerHTML="";
+ el("app").hidden=false;
+ fillBandSelect();
+ wireStatic();
+ var mId=/[?&]id=([^&]*)/.exec(location.search);
+ var mDup=/[?&]duplicate=([^&]*)/.exec(location.search);
+ if(mId){
+  var id=decodeURIComponent(mId[1]);
+  var rec=S.getCustomLesson(id);
+  if(rec){L=Object.assign(newBlank(),rec)}
+  else{
+   L=newBlank();
+   showLoadError("That custom lesson could not be found — starting a fresh one instead.");
+  }
+  renderAll();
+ }else if(mDup){
+  L=newBlank();
+  renderAll();
+  var bid=decodeURIComponent(mDup[1]);
+  loadBundled(bid,function(src){
+   if(!src){
+    showLoadError("Could not open that bundled lesson for duplication — starting a fresh one instead.");
+   }else{
+    L=Object.assign(newBlank(),src);
+    delete L.id;
+    L.title=(src.title||"Lesson")+" (adapted)";
+    L.enabled=false;
+    delete L.createdAt;
+    delete L.updatedAt;
+   }
+   renderAll();
+  });
+ }else{
+  L=newBlank();
+  renderAll();
+ }
+}
+
+function renderGate(mode,err){
+ var g=el("gate");
+ el("app").hidden=true;
+ var adminMissing=!S.data().users.admin;
+ var relaxed=(location.protocol==="file:"&&S.getSettings().adminGatePortable===false);
+ g.innerHTML="";
+ if(relaxed){
+  var note=document.createElement("div");
+  note.className="callout callout-info";note.style.marginBottom="var(--space-4)";
+  note.innerHTML="<h4>Gating relaxed on this portable copy</h4><p>An administrator turned off sign-in requirements for plain-file use. Everything below works without passwords here. The hosted copy enforces accounts properly.</p>";
+  g.appendChild(note);
+  session={role:"teacher",id:"local",name:"Local Teacher"};
+  enter();
+  return;
+ }
+ var card=document.createElement("div");card.className="card pop-in";card.style.maxWidth="440px";
+ var h=document.createElement("h1");h.textContent="Lesson Builder";card.appendChild(h);
+ var p=document.createElement("p");p.className="muted";p.style.color="var(--text-muted)";p.textContent="Staff only. Sign in with your teacher or administrator account.";card.appendChild(p);
+ if(adminMissing){
+  p=document.createElement("p");p.innerHTML="<strong>First run:</strong> create the administrator account.";card.appendChild(p);
+ }else if(err){p=document.createElement("p");p.style.color="var(--danger)";p.textContent=err;card.appendChild(p);}
+ function field(id,label,type){var w=document.createElement("div");w.className="form-row";var l=document.createElement("label");l.className="form-label";l.setAttribute("for",id);l.textContent=label;var i=document.createElement("input");i.className="form-input";i.id=id;i.type=type||"text";if(type==="password")i.autocomplete="current-password";w.appendChild(l);w.appendChild(i);card.appendChild(w);return i}
+ var nameI=field("g-name",adminMissing?"Administrator name":"Name");
+ var passI=field("g-pass","Password"+(adminMissing?" (choose one)":""),"password");
+ var btn=document.createElement("button");btn.type="button";btn.className="btn btn-primary form-row";
+ btn.textContent=adminMissing?"Create administrator":"Sign in";
+ btn.onclick=function(){
+  btn.disabled=true;
+  var done=function(msg){btn.disabled=false;if(msg){g.innerHTML="";renderGate(null,msg)}};
+  if(adminMissing){
+   if(!nameI.value||passI.value.length<4){done("Name plus a password of at least 4 characters.");return}
+   S.hashPassword(passI.value).then(function(r){
+    S.data().users.admin={name:nameI.value.trim(),hash:r.hash,salt:r.salt};S.save();
+    return S.loginAdmin(nameI.value.trim(),passI.value);
+   }).then(enter).catch(function(e){done(e.message)});
+  }else{
+   S.loginTeacher(nameI.value.trim(),passI.value).then(function(sess){session=sess;enter()}).catch(function(){
+    S.loginAdmin(nameI.value.trim(),passI.value).then(function(sess){session=sess;enter()}).catch(function(){done("Wrong name or password.")});
+   });
+  }
+ };
+ card.appendChild(btn);
+ if(!adminMissing){
+  var back=document.createElement("p");back.style.marginTop="var(--space-3)";
+  back.innerHTML='<a href="index.html">&larr; Back to Schoolhouse</a>';
+  card.appendChild(back);
+ }
+ g.appendChild(card);
+}
+
+document.addEventListener("DOMContentLoaded",function(){
+ S.init(function(){
+  var sess=S.getSession();
+  var relaxed=(location.protocol==="file:"&&S.getSettings().adminGatePortable===false);
+  if(sess&&(sess.role==="teacher"||sess.role==="admin")){session=sess;enter()}
+  else renderGate();
+ });
+});
+})();
+</script>
+</body>
+</html>

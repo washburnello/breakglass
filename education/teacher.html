@@ -27,6 +27,7 @@
 <a href="#review" data-tab="review">Review <span class="badge" id="pending-badge" hidden>0</span></a>
 <a href="#students" data-tab="students">Students</a>
 <a href="#lessons" data-tab="lessons">Lessons</a>
+<a href="#assignments" data-tab="assignments">Assignments</a>
 <a href="#settings" data-tab="settings">Settings</a>
 <a href="#admin" data-tab="admin" id="admin-tab" hidden>Admin</a>
 </nav>
@@ -51,9 +52,18 @@
 <div id="drawer" hidden></div>
 </section>
 <section id="tab-lessons" class="tabpane" hidden>
-<h2>Lessons</h2>
-<p style="color:var(--text-muted);font-size:var(--fs-sm);margin-bottom:var(--space-3)">Unticked lessons are hidden from student dashboards. Preview opens the player (a student session is needed to interact).</p>
+<div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-3)">
+<h2 style="margin:0;flex:1">Lessons</h2>
+<a class="btn btn-primary" href="builder.html"><i class="fa-solid fa-plus"></i> New lesson</a>
+</div>
+<p style="color:var(--text-muted);font-size:var(--fs-sm);margin-bottom:var(--space-3)">Unticked lessons are hidden from student dashboards. Preview plays the lesson read-only — nothing gets saved.</p>
 <div id="lesson-list"></div>
+</section>
+<section id="tab-assignments" class="tabpane" hidden>
+<h2>Assignments</h2>
+<div class="card" id="assign-form" style="margin-bottom:var(--space-4)"></div>
+<h3 style="margin-top:var(--space-5)">Active assignments</h3>
+<div id="assign-list"></div>
 </section>
 <section id="tab-settings" class="tabpane" hidden>
 <h2>Settings</h2>
@@ -129,6 +139,7 @@ function fmtDate(iso){try{return new Date(iso).toLocaleDateString(undefined,{mon
 function starsHtml(n){var s="";for(var i=0;i<4;i++)s+='<span class="'+(i<n?"earned":"")+'">&#9733;</span>';return '<span class="star-row" style="justify-content:flex-start;font-size:var(--fs-md)">'+s+"</span>"}
 
 var MANIFEST=[];
+var CATALOG=[];
 function loadManifest(cb){
  if(window.BG_LESSONS_MANIFEST)return cb(window.BG_LESSONS_MANIFEST);
  var s=document.createElement("script");s.src="../assets/lessons/manifest.js";
@@ -136,8 +147,14 @@ function loadManifest(cb){
  s.onerror=function(){cb([])};
  document.head.appendChild(s);
 }
+function buildCatalog(){
+ var out=[];
+ (window.BG_LESSONS_MANIFEST||[]).forEach(function(Lm){out.push(Object.assign({},Lm,{custom:false}))});
+ (S.listCustomLessons()||[]).forEach(function(r){out.push({id:r.id,title:r.title,band:r.band,subject:r.subject,minutes:r.minutes,enabled:r.enabled,custom:true})});
+ return out;
+}
 function lessonTitle(id){
- for(var i=0;i<MANIFEST.length;i++)if(MANIFEST[i].id===id)return MANIFEST[i].title;
+ for(var i=0;i<CATALOG.length;i++)if(CATALOG[i].id===id)return CATALOG[i].title;
  return id||"—";
 }
 function enabledMap(){var s=S.getSettings();return Object.assign({},s.enabledLessons||{})}
@@ -199,20 +216,22 @@ function enter(){
  el("gate").innerHTML="";
  el("app").hidden=false;
  el("admin-tab").hidden=session.role!=="admin";
- loadManifest(function(m){MANIFEST=m;route()});
+ loadManifest(function(m){MANIFEST=m;CATALOG=buildCatalog();route()});
 }
 
 function route(){
  var h=(location.hash.replace(/^#/,"")||"review");
- var tabs=["review","students","lessons","settings","admin"];
+ var tabs=["review","students","lessons","assignments","settings","admin"];
  if(tabs.indexOf(h)===-1)h="review";
  if(h==="admin"&&session.role!=="admin")h="review";
- ["review","students","lessons","settings","admin"].forEach(function(t){el("tab-"+t).hidden=t!==h});
+ ["review","students","lessons","assignments","settings","admin"].forEach(function(t){el("tab-"+t).hidden=t!==h});
  var chips=el("tabs").querySelectorAll("[data-tab]");
  for(var i=0;i<chips.length;i++)chips[i].style.borderColor=(chips[i].getAttribute("data-tab")===h)?"var(--accent)":"";
+ CATALOG=buildCatalog();
  if(h==="review")renderReview();
  else if(h==="students")renderRoster();
  else if(h==="lessons")renderLessons();
+ else if(h==="assignments")renderAssignmentsTab();
  else if(h==="settings")renderSettings();
  else renderAdmin();
  updatePendingBadge();
@@ -361,28 +380,173 @@ function toggleDrawer(st){
   rst.onclick=function(){delete pr[lid];var st2=S.data().students.filter(function(x){return x.id===st.id})[0];
    if(st2&&st2.currentLesson&&st2.currentLesson.id===lid)st2.currentLesson={id:null,step:0};
    S.save();toggleDrawer(st);toggleDrawer(st)};
-  row.appendChild(rst);c.appendChild(row);
- });
- d.appendChild(c);
+   row.appendChild(rst);c.appendChild(row);
+  });
+  var hd=document.createElement("h4");hd.textContent="Assigned work";hd.style.marginTop="var(--space-3)";
+  c.appendChild(hd);
+  var aw=[];
+  try{aw=S.assignmentsForStudent(st.id)||[]}catch(e){aw=[]}
+  if(!aw.length){
+   var dashP=document.createElement("p");dashP.className="muted";dashP.style.color="var(--text-muted)";dashP.textContent="—";
+   c.appendChild(dashP);
+  }else{
+   var pr2=S.getProgress(st.id)||{};
+   aw.forEach(function(a2){
+    var e3=pr2[a2.lessonId];
+    var word=(e3&&e3.status==="complete")?"Complete":(e3?"In progress":"Not started");
+    var rowA=document.createElement("div");rowA.className="sub-row";
+    rowA.innerHTML="<span>"+esc(lessonTitle(a2.lessonId))+"</span><span class='badge'>"+word+"</span>";
+    c.appendChild(rowA);
+   });
+  }
+  d.appendChild(c);
 }
 
 function renderLessons(){
  var wrap=el("lesson-list");wrap.innerHTML="";
- if(!MANIFEST.length){wrap.innerHTML='<div class="callout callout-warning"><p>No lesson manifest found yet.</p></div>';return}
- var map=enabledMap();
- MANIFEST.forEach(function(L){
+ if(!CATALOG.length){wrap.innerHTML='<div class="callout callout-warning"><p>No lesson manifest found yet.</p></div>';return}
+ CATALOG.forEach(function(L){
   var r=document.createElement("div");r.className="sub-row";
-  var cb=document.createElement("input");cb.type="checkbox";cb.checked=isEnabled(L.id);cb.style.width="1.1em";cb.style.height="1.1em";
+  var cb=document.createElement("input");cb.type="checkbox";cb.style.width="1.1em";cb.style.height="1.1em";
+  cb.checked=L.custom?!!L.enabled:isEnabled(L.id);
   cb.onchange=function(){
-   var m=enabledMap();m[L.id]=cb.checked;S.setSetting("enabledLessons",m);
+   if(L.custom){
+    var rec=S.getCustomLesson(L.id);
+    if(!rec){toast("That custom lesson is gone.","callout-warning");return}
+    S.saveCustomLesson(Object.assign({},rec,{enabled:cb.checked}));
+   }else{
+    var m=enabledMap();m[L.id]=cb.checked;S.setSetting("enabledLessons",m);
+   }
    toast(cb.checked?L.title+" shown to students":L.title+" hidden from students");
   };
   r.appendChild(cb);
   var lab=document.createElement("span");lab.style.flex="1";
-  lab.innerHTML="<strong>"+esc(L.title)+"</strong> <span class='badge'>"+esc((S.BAND_LABELS||{})[L.band]||L.band)+"</span> <span class='badge'>"+L.minutes+" min</span>";
+  lab.innerHTML="<strong>"+esc(L.title)+"</strong>"+(L.custom?' <span class="badge">Custom</span>':"")+" <span class='badge'>"+esc((S.BAND_LABELS||{})[L.band]||L.band)+"</span> <span class='badge'>"+L.minutes+" min</span>";
   r.appendChild(lab);
-  var pv=document.createElement("a");pv.className="btn btn-ghost";pv.href="lesson.html?id="+encodeURIComponent(L.id);pv.textContent="Preview";
+  var pv=document.createElement("a");pv.className="btn btn-ghost";pv.href="lesson.html?id="+encodeURIComponent(L.id)+"&preview=1";pv.textContent="Preview";
   r.appendChild(pv);
+  if(L.custom){
+   var ed=document.createElement("a");ed.className="btn btn-ghost";ed.href="builder.html?id="+encodeURIComponent(L.id);ed.textContent="Edit";
+   r.appendChild(ed);
+   var del=document.createElement("button");del.type="button";del.className="btn btn-danger";del.textContent="Delete";
+   del.onclick=function(){
+    if(!confirm("Delete \""+L.title+"\"? Any assigned work for it is removed too."))return;
+    S.deleteCustomLesson(L.id);
+    toast("Deleted.");
+    route();
+   };
+   r.appendChild(del);
+  }else{
+   var dup=document.createElement("a");dup.className="btn btn-ghost";dup.href="builder.html?duplicate="+encodeURIComponent(L.id);dup.textContent="Duplicate & edit";
+   r.appendChild(dup);
+  }
+  wrap.appendChild(r);
+ });
+}
+
+function isOverdueDate(iso){
+ if(!iso)return false;
+ var t=new Date();t.setHours(0,0,0,0);
+ var d=new Date(iso);
+ if(isNaN(d.getTime()))return false;
+ d.setHours(0,0,0,0);
+ return d<t;
+}
+function snip(t){t=String(t||"");return t.length>80?t.slice(0,79)+"…":t}
+
+function renderAssignmentsTab(){
+ var box=el("assign-form");box.innerHTML="";
+ var h=document.createElement("h3");h.textContent="Assign a lesson";h.style.marginTop="0";box.appendChild(h);
+ var rowL=document.createElement("div");rowL.className="form-row";
+ var labL=document.createElement("label");labL.className="form-label";labL.setAttribute("for","as-lesson");labL.textContent="Lesson";
+ var sel=document.createElement("select");sel.className="form-input";sel.id="as-lesson";
+ var ogB=document.createElement("optgroup");ogB.label="Bundled";
+ var ogC=document.createElement("optgroup");ogC.label="Custom";
+ CATALOG.forEach(function(Lc){
+  var o=document.createElement("option");
+  o.value=Lc.id;
+  o.textContent=Lc.title+((Lc.custom?!!Lc.enabled:isEnabled(Lc.id))?"":" (hidden)");
+  (Lc.custom?ogC:ogB).appendChild(o);
+ });
+ sel.appendChild(ogB);
+ if(ogC.childNodes.length)sel.appendChild(ogC);
+ rowL.appendChild(labL);rowL.appendChild(sel);box.appendChild(rowL);
+ var rowD=document.createElement("div");rowD.className="form-row";
+ var labD=document.createElement("label");labD.className="form-label";labD.setAttribute("for","as-due");labD.textContent="Due date (optional)";
+ var dueI=document.createElement("input");dueI.type="date";dueI.className="form-input";dueI.id="as-due";dueI.style.maxWidth="200px";
+ rowD.appendChild(labD);rowD.appendChild(dueI);box.appendChild(rowD);
+ var rowN=document.createElement("div");rowN.className="form-row";
+ var labN=document.createElement("label");labN.className="form-label";labN.setAttribute("for","as-note");labN.textContent="Note for students (optional)";
+ var noteI=document.createElement("input");noteI.type="text";noteI.className="form-input";noteI.id="as-note";noteI.maxLength=500;noteI.placeholder="e.g. Finish this before Friday";
+ rowN.appendChild(labN);rowN.appendChild(noteI);box.appendChild(rowN);
+ var labS=document.createElement("label");labS.className="form-label";labS.textContent="Students";
+ box.appendChild(labS);
+ var pick=document.createElement("div");pick.id="as-students";
+ (S.BANDS||[]).forEach(function(b){
+  var kids=S.data().students.filter(function(st){return st.band===b});
+  if(!kids.length)return;
+  var head=document.createElement("div");head.className="sub-row";
+  var mc=document.createElement("input");mc.type="checkbox";mc.style.width="1.1em";mc.style.height="1.1em";
+  var strong=document.createElement("strong");strong.textContent=(S.BAND_LABELS||{})[b]||b;
+  head.appendChild(mc);head.appendChild(strong);
+  pick.appendChild(head);
+  kids.forEach(function(st){
+   var row=document.createElement("label");row.className="sub-row";row.style.paddingLeft="var(--space-5)";
+   var cbi=document.createElement("input");cbi.type="checkbox";cbi.className="as-student";cbi.value=st.id;cbi.dataset.band=b;cbi.style.width="1.1em";cbi.style.height="1.1em";
+   var nm=document.createElement("span");nm.innerHTML=esc(st.name)+' <span class="badge">'+esc((S.BAND_LABELS||{})[st.band]||st.band)+"</span>";
+   row.appendChild(cbi);row.appendChild(nm);
+   pick.appendChild(row);
+  });
+  mc.onchange=function(){
+   var boxes=pick.querySelectorAll(".as-student");
+   for(var i=0;i<boxes.length;i++){if(boxes[i].dataset.band===b)boxes[i].checked=mc.checked}
+  };
+ });
+ box.appendChild(pick);
+ var go=document.createElement("button");go.type="button";go.className="btn btn-primary form-row";go.style.maxWidth="280px";go.textContent="Assign to selected students";
+ go.onclick=function(){
+  var ids=[];
+  var boxes=pick.querySelectorAll(".as-student");
+  for(var i=0;i<boxes.length;i++){if(boxes[i].checked)ids.push(boxes[i].value)}
+  if(!ids.length){toast("Pick at least one student first.","callout-warning");return}
+  var rec=S.assignLesson(sel.value,{students:ids,note:noteI.value.trim(),dueAt:dueI.value||null},session.name);
+  if(!rec){toast("No valid students were selected.","callout-warning");return}
+  toast("Assigned "+lessonTitle(rec.lessonId)+".");
+  renderAssignmentsTab();
+ };
+ box.appendChild(go);
+ renderAssignList();
+}
+
+function renderAssignList(){
+ var wrap=el("assign-list");wrap.innerHTML="";
+ var list=S.listAssignments({});
+ if(!list.length){wrap.innerHTML='<p class="muted" style="color:var(--text-muted)">No active assignments yet.</p>';return}
+ list.forEach(function(a){
+  var r=document.createElement("div");r.className="sub-row";
+  var names=(a.students||[]).map(function(sid){
+   var st=S.data().students.filter(function(x){return x.id===sid})[0];
+   return st?st.name:sid;
+  });
+  var done=0;
+  (a.students||[]).forEach(function(sid){
+   var pr=S.getProgress(sid)||{};
+   var e2=pr[a.lessonId];
+   if(e2&&e2.status==="complete")done++;
+  });
+  r.innerHTML="<span><strong>"+esc(lessonTitle(a.lessonId))+"</strong></span>"+
+   '<span class="badge" title="'+esc(names.join(", "))+'">for '+names.length+(names.length===1?" student":" students")+"</span>"+
+   '<span class="badge">'+done+"/"+names.length+" complete</span>"+
+   (a.dueAt?'<span class="badge'+(isOverdueDate(a.dueAt)?'" style="color:var(--danger);border-color:var(--danger);"':"")+'">due '+fmtDate(a.dueAt)+"</span>":"")+
+   '<span class="muted" style="color:var(--text-muted);font-size:var(--fs-xs);flex:1">'+esc(snip(a.note))+"</span>";
+  var rm=document.createElement("button");rm.type="button";rm.className="btn btn-danger";rm.textContent="Remove";
+  rm.onclick=function(){
+   if(!confirm("Remove this assignment of \""+lessonTitle(a.lessonId)+"\"?"))return;
+   S.unassign(a.aid);
+   toast("Assignment removed.");
+   route();
+  };
+  r.appendChild(rm);
   wrap.appendChild(r);
  });
 }

@@ -40,7 +40,9 @@
       students: [],
       settings: { hintsEnabled: true, adminGatePortable: true },
       progress: {},
-      submissions: []
+      submissions: [],
+      customLessons: [],
+      assignments: []
     };
   }
 
@@ -63,6 +65,8 @@
     }
     d.progress = (raw.progress && typeof raw.progress === "object") ? raw.progress : {};
     d.submissions = Array.isArray(raw.submissions) ? raw.submissions : [];
+    d.customLessons = Array.isArray(raw.customLessons) ? raw.customLessons : [];
+    d.assignments = Array.isArray(raw.assignments) ? raw.assignments : [];
     return d;
   }
 
@@ -543,6 +547,146 @@
     return false;
   }
 
+  function clampText(v, n) {
+    return String(v == null ? "" : v).slice(0, n);
+  }
+
+  function listCustomLessons() {
+    return clone(db.customLessons);
+  }
+
+  function getCustomLesson(id) {
+    for (var i = 0; i < db.customLessons.length; i++) {
+      if (db.customLessons[i].id === id) return clone(db.customLessons[i]);
+    }
+    return null;
+  }
+
+  function nextCustomLessonId() {
+    var proxy = db.customLessons.map(function (l) {
+      var m = /^custom-(\d+)$/.exec(String((l && l.id) || ""));
+      return { id: m ? "c" + m[1] : String((l && l.id) || "") };
+    });
+    return "custom-" + nextId(proxy, "c").slice(1);
+  }
+
+  function saveCustomLesson(input) {
+    if (!input || typeof input !== "object") return null;
+    var existing = null;
+    var idx = -1;
+    var wanted = String(input.id || "");
+    if (/^custom-\d+$/.test(wanted)) {
+      for (var i = 0; i < db.customLessons.length; i++) {
+        if (db.customLessons[i].id === wanted) { existing = db.customLessons[i]; idx = i; break; }
+      }
+    }
+    var minutes = parseInt(input.minutes, 10);
+    var now = new Date().toISOString();
+    var rec = {
+      id: existing ? existing.id : nextCustomLessonId(),
+      title: clampText(input.title, 120),
+      subject: clampText(input.subject, 60),
+      band: (BANDS.indexOf(input.band) !== -1) ? input.band : "35",
+      minutes: (minutes >= 1 && minutes <= 600) ? minutes : 20,
+      intro: clampText(input.intro, 2000),
+      steps: Array.isArray(input.steps) ? clone(input.steps) : [],
+      test: Array.isArray(input.test) ? clone(input.test) : null,
+      author: clampText(input.author, 40),
+      enabled: existing
+        ? (typeof input.enabled === "boolean" ? input.enabled : !!existing.enabled)
+        : false,
+      createdAt: existing ? existing.createdAt : now,
+      updatedAt: now
+    };
+    if (existing) {
+      db.customLessons[idx] = rec;
+    } else {
+      db.customLessons.push(rec);
+    }
+    save();
+    return clone(rec);
+  }
+
+  function deleteCustomLesson(id) {
+    for (var i = 0; i < db.customLessons.length; i++) {
+      if (db.customLessons[i].id !== id) continue;
+      db.customLessons.splice(i, 1);
+      var kept = [];
+      for (var j = 0; j < db.assignments.length; j++) {
+        if (db.assignments[j].lessonId !== id) kept.push(db.assignments[j]);
+      }
+      db.assignments = kept;
+      save();
+      return true;
+    }
+    return false;
+  }
+
+  function assignLesson(lessonId, opts, byName) {
+    var o = opts || {};
+    var lid = String(lessonId || "");
+    if (!lid) return null;
+    var rawIds = Array.isArray(o.students) ? o.students : [];
+    var seen = {};
+    var students = [];
+    for (var i = 0; i < rawIds.length; i++) {
+      var sidv = String(rawIds[i] || "");
+      if (!sidv || seen[sidv]) continue;
+      seen[sidv] = true;
+      if (findStudent(sidv)) students.push(sidv);
+    }
+    if (!students.length) return null;
+    var dueAt = null;
+    if (o.dueAt) {
+      try {
+        var d = new Date(o.dueAt);
+        if (!isNaN(d.getTime())) dueAt = d.toISOString();
+      } catch (e) { dueAt = null; }
+    }
+    var entry = {
+      aid: nextId(db.assignments.map(function (a) { return { id: a && a.aid }; }), "a"),
+      lessonId: lid,
+      students: students,
+      note: clampText(o.note, 500),
+      dueAt: dueAt,
+      by: clampText(byName, 40),
+      at: new Date().toISOString()
+    };
+    db.assignments.push(entry);
+    save();
+    return clone(entry);
+  }
+
+  function unassign(aid) {
+    for (var i = 0; i < db.assignments.length; i++) {
+      if (db.assignments[i].aid === aid) {
+        db.assignments.splice(i, 1);
+        save();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function listAssignments(filter) {
+    var f = filter || {};
+    var out = [];
+    for (var i = 0; i < db.assignments.length; i++) {
+      var a = db.assignments[i];
+      if (f.lessonId && a.lessonId !== f.lessonId) continue;
+      if (f.studentId && (!a.students || a.students.indexOf(f.studentId) === -1)) continue;
+      out.push(clone(a));
+    }
+    out.sort(function (x, y) {
+      return String(y.at).localeCompare(String(x.at));
+    });
+    return out;
+  }
+
+  function assignmentsForStudent(sid) {
+    return listAssignments({ studentId: sid });
+  }
+
   function exportFile() {
     var payload = JSON.stringify(db, null, 2);
     try {
@@ -686,6 +830,14 @@
     addSubmission: addSubmission,
     listSubmissions: listSubmissions,
     gradeSubmission: gradeSubmission,
+    listCustomLessons: listCustomLessons,
+    getCustomLesson: getCustomLesson,
+    saveCustomLesson: saveCustomLesson,
+    deleteCustomLesson: deleteCustomLesson,
+    assignLesson: assignLesson,
+    unassign: unassign,
+    listAssignments: listAssignments,
+    assignmentsForStudent: assignmentsForStudent,
     confettiBurst: confettiBurst
   };
 })();
