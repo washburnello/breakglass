@@ -21,9 +21,251 @@
 </header>
 <main>
 <h1>Calculators</h1>
-<div class="callout callout-info"><p>This section is under construction. Content ships in phases — see plan.md.</p></div>
-<div class="card"><p>The Calculators section handles water, food and power math so you can size supplies and systems without guessing.</p></div>
+<p>Type numbers, get answers — every box below updates as you type, shows the formula it used, and works fully offline. All figures are rough planning aids, not precision instruments.</p>
+<nav class="toc-chips" aria-label="Calculators">
+<a href="#water-storage">Water storage</a>
+<a href="#food-calories">Food calories</a>
+<a href="#generator-runtime">Generator runtime</a>
+<a href="#bleach-disinfection">Bleach disinfection</a>
+<a href="#dose-helper">Dose helper</a>
+<a href="#battery-runtime">Battery bank runtime</a>
+</nav>
+<section class="card" aria-labelledby="water-storage-h">
+<h2 id="water-storage-h">Water storage</h2>
+<p>How much water to put back for drinking, cooking and hygiene — see <a href="../food/water-storage.html">Water Storage</a> for containers and rotation.</p>
+<div class="form-row">
+<label class="form-label" for="wa-people">People</label>
+<input class="form-input" id="wa-people" type="number" inputmode="numeric" min="0" step="1" placeholder="4">
+</div>
+<div class="form-row">
+<label class="form-label" for="wa-days">Days of supply</label>
+<input class="form-input" id="wa-days" type="number" inputmode="numeric" min="0" step="1" placeholder="14">
+</div>
+<div class="form-row">
+<label class="form-label" for="wa-pets">Pets — combined body weight in lb (optional)</label>
+<input class="form-input" id="wa-pets" type="number" inputmode="decimal" min="0" step="any" placeholder="40">
+</div>
+<p class="form-row" aria-live="polite"><span class="badge"><strong id="wa-res">Waiting for numbers…</strong></span></p>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Formula: gallons = people × days + (pet lb × days ÷ 128 oz/gal) · liters ≈ gallons × 3.785 · filled weight ≈ gallons × 8.34 lb/gal.</p>
+</section>
+<section class="card" aria-labelledby="food-calories-h">
+<h2 id="food-calories-h">Food calories</h2>
+<p>Rough planning figures only — real needs vary by person, weather and workload. Pair this with <a href="../food/food-storage-basics.html">Food Storage Basics</a>.</p>
+<div class="form-row">
+<label class="form-label" for="fd-people">People</label>
+<input class="form-input" id="fd-people" type="number" inputmode="numeric" min="0" step="1" placeholder="4">
+</div>
+<div class="form-row">
+<label class="form-label" for="fd-days">Days</label>
+<input class="form-input" id="fd-days" type="number" inputmode="numeric" min="0" step="1" placeholder="14">
+</div>
+<div class="form-row">
+<label class="form-label" for="fd-activity">Activity level</label>
+<select class="form-input" id="fd-activity">
+<option value="2000">Sedentary — about 2,000 kcal/person/day</option>
+<option value="2500" selected>Moderate — about 2,500 kcal/person/day</option>
+<option value="3000">Active / cold weather — about 3,000 kcal/person/day</option>
+</select>
+</div>
+<p class="form-row" aria-live="polite"><span class="badge"><strong id="fd-res">Waiting for numbers…</strong></span></p>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Rough planning figures: total kcal = people × days × kcal/day. Suggested macro split — grains/carbs 50% of kcal ÷ 4 g, protein 20% ÷ 4 g, fat 30% ÷ 9 g.</p>
+</section>
+<section class="card" aria-labelledby="generator-runtime-h">
+<h2 id="generator-runtime-h">Generator runtime</h2>
+<p>The honest way to estimate runtime: divide tank size by what your machine actually burns per hour, measured or straight from the manual.</p>
+<div class="form-row">
+<label class="form-label" for="gn-gallons">Fuel in tank (gallons)</label>
+<input class="form-input" id="gn-gallons" type="number" inputmode="decimal" min="0" step="any" placeholder="5">
+</div>
+<div class="form-row">
+<label class="form-label" for="gn-gph">Consumption rate (gallons per hour)</label>
+<input class="form-input" id="gn-gph" type="number" inputmode="decimal" min="0" step="any" placeholder="0.5">
+</div>
+<p class="form-row" aria-live="polite"><span class="badge"><strong id="gn-res">Waiting for numbers…</strong></span></p>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Formula: hours = fuel gallons ÷ gallons per hour.</p>
+<table>
+<caption>Typical appliance draws — check your own nameplates, motors pull far more starting than running</caption>
+<thead><tr><th>Appliance</th><th>Running</th><th>Starting surge</th></tr></thead>
+<tbody>
+<tr><td>Refrigerator</td><td>600 W</td><td>1,800 W</td></tr>
+<tr><td>Furnace fan</td><td>800 W</td><td>—</td></tr>
+<tr><td>Lights (LED, whole house)</td><td>100 W</td><td>—</td></tr>
+<tr><td>Phone/power bank charging</td><td>10 W</td><td>—</td></tr>
+</tbody>
+</table>
+</section>
+<section class="card" aria-labelledby="bleach-disinfection-h">
+<h2 id="bleach-disinfection-h">Bleach disinfection</h2>
+<p>Drops of <em>plain unscented</em> liquid bleach per batch of water — same numbers as <a href="../howto/water-treatment.html">Water Treatment</a>. Stir, wait 30 minutes, sniff for a faint chlorine smell.</p>
+<div class="form-row">
+<label class="form-label" for="bl-gallons">Water to treat (gallons)</label>
+<input class="form-input" id="bl-gallons" type="number" inputmode="decimal" min="0" step="any" placeholder="5">
+</div>
+<div class="form-row">
+<label class="form-label" for="bl-strength">Bleach strength (from the label)</label>
+<select class="form-input" id="bl-strength">
+<option value="6">6%</option>
+<option value="8.25">8.25%</option>
+</select>
+</div>
+<div class="form-row">
+<label style="display:flex;align-items:center;gap:var(--space-2);font-weight:600"><input type="checkbox" id="bl-cloudy"> Water is cloudy after clarifying — double the dose</label>
+</div>
+<p class="form-row" aria-live="polite"><span class="badge"><strong id="bl-res">Waiting for numbers…</strong></span></p>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Formula: drops = gallons × 8 (at 6%) or × 6 (at 8.25%), doubled when cloudy · 1 teaspoon ≈ 100 drops.</p>
+<div class="callout callout-caution">
+<h4>Bleach has limits</h4>
+<p>Plain sodium hypochlorite 5–9%, unscented, not expired. Splash-less, thickened, scented, or "color-safe" formulas are not for water treatment, and bleach weakens with age.</p>
+</div>
+</section>
+<section class="card" aria-labelledby="dose-helper-h">
+<h2 id="dose-helper-h">Dose helper</h2>
+<div class="callout callout-danger">
+<h4>Educational only — verify before every dose</h4>
+<p>This helper mirrors the standard amounts printed on US over-the-counter packaging, for reference when original packaging is lost. It is not medical advice. Verify every dose against the actual product label or a pharmacist/doctor — formulations vary by brand and country. Full tables and rules: <a href="../medical/dosing-by-weight.html">Dosing by Weight</a>.</p>
+</div>
+<div class="form-row">
+<label class="form-label" for="ds-weight">Weight</label>
+<input class="form-input" id="ds-weight" type="number" inputmode="decimal" min="0" step="any" placeholder="30">
+</div>
+<div class="form-row">
+<label class="form-label" for="ds-unit">Unit</label>
+<select class="form-input" id="ds-unit">
+<option value="lb">pounds (lb)</option>
+<option value="kg">kilograms (kg)</option>
+</select>
+</div>
+<div class="form-row">
+<label class="form-label" for="ds-med">Medicine (children's liquid strength)</label>
+<select class="form-input" id="ds-med">
+<option value="acet">Acetaminophen — 160 mg per 5 mL</option>
+<option value="ibu">Ibuprofen — 100 mg per 5 mL</option>
+</select>
+</div>
+<p class="form-row" aria-live="polite"><span class="badge"><strong id="ds-res">Waiting for numbers…</strong></span></p>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Method: match weight to the packaging weight bands (identical to Dosing by Weight) — under band minimum means ask a professional, never guess.</p>
+</section>
+<section class="card" aria-labelledby="battery-runtime-h">
+<h2 id="battery-runtime-h">Battery bank runtime</h2>
+<p>Enter capacity directly in watt-hours, or let the amp-hour helper compute it. Efficiency covers inverter losses.</p>
+<div class="form-row">
+<label class="form-label" for="ba-wh">Battery capacity (Wh) — leave blank if using Ah × V below</label>
+<input class="form-input" id="ba-wh" type="number" inputmode="decimal" min="0" step="any" placeholder="1000">
+</div>
+<div class="form-row">
+<label class="form-label" for="ba-ah">Helper: capacity (Ah)</label>
+<input class="form-input" id="ba-ah" type="number" inputmode="decimal" min="0" step="any" placeholder="100">
+</div>
+<div class="form-row">
+<label class="form-label" for="ba-v">Helper: system voltage (V)</label>
+<select class="form-input" id="ba-v">
+<option value=""></option>
+<option value="12">12 V</option>
+<option value="24">24 V</option>
+<option value="48">48 V</option>
+</select>
+</div>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)" id="ba-cap">Pack: enter Wh, or Ah with voltage.</p>
+<div class="form-row">
+<label class="form-label" for="ba-watts">Device draw (watts)</label>
+<input class="form-input" id="ba-watts" type="number" inputmode="decimal" min="0" step="any" placeholder="60">
+</div>
+<div class="form-row">
+<label class="form-label" for="ba-eff">Inverter efficiency (%)</label>
+<input class="form-input" id="ba-eff" type="number" inputmode="decimal" min="1" max="100" step="any" value="85">
+</div>
+<p class="form-row" aria-live="polite"><span class="badge"><strong id="ba-res">Waiting for numbers…</strong></span></p>
+<p style="font-size:var(--fs-sm);color:var(--text-muted)">Formula: usable Wh = capacity Wh (or Ah × V) × efficiency ÷ 100 · hours = usable Wh ÷ device watts.</p>
+<div class="callout callout-caution">
+<h4>Honesty about cycle life</h4>
+<p>Lead-acid batteries last far longer if you never drain them past half. Unless the manufacturer says otherwise, plan runtime on 50% of rated capacity — treat a "100 Ah" lead-acid as 50 Ah of real storage. Lithium chemistry tolerates deeper discharge, at higher cost.</p>
+</div>
+</section>
 </main>
 <footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
+<script>
+(function(){
+"use strict";
+var DOSE_ML=[2.5,3.75,5,7.5,10,12.5,15,20];
+var DOSE_LB=[12,18,24,36,48,60,72,96];
+var DOSE_KG=[5,8,11,16,22,27,33,44];
+function el(id){return document.getElementById(id);}
+function num(id){var v=parseFloat(el(id).value);return isFinite(v)&&v>=0?v:NaN;}
+function fmt(x,d){if(!isFinite(x))return"—";var s=x.toFixed(d);if(s.indexOf(".")>-1)s=s.replace(/0+$/,"").replace(/\.$/,"");return s;}
+function setRes(id,text){el(id).textContent=text;}
+function waitFor(id){setRes(id,"Waiting for numbers…");}
+function calcWater(people,days,pets){var gal=people*days+(pets*days)/128;return{gal:gal,ltr:gal*3.785,lb:gal*8.34};}
+function calcFood(people,days,kcal){var total=people*days*kcal;return{kcal:total,grains:total*0.5/4,protein:total*0.2/4,fat:total*0.3/9};}
+function calcGenHours(gallons,gph){return gallons/gph;}
+function calcBleach(gallons,pct,cloudy){var per=pct===8.25?6:8;var drops=gallons*per*(cloudy?2:1);return{drops:drops,tsp:drops/100};}
+function doseMl(weight,unit){var t=unit==="kg"?DOSE_KG:DOSE_LB;for(var i=t.length-1;i>=0;i--){if(weight>=t[i])return DOSE_ML[i];}return null;}
+function calcBattery(wh,watts,eff){return wh*eff/100/watts;}
+
+function updWater(){
+var p=num("wa-people"),d=num("wa-days"),t=num("wa-pets");
+if(isNaN(p)||isNaN(d)||p<=0||d<=0||(isNaN(t)&&el("wa-pets").value.trim()!=="")){waitFor("wa-res");return;}
+var r=calcWater(p,d,isNaN(t)?0:t);
+var petsNote=t>0?" (includes "+fmt(t,0)+" lb of pets)":"";
+setRes("wa-res","Store about "+fmt(r.gal,1)+" gallons ("+fmt(r.ltr,1)+" L)"+petsNote+" — roughly "+fmt(r.lb,0)+" lb filled.");
+}
+
+function updFood(){
+var p=num("fd-people"),d=num("fd-days");
+if(isNaN(p)||isNaN(d)||p<=0||d<=0){waitFor("fd-res");return;}
+var r=calcFood(p,d,parseInt(el("fd-activity").value,10));
+setRes("fd-res","Rough planning figures: "+fmt(r.kcal,0)+" kcal total — about "+fmt(r.grains,0)+" g grains, "+fmt(r.protein,0)+" g protein, "+fmt(r.fat,0)+" g fat.");
+}
+
+function updGen(){
+var g=num("gn-gallons"),r=num("gn-gph");
+if(isNaN(g)||isNaN(r)||g<=0||r<=0){waitFor("gn-res");return;}
+setRes("gn-res","About "+fmt(calcGenHours(g,r),1)+" hours of runtime.");
+}
+
+function updBleach(){
+var g=num("bl-gallons");
+if(isNaN(g)||g<=0){waitFor("bl-res");return;}
+var pct=parseFloat(el("bl-strength").value);
+var r=calcBleach(g,pct,el("bl-cloudy").checked);
+var drops=Math.round(r.drops);
+setRes("bl-res","Add "+drops+" drops ("+fmt(drops/100,2)+" tsp) of bleach — stir, wait 30 minutes.");
+}
+
+function updDose(){
+var w=num("ds-weight");
+if(isNaN(w)||w<=0){waitFor("ds-res");return;}
+var unit=el("ds-unit").value;
+var med=el("ds-med").value;
+var ml=doseMl(w,unit);
+if(ml===null){setRes("ds-res","Ask a professional — do not guess below "+(unit==="kg"?"5 kg":"12 lb")+".");return;}
+var freq;
+if(med==="acet"){freq="every 4–6 hours, maximum 5 doses in 24 hours";}
+else{freq="ages 6 months+ only, give with food if possible — every 6–8 hours, maximum 4 doses in 24 hours";}
+setRes("ds-res","Standard amount: "+ml+" mL per dose — "+freq+". Verify against the label.");
+}
+
+function updBattery(){
+var wh=num("ba-wh"),ah=num("ba-ah"),v=parseFloat(el("ba-v").value),w=num("ba-watts"),e=num("ba-eff");
+var pack=!isNaN(ah)&&ah>0&&!isNaN(v)&&v>0;
+var srcWh=pack?ah*v:wh;
+if(!pack){el("ba-cap").textContent=isFinite(wh)&&wh>0?"Pack: "+fmt(wh,0)+" Wh":"Pack: enter Wh, or Ah with voltage.";}
+else{el("ba-cap").textContent="Pack: "+fmt(ah,0)+" Ah × "+v+" V = "+fmt(srcWh,0)+" Wh";}
+if(isNaN(srcWh)||srcWh<=0||isNaN(w)||w<=0||isNaN(e)||e<=0||e>100){waitFor("ba-res");return;}
+setRes("ba-res","About "+fmt(calcBattery(srcWh,w,e),1)+" hours of runtime ("+fmt(srcWh*e/100,0)+" Wh usable).");
+}
+
+function bind(ids,fn){
+ids.forEach(function(id){
+["input","change"].forEach(function(evt){el(id).addEventListener(evt,fn);});
+});
+}
+bind(["wa-people","wa-days","wa-pets"],updWater);
+bind(["fd-people","fd-days","fd-activity"],updFood);
+bind(["gn-gallons","gn-gph"],updGen);
+bind(["bl-gallons","bl-strength","bl-cloudy"],updBleach);
+bind(["ds-weight","ds-unit","ds-med"],updDose);
+bind(["ba-wh","ba-ah","ba-v","ba-watts","ba-eff"],updBattery);
+})();
+</script>
 </body>
 </html>
