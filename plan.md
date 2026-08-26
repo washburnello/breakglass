@@ -304,7 +304,7 @@ attribution block.
 | 9 | Schoolhouse | curriculum skeleton, tracker, Kolibri container ← **skeleton+tracker done** (hub, 4 daily plans, one-room primer, adult literacy, mastery-grid tracker w/ local student files; remaining: bundled OER integration, Kolibri container when sd256/vault work resumes) |
 | 10 | Ask-the-Kit + Phases | proxy service, chat UI, phase tagging sweep ← **core done** (chat UI w/ RAG citations + streaming; admin endpoint config; phase tile-reorder/banners/search-boost/EMERGENCY pin live. Remaining: ai-proxy container for server-masked keys — client-direct works today) |
 | 11 | Usability extras | Emergency Hub drills, Quick Ref, ID Browser, map tiers |
-| 12 | Packaging | pack.sh, kits, START-HERE |
+| 12 | Packaging | pack.sh, kits, START-HERE ✅ (tools/pack.sh → dist/breakglass-{pocket,fat}-DATE.zip, ~27 MB each; private library + manifests excluded; START-SERVER shims: python3 primary / PowerShell fallback on Windows — bundled per-OS binaries dropped as unnecessary) |
 | 13 | Wrap-up | lando fix, field-guide updates, preview refresh, ESV follow-up |
 
 Order is flexible except: design system before mass content; deploy before
@@ -331,3 +331,8 @@ deep content so the live URL shapes decisions.
   https://wiki.w4sh.net (WikiMed, iFixit, Wikipedia maxi). Incident note:
   a failed sudo chain truncated cloudflared config.yml to 0 bytes; repaired
   in place from config.yml.bak-wiki and all vhosts verified post-restart.
+- 2026-08-25 — Packaging decision: kits build from the deploy tree
+  (/mnt/tb01/breakglass) so they always match the live site; roms/zims
+  manifests are excluded from distributed zips (graceful empty states cover
+  them); micro-server is a Python script with a zero-dependency Windows
+  PowerShell fallback instead of shipping binaries.
