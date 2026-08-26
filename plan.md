@@ -336,3 +336,8 @@ deep content so the live URL shapes decisions.
   manifests are excluded from distributed zips (graceful empty states cover
   them); micro-server is a Python script with a zero-dependency Windows
   PowerShell fallback instead of shipping binaries.
+- 2026-08-25 — Web-first pass #2 (owner priority): four new scanning
+  components (.toc-chips / .keyfacts / ol.steps / details.fold) added via
+  styleguide, then applied across all 23 content articles. Print still
+  force-opens folds; safety callouts never collapse.
+
