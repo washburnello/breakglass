@@ -305,7 +305,7 @@ attribution block.
 | 10 | Ask-the-Kit + Phases | proxy service, chat UI, phase tagging sweep ← **core done** (chat UI w/ RAG citations + streaming; admin endpoint config; phase tile-reorder/banners/search-boost/EMERGENCY pin live. Remaining: ai-proxy container for server-masked keys — client-direct works today) |
 | 11 | Usability extras | Emergency Hub drills, Quick Ref, ID Browser, map tiers |
 | 12 | Packaging | pack.sh, kits, START-HERE ✅ (tools/pack.sh → dist/breakglass-{pocket,fat}-DATE.zip, ~27 MB each; private library + manifests excluded; START-SERVER shims: python3 primary / PowerShell fallback on Windows — bundled per-OS binaries dropped as unnecessary) |
-| 13 | Wrap-up | lando fix, field-guide updates, preview refresh, ESV follow-up |
+| 13 | Wrap-up | lando fix, field-guide updates, preview refresh, ESV follow-up ← **done 2026-08-25** (system field-guide: projects/tunnel/nginx/storage tables + BreakGlass service section + hosts-file resilience; landing preview refreshed; ESV remains ON HOLD per owner; stray ~/projects git-repo cleanup stays owner's call as noted in Housekeeping) |
 
 Order is flexible except: design system before mass content; deploy before
 deep content so the live URL shapes decisions.
