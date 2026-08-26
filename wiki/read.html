@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bg-phases" content="everyday survive stabilize rebuild thrive">
+<meta name="bg-priority" content="normal">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<title>Wiki Reader — BreakGlass</title>
+<script>(function(){try{var t=localStorage.getItem("bg.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css?v=2">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<script src="../assets/shell.js?v=2" defer></script>
+<style>
+body{min-height:100vh;display:flex;flex-direction:column}
+main.reader-shell{flex:1;display:flex;flex-direction:column;width:100%;max-width:none;margin:0;padding:0;overflow:hidden}
+.reader-toolbar{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:nowrap}
+.reader-nav{display:flex;gap:var(--space-1);flex:0 0 auto}
+.reader-title{flex:1 1 auto;min-width:0;font-weight:600;font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;color:var(--text-muted)}
+.reader-tools{display:flex;gap:var(--space-1);flex:0 0 auto}
+.wiki-search{position:relative;display:flex;align-items:center;gap:var(--space-2);flex:1 1 200px;max-width:340px;min-width:140px;padding:var(--space-1) var(--space-3);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-pill)}
+.wiki-search i{color:var(--text-muted);flex:0 0 auto}
+.wiki-search input{flex:1;min-width:0;border:none;background:transparent;outline:none;color:var(--text);font-size:var(--fs-sm)}
+#search-results{position:absolute;top:calc(100% + var(--space-2));right:0;left:auto;width:min(30rem,90vw);z-index:40;margin:0;padding:var(--space-1);list-style:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-2);max-height:min(60vh,var(--space-8));overflow:auto}
+#search-results li+li{border-top:1px solid var(--border)}
+#search-results button{display:block;width:100%;text-align:left;padding:var(--space-2) var(--space-3);background:none;border:none;border-radius:var(--radius-sm);cursor:pointer;color:var(--text)}
+#search-results button:hover,#search-results button.active{background:var(--accent-soft)}
+.sr-snippet{display:block;color:var(--text-muted);font-size:var(--fs-xs)}
+.sr-empty{padding:var(--space-2) var(--space-3);color:var(--text-muted);font-size:var(--fs-sm)}
+.reader-stage{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+#articleContent{display:block;flex:1;width:100%;border:none;background:#FFFFFF}
+[data-theme="dark"] #articleContent{background:var(--surface)}
+.stage-card{margin:var(--space-6) auto;max-width:44rem;padding:var(--space-5)}
+.kit-entry{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;padding:var(--space-3) 0;border-bottom:1px solid var(--border)}
+.kit-entry:last-child{border-bottom:none}
+.kit-entry.kit-requested{background:var(--accent-soft);border-radius:var(--radius-sm);padding-left:var(--space-3);padding-right:var(--space-3)}
+.kit-desc{color:var(--text-muted);font-size:var(--fs-sm)}
+#dropzone{border-style:dashed;text-align:center;color:var(--text-muted);cursor:pointer;transition:border-color var(--dur-fast) var(--ease-out),background-color var(--dur-fast) var(--ease-out)}
+#dropzone.dragging,#dropzone:hover,#dropzone:focus-visible{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+.badge-slot{display:inline-flex;gap:var(--space-2);align-items:center}
+@media print{.topbar,.reader-toolbar,.status-line,.stage-card,#search-results{display:none!important}body,main.reader-shell,.reader-stage{display:block;height:auto}#articleContent{height:72vh;border:1px solid #ccc}}
+</style>
+</head>
+<body>
+<header class="topbar" id="top">
+<a class="brand" href="../index.html"><i class="fa-solid fa-box-open"></i> BREAKGLASS</a>
+<form class="searchbar" action="../search.html" role="search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="q" placeholder="Search everything…" aria-label="Search"></form>
+<select class="phase-select" aria-label="Situation phase"></select>
+<button class="btn btn-ghost" type="button" data-action="toggle-theme" aria-pressed="false" title="Toggle light/dark"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+<main class="reader-shell">
+<div class="reader-toolbar">
+<div class="reader-nav">
+<button class="btn btn-ghost" id="back-btn" type="button" disabled title="Back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
+<button class="btn btn-ghost" id="home-btn" type="button" title="Main page of this archive"><i class="fa-solid fa-house" aria-hidden="true"></i></button>
+<a class="btn btn-ghost" href="index.html" title="Wiki library"><i class="fa-solid fa-book-bookmark" aria-hidden="true"></i></a>
+</div>
+<span id="article-title" class="reader-title">No archive open</span>
+<form class="wiki-search" id="search-wrap" role="search" onsubmit="return false">
+<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+<input type="search" id="wiki-search" placeholder="Search this archive…" aria-label="Search inside the open ZIM" autocomplete="off">
+<ul id="search-results" hidden></ul>
+</form>
+<div class="reader-tools">
+<button class="btn btn-ghost" id="fs-minus" type="button" title="Smaller text"><i class="fa-solid fa-minus" aria-hidden="true"></i>A</button>
+<button class="btn btn-ghost" id="fs-plus" type="button" title="Larger text"><i class="fa-solid fa-plus" aria-hidden="true"></i>A</button>
+<button class="btn btn-ghost" id="print-btn" type="button" title="Print article" disabled><i class="fa-solid fa-print" aria-hidden="true"></i></button>
+</div>
+</div>
+<section class="card stage-card" id="hero">
+<h2><i class="fa-solid fa-book-open" aria-hidden="true"></i> Open an archive</h2>
+<p id="hero-msg">Pick a pack below, or drop any <code>.zim</code> file here. Articles render right here with images and working links — nothing leaves this machine.</p>
+<div id="kit-list"></div>
+<p id="last-zim" hidden></p>
+<div id="dropzone" class="card" tabindex="0" role="button" aria-label="Drop a ZIM file here or press Enter to browse">
+<p><i class="fa-solid fa-file-import" aria-hidden="true"></i> <strong>Drag &amp; drop a <code>.zim</code> anywhere onto this box</strong>, or press Enter / click to browse.</p>
+<input type="file" id="zim-input" accept=".zim,application/octet-stream" hidden>
+</div>
+<noscript><div class="callout callout-warning">The reader needs JavaScript. Without it, use the Kiwix Reader app or a served copy of this kit.</div></noscript>
+</section>
+<div id="error-card" class="callout callout-danger stage-card" role="alert" hidden>
+<h3>Could not open that file</h3>
+<p id="error-msg"></p>
+<p><button class="btn btn-primary" id="retry-btn" type="button">Try another file…</button></p>
+</div>
+<div id="fts-note" class="callout callout-warning stage-card" hidden>
+<p id="fts-note-msg"></p>
+<p><button class="btn btn-ghost" id="fts-dismiss" type="button">Got it</button></p>
+</div>
+<div id="zimit-note" class="callout callout-caution stage-card" hidden>
+<p>This archive is a web-capture (Zimit) type and renders simplified here. For the full experience use <a href="https://wiki.w4sh.net" rel="noopener">wiki.w4sh.net</a>, or open it in the Kiwix app.</p>
+</div>
+<div id="zimit-block" class="callout callout-caution stage-card" hidden>
+<h3><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Best read in the full reader</h3>
+<p id="zimit-name"></p>
+<p>This pack is a web-capture archive. It renders faithfully in the kit's full reader at <a href="https://wiki.w4sh.net" rel="noopener">wiki.w4sh.net</a> (served kits), or offline in the free Kiwix Reader app.</p>
+<p><button class="btn btn-primary" id="zimit-open" type="button">Open full reader</button> <button class="btn btn-ghost" id="zimit-pick" type="button">Pick a different file…</button></p>
+</div>
+<iframe id="articleContent" title="Rendered wiki article" referrerpolicy="no-referrer" src="about:blank" hidden></iframe>
+</main>
+<footer class="status-line">
+<span><a href="../how-to-use.html">How to use this site</a></span>
+<span class="badge-slot">
+<span class="badge" id="mode-badge">checking…</span>
+<span class="badge badge-warn" id="archive-badge">no archive</span>
+<span class="badge" id="fts-badge" hidden></span>
+<span class="badge" id="load-badge" hidden>Loading…</span>
+</span>
+<span data-media-state>Media pack: checking…</span>
+<span>BreakGlass © <span data-year></span></span>
+</footer>
+<div id="dropup" hidden></div>
+<ul id="ToCList" hidden></ul>
+
+<script>
+window.params = {
+keyPrefix: "kiwixjs-",
+appType: "desktop",
+maxSearchResultsSize: 50,
+useLibzim: false,
+libzimMode: "wasm",
+libzimSearchType: "search",
+debugLibzimASM: false,
+searchProvider: "",
+zimType: "",
+isLandingPage: false,
+assetsCache: true,
+hideActiveContentWarning: true,
+openExternalLinksInNewTabs: true,
+noPrompts: true,
+decompressorAPI: {}
+};
+window.BGWikiStore = {
+get: function(k) { try { return localStorage.getItem("bg.wiki." + k); } catch (e) { return null; } },
+set: function(k, v) { try { localStorage.setItem("bg.wiki." + k, v); } catch (e) {} }
+};
+</script>
+<script src="../assets/zims-manifest.js?v=2"></script>
+<script src="../assets/wiki-theme.js?v=1"></script>
+<script src="../assets/vendor/kiwix-js/engine.bundle.js"></script>
+<script>
+(function () {
+"use strict";
+
+var ENGINE = window.KiwixEngine;
+var MODE = location.protocol === "file:" ? "portable" : "server";
+var vendorRoot = new URL("../assets/vendor/kiwix-js/", location.href).href;
+
+var el = function (id) { return document.getElementById(id); };
+var frame = el("articleContent");
+
+var state = {
+archive: null,
+swReady: false,
+stack: [],
+current: null,
+pendingAnchor: "",
+blobs: [],
+searchTimer: null,
+historyOk: true,
+resultsItems: [],
+resultIndex: -1
+};
+
+function probeHistory() {
+try {
+history.replaceState(null, "", location.href);
+state.historyOk = true;
+} catch (e) { state.historyOk = false; }
+}
+
+function setUrl(replace) {
+if (!state.historyOk || !state.archive || !state.current) return;
+try {
+var u = new URL(location.href);
+u.searchParams.set("z", state.archive.file.name);
+u.searchParams.set("p", state.current);
+u.hash = "";
+if (replace) history.replaceState(null, "", u);
+else history.pushState(null, "", u);
+} catch (e) {
+state.historyOk = false;
+}
+}
+
+function setBadge(node, text, warn) {
+node.textContent = text;
+node.classList.toggle("badge", !warn);
+node.classList.toggle("badge-warn", !!warn);
+}
+
+function setModeBadge() {
+setBadge(el("mode-badge"), MODE === "server" ? "Server mode" : "Portable · file://", MODE !== "server");
+if (MODE === "server") setBadge(el("mode-badge"), state.swReady ? "Server mode" : "Server mode · basic rendering", false);
+}
+
+function ftsAvailable() {
+return !!(state.swReady && state.archive && state.archive.file.fullTextIndex && state.archive.libzimReady === "ready");
+}
+
+function updateFtsBadge() {
+var b = el("fts-badge");
+if (!state.archive) { b.hidden = true; return; }
+b.hidden = false;
+if (ftsAvailable()) { setBadge(b, "Full-text search", false); }
+else { setBadge(b, state.archive.file.fullTextIndex ? "Title search only (full-text needs server mode)" : "Title search only (no index in this ZIM)", true); }
+}
+
+function registerServiceWorker() {
+if (MODE !== "server" || !navigator.serviceWorker) {
+setModeBadge();
+return;
+}
+var swUrl = new URL("service-worker.js", vendorRoot).href;
+navigator.serviceWorker.register(swUrl).then(function () {
+return navigator.serviceWorker.ready;
+}).then(function () {
+if (navigator.serviceWorker.controller) {
+navigator.serviceWorker.controller.postMessage({ action: "init" });
+}
+state.swReady = true;
+setModeBadge();
+updateFtsBadge();
+}).catch(function () {
+state.swReady = false;
+setModeBadge();
+});
+}
+
+navigator.serviceWorker && (navigator.serviceWorker.onmessage = function (event) {
+var d = event.data || {};
+if (d.action === "acknowledge") return;
+if (d.action !== "askForContent" || !state.archive) return;
+if (d.zimFileName !== state.archive.file.name) return;
+var port = event.ports[0];
+state.archive.getDirEntryByPath(d.title).then(function (dirEntry) {
+if (!dirEntry) {
+port.postMessage({ action: "giveContent", title: d.title, content: null, zimType: state.archive.zimType });
+} else if (dirEntry.isRedirect()) {
+state.archive.resolveRedirect(dirEntry, function (target) {
+port.postMessage({ action: "sendRedirect", title: d.title, redirectUrl: target.namespace + "/" + target.url });
+});
+} else {
+state.archive.readBinaryFile(dirEntry, function (fde, content) {
+var buffer = content.buffer ? content.buffer : content;
+port.postMessage({ action: "giveContent", title: d.title, content: buffer, mimetype: fde.getMimetype(), zimType: state.archive.zimType });
+});
+}
+}).catch(function () {
+port.postMessage({ action: "giveContent", title: d.title, content: new Uint8Array(), zimType: state.archive.zimType });
+});
+});
+
+function hideStageCards() {
+el("hero").hidden = true;
+el("error-card").hidden = true;
+el("zimit-block").hidden = true;
+}
+
+function showError(msg) {
+el("error-msg").textContent = msg;
+el("error-card").hidden = false;
+el("zimit-block").hidden = true;
+el("hero").hidden = true;
+el("articleContent").hidden = true;
+setBadge(el("archive-badge"), "no archive", true);
+}
+
+function resetForOpen() {
+hideStageCards();
+el("fts-note").hidden = true;
+state.stack = [];
+state.current = null;
+state.blobs.forEach(function (u) { try { URL.revokeObjectURL(u); } catch (e) {} });
+state.blobs = [];
+assetCache.clear();
+closeResults();
+}
+
+function openFile(file) {
+if (!file) return;
+resetForOpen();
+setBadge(el("archive-badge"), "Opening " + file.name + "…", true);
+el("load-badge").hidden = false;
+file.slice(0, 4).arrayBuffer().then(function (buf) {
+var magic = new Uint8Array(buf);
+if (!(magic[0] === 0x5A && magic[1] === 0x49 && magic[2] === 0x4D)) {
+throw new Error("not-zim");
+}
+ENGINE.zimArchiveLoader.loadArchiveFromFiles([file], onArchiveReady, function (msg) {
+failOpen(file.name, msg);
+});
+}).catch(function () {
+failOpen(file.name, "That file is not a readable ZIM archive (wrong file, truncated download, or corrupted copy).");
+});
+}
+
+function openRemoteByName(name) {
+var z = null;
+(window.BG_ZIMS || []).forEach(function (zz) { if (zz.file === name) z = zz; });
+if (!z) {
+failOpen(name, "not listed in this kit's manifest");
+return;
+}
+openRemote(z);
+}
+
+function openRemote(z) {
+if (!z || MODE !== "server") return;
+resetForOpen();
+setBadge(el("archive-badge"), "Loading " + z.file + " over the network…", true);
+el("load-badge").hidden = false;
+var url = new URL("../media/zims/" + encodeURIComponent(z.file), location.href).href;
+ENGINE.zimArchiveLoader.loadArchiveFromFiles([{ name: z.file, size: z.bytes || 0, remoteUrl: url }], onArchiveReady, function (msg) {
+el("load-badge").hidden = true;
+showError('Could not load "' + z.file + '" from this server (' + (msg || "network error") + "). Check that the pack exists in media/zims/ and that the media pack is installed.");
+});
+}
+
+function failOpen(name, detail) {
+el("load-badge").hidden = true;
+showError('"' + name + '" could not be opened as a ZIM archive.' + (detail ? " Detail: " + detail : "") + " Check that the file finished downloading and lives in media/zims/.");
+}
+
+function showZimitBlock(name) {
+el("articleContent").hidden = true;
+hideStageCards();
+el("zimit-name").textContent = '"' + name + '" loaded, but:';
+el("zimit-block").hidden = false;
+setBadge(el("archive-badge"), name + " — open in full reader", true);
+}
+
+function onArchiveReady(archive) {
+state.archive = archive;
+window.params.zimType = archive.zimType;
+BGWikiStore.set("lastZim", archive.file.name);
+if (/zimit/i.test(archive.zimType || "") && !(MODE === "server" && state.swReady)) {
+showZimitBlock(archive.file.name);
+return;
+}
+hideStageCards();
+el("zimit-note").hidden = !/zimit/i.test(archive.zimType || "");
+el("articleContent").hidden = false;
+el("print-btn").disabled = false;
+frame.setAttribute("sandbox", state.swReady
+? "allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads"
+: "allow-same-origin allow-popups allow-forms allow-modals");
+setBadge(el("archive-badge"), archive.file.name, false);
+updateFtsBadge();
+openMainPage();
+}
+
+function resolvePath(path, cb) {
+state.archive.getDirEntryByPath(path).then(function (de) {
+if (!de) return cb(null);
+if (!de.isRedirect()) return cb(de);
+state.archive.resolveRedirect(de, cb);
+}).catch(function () { cb(null); });
+}
+
+function setTitle(t) {
+el("article-title").textContent = t;
+document.title = (t && t !== "—" ? t + " — " : "") + "BreakGlass Wiki Reader";
+}
+
+function displayDirEntry(de, forward) {
+if (!de) {
+showError("That article was not found inside the archive.");
+return;
+}
+if (forward && !state.historyOk && state.current) state.stack.push(state.current);
+state.current = de.namespace + "/" + de.url;
+if (state.historyOk) setUrl(!forward);
+el("back-btn").disabled = !state.historyOk && state.stack.length === 0;
+setTitle(de.getTitleOrUrl());
+closeResults();
+el("load-badge").hidden = false;
+if (state.swReady) {
+var target = articleUrl(de);
+if (state.pendingAnchor) target += "#" + state.pendingAnchor;
+frame.src = target;
+} else {
+renderRestricted(de);
+}
+}
+
+function goBack() {
+if (state.historyOk && history.length > 1) { history.back(); return; }
+var prev = state.stack.pop();
+if (!prev) return;
+resolvePath(prev, function (de) {
+state.current = prev;
+if (de) displayDirEntry(de, false);
+});
+}
+
+var vendorPath = new URL(vendorRoot, location.href).pathname;
+
+frame.addEventListener("load", function () {
+if (!state.swReady || !state.archive || frame.contentDocument == null) return;
+var seg;
+try {
+seg = decodeURIComponent(frame.contentWindow.location.pathname);
+} catch (e) { return; }
+if (seg.indexOf(vendorPath) !== 0) return;
+var parts = seg.slice(vendorPath.length).split("/");
+if (parts.length < 3) return;
+var cur = parts[1] + "/" + parts.slice(2).join("/");
+el("load-badge").hidden = true;
+decorateFrame();
+applyAnchor(frame.contentDocument);
+if (!cur || cur === state.current) return;
+if (!state.historyOk && state.current) state.stack.push(state.current);
+state.current = cur;
+if (state.historyOk) setUrl(false);
+el("back-btn").disabled = !state.historyOk && state.stack.length === 0;
+resolvePath(cur, function (de) {
+setTitle(de ? de.getTitleOrUrl() : cur.split("/").pop());
+});
+});
+
+function applyAnchor(idoc) {
+if (!state.pendingAnchor || !idoc) return;
+try {
+var tgt = idoc.getElementById(state.pendingAnchor) || idoc.getElementsByName(state.pendingAnchor)[0];
+if (tgt && tgt.scrollIntoView) tgt.scrollIntoView();
+} catch (e) {}
+state.pendingAnchor = "";
+}
+
+function decorateFrame() {
+if (!window.BGWikiTheme) return;
+var kind = /zimit/i.test((state.archive && state.archive.zimType) || "") ? "zimit" : "wiki";
+try { window.BGWikiTheme.decorate(frame.contentDocument, kind); } catch (e) {}
+}
+
+function goToArticle(path, anchor, fromHistory) {
+state.pendingAnchor = anchor || "";
+resolvePath(path, function (de) {
+if (!de && !/\.[a-z0-9]+$/i.test(path)) {
+resolvePath(path.replace(/^C\//, ""), function (de2) { displayDirEntry(de2, !fromHistory); });
+return;
+}
+displayDirEntry(de, !fromHistory);
+});
+}
+
+function openMainPage() {
+state.archive.getMainPageDirEntry(function (de) {
+if (de && de.isRedirect()) {
+state.archive.resolveRedirect(de, function (t) { displayDirEntry(t, false); });
+} else {
+displayDirEntry(de, false);
+}
+});
+}
+
+function zimBaseUrl(de) {
+return encodeURI(de.namespace + "/" + de.url.replace(/[^/]+$/, ""));
+}
+
+function deriveZimUrl(url, base) {
+var u = new URL(url, "http://d/" + base);
+return decodeURIComponent(u.pathname.replace(/^\//, ""));
+}
+
+function stripQuery(href) { return String(href).split("#")[0].split("?")[0]; }
+
+function injectCSP(html) {
+var csp = '<meta http-equiv="Content-Security-Policy" content="default-src \'self\' data: blob: about: \'unsafe-inline\' \'unsafe-eval\';">';
+if (/<head\b[^>]*>/i.test(html)) return html.replace(/(<head\b[^>]*>)\s*/i, "$1\n" + csp + "\n");
+return csp + html;
+}
+
+function metaRedirectTarget(html) {
+var m = html.match(/<meta[^>]*http-equiv\s*=\s*["']?refresh["']?[^>]*>/i);
+if (!m) return "";
+var u = m[0].match(/url=([^"';>\s]+)/i);
+return u ? u[1] : "";
+}
+
+function blobUrl(mime, bytes) {
+var u = URL.createObjectURL(new Blob([bytes], { type: mime }));
+state.blobs.push(u);
+return u;
+}
+
+function readBinary(path) {
+return state.archive.getDirEntryByPath(path).then(function (de) {
+if (!de || de.isRedirect()) return null;
+return new Promise(function (res) {
+state.archive.readBinaryFile(de, function (fde, content) { res({ mime: fde.getMimetype(), bytes: content }); });
+});
+});
+}
+
+var assetCache = new Map();
+
+function assetBlob(path) {
+if (assetCache.has(path)) return assetCache.get(path);
+var p = readBinary(path).then(function (r) {
+return r ? blobUrl(r.mime, r.bytes) : "";
+}).catch(function () { return ""; });
+assetCache.set(path, p);
+return p;
+}
+
+function renderRestricted(de) {
+state.archive.readUtf8File(de, function (fde, html) {
+if (!html) {
+el("load-badge").hidden = true;
+if (/zimit/i.test(state.archive.zimType || "")) { showZimitBlock(state.archive.file.name); return; }
+showError("Empty or unreadable article: " + de.namespace + "/" + de.url);
+return;
+}
+var target = metaRedirectTarget(html);
+html = html.replace(/(<meta\b[^>]*?)http-equiv(\s*=\s*["']?refresh)/ig, "$1data-kiwix-refresh$2");
+if (target && state.current) {
+goToArticle(deriveZimUrl(target, zimBaseUrl(de)));
+return;
+}
+html = injectCSP(html);
+var base = zimBaseUrl(de);
+var doc = frame.contentDocument;
+doc.open();
+doc.write(html);
+doc.close();
+var idoc = doc;
+Array.prototype.forEach.call(idoc.querySelectorAll("noscript"), function (n) { n.outerHTML = n.innerHTML; });
+Array.prototype.forEach.call(idoc.querySelectorAll(".collapsible-block:not(.open-block), .collapsible-heading:not(.open-block)"), function (c) { c.classList.add("open-block"); });
+Array.prototype.forEach.call(idoc.querySelectorAll("script"), function (s) { s.parentNode.removeChild(s); });
+
+Array.prototype.forEach.call(idoc.querySelectorAll("img[src],source[src],video[src],audio[src],track[src],link[href]"), function (n) {
+var attr = n.hasAttribute("src") ? "src" : "href";
+var raw = n.getAttribute(attr);
+if (/^(data|blob|about):/i.test(raw) || /^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) return;
+n.setAttribute("data-kiwixurl", deriveZimUrl(stripQuery(raw), base));
+n.removeAttribute(attr);
+if (n.hasAttribute("srcset")) n.removeAttribute("srcset");
+});
+
+var links = Array.prototype.slice.call(idoc.querySelectorAll("link[data-kiwixurl]"));
+var pending = links.length + 1;
+
+function done() {
+pending -= 1;
+if (pending > 0) return;
+processImages(idoc, base);
+}
+
+links.forEach(function (link) {
+var path = link.getAttribute("data-kiwixurl");
+resolvePath(path, function (cde) {
+if (!cde) { done(); return; }
+readBinary(path).then(function (r) {
+if (!r) { done(); return; }
+if (/text\/css/i.test(r.mime)) {
+buildCss(r.bytes, path).then(function (cssText) {
+var st = idoc.createElement("style");
+st.textContent = cssText;
+link.parentNode.replaceChild(st, link);
+done();
+});
+} else {
+link.setAttribute("href", blobUrl(r.mime, r.bytes));
+done();
+}
+});
+});
+});
+done();
+wireLinks(idoc, base);
+finishRender(de, idoc);
+});
+}
+
+function decodeBytes(bytes) {
+return new TextDecoder("utf-8").decode(bytes);
+}
+
+function buildCss(bytes, cssPath, depth) {
+depth = depth || 0;
+var text = decodeBytes(bytes);
+var imports = [];
+if (depth < 3) {
+text = text.replace(/@import\s+(?:url\(\s*)?['"]?([^'");]+)['"]?\s*\)?[^;]*;?/ig, function (m0, ref) {
+var slot = "@BGI" + imports.length + "@";
+var p = deriveZimUrl(stripQuery(ref), cssPath);
+imports.push(
+readBinary(p)
+.then(function (r) { return r ? buildCss(r.bytes, p, depth + 1) : ""; })
+.catch(function () { return ""; })
+.then(function (inner) { return [slot, inner]; })
+);
+return slot;
+});
+}
+var replacements = [];
+var out = text.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g, function (m0, q, ref) {
+if (/^(data|blob|about):/i.test(ref) || /^[a-z][a-z0-9+.-]*:\/\//i.test(ref)) return m0;
+var p = deriveZimUrl(stripQuery(ref), cssPath);
+replacements.push(assetBlob(p).then(function (bu) { return bu ? 'url("' + bu + '")' : m0; }));
+return "\u0000R" + (replacements.length - 1) + "\u0000";
+});
+return Promise.all(replacements).then(function (arr) {
+out = out.replace(/\u0000R(\d+)\u0000/g, function (m0, i) { return arr[+i]; });
+return Promise.all(imports).then(function (pairs) {
+pairs.forEach(function (pair) { out = out.split(pair[0]).join(pair[1]); });
+return out;
+});
+});
+}
+
+function processImages(idoc, base) {
+var imgs = Array.prototype.slice.call(idoc.querySelectorAll("img[data-kiwixurl]"));
+var idx = 0;
+function next() {
+if (idx >= imgs.length) {
+el("load-badge").hidden = true;
+return;
+}
+var img = imgs[idx++];
+var path = img.getAttribute("data-kiwixurl");
+if (/^data:image\/webp/i.test(path)) { next(); return; }
+assetBlob(decodeURIComponent(path)).then(function (bu) {
+if (bu) img.src = bu;
+next();
+});
+}
+next();
+}
+
+function wireLinks(idoc, base) {
+idoc.addEventListener("click", function (ev) {
+var t = ev.target;
+while (t && t.nodeName !== "A") t = t.parentElement;
+if (!t) return;
+var href = t.getAttribute("href");
+if (!href) return;
+if (href.charAt(0) === "#") return;
+if (/^https?:/i.test(href) || /^[a-z][a-z0-9+.-]*:\/\//i.test(href)) {
+ev.preventDefault();
+window.open(href, "_blank", "noopener");
+return;
+}
+ev.preventDefault();
+var h = href.split("#");
+var anchor = h[1] || "";
+var path = deriveZimUrl(stripQuery(h[0]), base);
+goToArticle(path, anchor);
+}, false);
+}
+
+function finishRender(de, idoc) {
+setTitle(de.getTitleOrUrl());
+decorateFrame();
+applyAnchor(idoc);
+el("load-badge").hidden = true;
+}
+
+function escapeHtml(s) {
+return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });
+}
+
+var REQUESTED_Z = null;
+
+function renderKitList() {
+var list = el("kit-list");
+var zims = window.BG_ZIMS || [];
+if (!zims.length) {
+list.innerHTML = "<p>No pack list found in this copy of the kit. Use the drop zone to open any <code>.zim</code> you have.</p>";
+return;
+}
+var html = "";
+zims.forEach(function (z) {
+var action;
+if (MODE === "server") {
+action = '<a class="btn btn-primary" href="?z=' + encodeURIComponent(z.file) + '">Read' + "</a>";
+} else {
+action = '<button class="btn btn-primary" type="button" data-open="' + escapeHtml(z.file) + '">Open' + "</button>";
+}
+var requested = REQUESTED_Z === z.file;
+html += '<div class="kit-entry' + (requested ? " kit-requested" : "") + '"><div class="kit-meta"><strong>' + escapeHtml(z.title) + '</strong> <span class="badge">' + escapeHtml(z.size) + '</span><br><span class="kit-desc">' + escapeHtml(z.desc) + "</span></div>" + action + "</div>";
+});
+list.innerHTML = html;
+}
+
+function openPicker(hint) {
+el("zim-input").value = "";
+el("hero-msg").innerHTML = hint ? 'Browsers make you choose the file by hand — pick <strong>' + escapeHtml(hint) + "</strong> from <code>media/zims/</code> below." : "Pick any <code>.zim</code> from <code>media/zims/</code> below, or drop one on the box.";
+el("zim-input").click();
+}
+
+var resultButtons = [];
+
+function closeResults() {
+el("search-results").hidden = true;
+state.resultIndex = -1;
+resultButtons = [];
+}
+
+function highlightResult() {
+resultButtons.forEach(function (b, i) { b.classList.toggle("active", i === state.resultIndex); });
+if (resultButtons[state.resultIndex]) resultButtons[state.resultIndex].scrollIntoView({ block: "nearest" });
+}
+
+function renderResults(entries, q) {
+var ul = el("search-results");
+ul.innerHTML = "";
+resultButtons = [];
+state.resultIndex = -1;
+if (!entries.length) {
+var li0 = document.createElement("li");
+li0.textContent = 'No titles matching "' + q + '"';
+li0.className = "sr-empty";
+ul.appendChild(li0);
+ul.hidden = false;
+return;
+}
+entries.slice(0, 30).forEach(function (de) {
+var li = document.createElement("li");
+var b = document.createElement("button");
+b.type = "button";
+b.textContent = de.getTitleOrUrl() || de.url;
+if (de.snippet) {
+var sp = document.createElement("span");
+sp.className = "sr-snippet";
+sp.textContent = de.snippet;
+b.appendChild(sp);
+}
+b.addEventListener("click", function () {
+goToArticle(de.namespace + "/" + de.url);
+el("wiki-search").value = "";
+closeResults();
+});
+li.appendChild(b);
+ul.appendChild(li);
+resultButtons.push(b);
+});
+ul.hidden = false;
+}
+
+function activateResult() {
+if (state.resultIndex >= 0 && resultButtons[state.resultIndex]) {
+resultButtons[state.resultIndex].click();
+return true;
+}
+return false;
+}
+
+function runSearch(size) {
+var q = el("wiki-search").value.trim();
+if (!q || !state.archive) { closeResults(); return; }
+var search = { prefix: q, size: size, status: {} };
+state.archive.findDirEntriesWithPrefix(search, function (dirEntries, s) {
+if (!dirEntries || s && s.cancelled) return;
+renderResults(dirEntries, q);
+});
+}
+
+function enterSearch() {
+var q = el("wiki-search").value.trim();
+if (!q || !state.archive) return;
+if (activateResult()) return;
+if (!ftsAvailable()) {
+if (!state.archive.file.fullTextIndex) {
+showFtsNote("This ZIM has no full-text index section, so only title search is possible here.");
+} else if (MODE === "portable") {
+showFtsNote("Full-text search needs <strong>server mode</strong>: browsers block the required WebAssembly worker and WASM fetch on file:// pages. Serving this kit over http unlocks it. Title search works everywhere.");
+} else if (!state.swReady) {
+showFtsNote("The service worker could not start in this browser context, so full-text search is unavailable. Title search still works.");
+}
+}
+runSearch(60);
+}
+
+function showFtsNote(html) {
+if (BGWikiStore.get("ftsNoticeDismissed") === "1") return;
+el("fts-note-msg").innerHTML = html;
+el("fts-note").hidden = false;
+}
+
+function adjustScale(delta) {
+if (!window.BGWikiTheme) return;
+var next = window.BGWikiTheme.setScale(window.BGWikiTheme.currentScale() + delta);
+try { if (frame.contentDocument) window.BGWikiTheme.refresh(frame.contentDocument); } catch (e) {}
+setBadge(el("mode-badge"), (MODE === "server" ? "Server mode" : "Portable · file://") + " · " + Math.round(next * 100) + "%", MODE !== "server");
+}
+
+function bootFromUrl() {
+var q = new URLSearchParams(location.search);
+var z = q.get("z");
+var p = q.get("p");
+if (p) {
+try { state.pendingAnchor = (location.hash || "").slice(1); } catch (e) {}
+}
+if (!z) return;
+if (MODE === "server") {
+openRemoteByName(z);
+return;
+}
+REQUESTED_Z = z;
+renderKitList();
+var match = null;
+(window.BG_ZIMS || []).forEach(function (zz) { if (zz.file === z) match = zz; });
+el("hero-msg").innerHTML = 'Portable copies open archives by hand: after clicking <strong>Open</strong>, choose <code>' + escapeHtml(z) + "</code> from <code>media/zims/</code>." + (match ? "" : " That file is not one of this kit's listed packs, so use the drop zone.");
+var req = document.querySelector(".kit-requested");
+if (req && req.scrollIntoView) req.scrollIntoView({ block: "center" });
+}
+
+function initUi() {
+probeHistory();
+renderKitList();
+setModeBadge();
+
+var last = BGWikiStore.get("lastZim");
+if (last) {
+el("last-zim").textContent = "Last archive opened on this machine: " + last + ". Browsers cannot re-open it automatically — pick it again.";
+el("last-zim").hidden = false;
+}
+
+document.addEventListener("click", function (ev) {
+var open = ev.target.closest("[data-open]");
+if (open) { openPicker(open.getAttribute("data-open")); return; }
+});
+
+el("back-btn").addEventListener("click", goBack);
+
+el("home-btn").addEventListener("click", function () {
+if (state.archive) openMainPage();
+else location.href = "index.html";
+});
+
+el("retry-btn").addEventListener("click", function () {
+el("error-card").hidden = true;
+el("hero").hidden = false;
+el("articleContent").hidden = true;
+openPicker("");
+});
+
+el("zim-input").addEventListener("change", function () {
+if (this.files && this.files[0]) openFile(this.files[0]);
+});
+
+var dz = el("dropzone");
+dz.addEventListener("click", function () { openPicker(""); });
+dz.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openPicker(""); } });
+["dragover", "dragenter"].forEach(function (t) {
+dz.addEventListener(t, function (ev) { ev.preventDefault(); dz.classList.add("dragging"); });
+});
+["dragleave", "drop"].forEach(function (t) {
+dz.addEventListener(t, function (ev) { ev.preventDefault(); dz.classList.remove("dragging"); });
+});
+dz.addEventListener("drop", function (ev) {
+var f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+openFile(f);
+});
+document.addEventListener("dragover", function (ev) { ev.preventDefault(); });
+document.addEventListener("drop", function (ev) { ev.preventDefault(); });
+
+el("zimit-open").addEventListener("click", function () { window.open("https://wiki.w4sh.net", "_blank", "noopener"); });
+el("zimit-pick").addEventListener("click", function () {
+el("zimit-block").hidden = true;
+el("hero").hidden = false;
+el("articleContent").hidden = true;
+openPicker("");
+});
+
+el("fts-dismiss").addEventListener("click", function () {
+el("fts-note").hidden = true;
+if (state.archive) el("articleContent").hidden = false;
+BGWikiStore.set("ftsNoticeDismissed", "1");
+});
+
+el("fs-minus").addEventListener("click", function () { adjustScale(-0.1); });
+el("fs-plus").addEventListener("click", function () { adjustScale(0.1); });
+
+el("print-btn").addEventListener("click", function () {
+try { frame.contentWindow.print(); } catch (e) { window.print(); }
+});
+
+el("wiki-search").addEventListener("input", function () {
+clearTimeout(state.searchTimer);
+state.searchTimer = setTimeout(function () { runSearch(25); }, 200);
+});
+el("wiki-search").addEventListener("keydown", function (ev) {
+var open = !el("search-results").hidden && resultButtons.length > 0;
+if (ev.key === "ArrowDown" && open) {
+ev.preventDefault();
+state.resultIndex = Math.min(resultButtons.length - 1, state.resultIndex + 1);
+highlightResult();
+} else if (ev.key === "ArrowUp" && open) {
+ev.preventDefault();
+state.resultIndex = Math.max(0, state.resultIndex - 1);
+highlightResult();
+} else if (ev.key === "Enter") {
+ev.preventDefault();
+enterSearch();
+} else if (ev.key === "Escape") {
+this.value = "";
+closeResults();
+}
+});
+document.addEventListener("click", function (ev) {
+if (!el("search-wrap").contains(ev.target)) closeResults();
+});
+
+window.addEventListener("popstate", function () {
+if (!state.archive) { bootFromUrl(); return; }
+var q = new URLSearchParams(location.search);
+var z = q.get("z");
+var p = q.get("p");
+if (z && z !== state.archive.file.name) return;
+if (!p || p === state.current) return;
+state.pendingAnchor = (location.hash || "").slice(1);
+goToArticle(p, state.pendingAnchor, true);
+});
+
+if (window.BGWikiTheme) {
+window.BGWikiTheme.onParentThemeChange(function () {
+try { if (frame.contentDocument) window.BGWikiTheme.refresh(frame.contentDocument); } catch (e) {}
+});
+}
+
+registerServiceWorker();
+bootFromUrl();
+}
+
+if (document.readyState === "loading") {
+document.addEventListener("DOMContentLoaded", initUi);
+} else {
+initUi();
+}
+})();
+</script>
+</body>
+</html>
