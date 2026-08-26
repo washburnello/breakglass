@@ -363,4 +363,30 @@ deep content so the live URL shapes decisions.
   from Town Builder). Security honesty: portable-copy passwords are
   deterrence-only; hosted copy enforces; admin can relax gating per copy.
   GCompris consulted as design inspiration only (GPL, not bundled).
+- 2026-08-26 — Schoolhouse teaching loop completed: fixed student desk never
+  loading the lesson manifest (the "no lessons" bug); staff preview mode in
+  the player (&preview=1, all persistence suppressed); custom lesson store +
+  assignment system in school-core (customLessons/assignments arrays,
+  CRUD APIs, cascade delete); teacher portal gains merged catalog with
+  edit/delete/duplicate actions and an Assignments tab (band-grouped
+  picker, due dates, notes, completion counts); new education/builder.html —
+  a full staff-gated lesson editor (all six step types, mastery-check
+  builder, validation gate, JSON/.js export-import for sharing and
+  promoting lessons into the shipped bundle). Customs live in the school
+  file (rides export/import), default hidden until enabled.
+- 2026-08-26 — Curriculum batch #1 shipped: twelve clean-room lessons across
+  all five bands (K–2 ×3 incl. two safety lessons, 3–5 ×2, 6–8 ×4 incl. the
+  faith-integrated Proverbs study quoting bundled WEB, 9–12 ×3, adult ×3),
+  each derived from our own kit pages and deep-linking them. QA pass fixed
+  four misaligned multiple-choice answer keys, one ambiguous ration phrasing,
+  and aligned Proverbs 27:12 wording with the bundled WEB text ("hides
+  himself"). Answer indices now vary across questions going forward.
 - Pets and animals page needs documents and informaiton on domesticating and raising animals. How to raise chickens, train dogs and cats, raise train and ride horses etc.- [DONE] Pets expansion IN PROGRESS → complete: domestication/raising docs — chickens (brooder→eggs), dog training (four pillars), cat training, horses (reality check + basics).
+- 2026-08-25/26 — Overnight polish pass: integrated parallel agent's wiki
+  hub/reader split + lesson builder + custom-lessons/assignments LMS
+  extensions + 12 kit-derived micro-lessons (17 total); site-wide QA sweep
+  (76 pages: tag balance, JS syntax, link graph, metas, comments, external
+  requests — clean); nginx gzip enabled site-wide (theme.css −77%,
+  FontAwesome → 21 KB wire); 30-day cache on ID photo library; a11y +
+  dark-mode audits clean; 76-page live HTTP sweep green.
+
