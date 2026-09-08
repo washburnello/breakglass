@@ -45,15 +45,41 @@
 .empty-state{text-align:center;padding:var(--space-7) var(--space-5)}
 .empty-state i{font-size:var(--fs-3xl);color:var(--text-muted);margin-bottom:var(--space-3)}
 .count-note{font-size:var(--fs-sm);color:var(--text-muted)}
+.arcade-toolbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-3)}
+.alpha-row{display:flex;flex-wrap:wrap;gap:var(--space-1);max-width:100%}
+.alpha-btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--radius-sm);min-width:2.1em;padding:var(--space-1) var(--space-2);font:inherit;cursor:pointer}
+.alpha-btn:hover{background:var(--surface-2)}
+.alpha-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--text-on-accent)}
+.alpha-btn:disabled{opacity:.3;cursor:default}
+.view-toggle{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-pill);overflow:hidden}
+.view-toggle button{border:none;background:var(--surface);color:var(--text);padding:var(--space-2) var(--space-3);cursor:pointer;font:inherit;display:inline-flex;align-items:center;gap:var(--space-1)}
+.view-toggle button:hover{background:var(--surface-2)}
+.view-toggle button[aria-pressed="true"]{background:var(--accent);color:var(--text-on-accent)}
+.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:var(--space-3);padding:var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md)}
+.game-grid-big{grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-4)}
+.game-card{position:relative}
+.game-card .gc-link{display:flex;flex-direction:column;gap:var(--space-1);color:inherit;text-decoration:none}
+.game-card .gc-art{position:relative;width:100%;aspect-ratio:3/4;border-radius:var(--radius-md);overflow:hidden;background:var(--surface-2);border:1px solid var(--border)}
+.game-card .gc-art img{width:100%;height:100%;object-fit:cover;display:block}
+.game-card .gc-art .gc-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:var(--fs-2xl)}
+.game-card .star-btn{position:absolute;top:var(--space-1);right:var(--space-1);background:rgba(0,0,0,.45);border-radius:var(--radius-pill);color:#fff;z-index:2}
+.game-card .star-btn:hover{color:var(--accent)}
+.game-card .star-btn[aria-pressed="true"]{color:var(--accent)}
+.game-card .gc-name{font-size:var(--fs-sm);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.game-card .gc-badges{display:flex;gap:var(--space-1);flex-wrap:wrap}
+.game-card .gc-badges .badge{font-size:var(--fs-xs)}
+.booklet-panel{margin-top:var(--space-5);border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);overflow:hidden}
+.booklet-bar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.booklet-nav{display:flex;align-items:center;gap:var(--space-2)}
+.booklet-frame{width:100%;height:min(70vh,640px);border:none;background:#fff;overflow:hidden}
+.booklet-frame-inner{width:100%;height:100%;border:none;display:block;background:#fff}
+.booklet-frame-fallback{padding:var(--space-6);text-align:center;color:var(--text-muted)}
+#booklet-toggle:disabled{opacity:.45;cursor:not-allowed}
 </style>
 
 <section id="view-home">
 <h1>Arcade</h1>
 <p class="arcade-intro count-note">A shelf of games for long evenings and low batteries. Pick a system to browse its library.</p>
-<div class="fav-wrap" id="fav-wrap" hidden>
-<h2 class="group-title">Favorites</h2>
-<div class="tile-grid" id="fav-strip"></div>
-</div>
 <h2 class="group-title">Systems</h2>
 <div class="tile-grid" id="sys-grid"></div>
 <div class="callout callout-warning" id="no-library" hidden>
@@ -74,8 +100,21 @@
 <h2 id="sys-title"></h2>
 <span class="badge" id="sys-count"></span>
 </div>
+<div class="arcade-toolbar">
+<div class="alpha-row" id="alpha-row" role="group" aria-label="Filter by first letter"></div>
+<div class="view-toggle" id="view-toggle" role="group" aria-label="View mode">
+<button type="button" data-view="list" aria-pressed="true"><i class="fa-solid fa-list" aria-hidden="true"></i> List</button>
+<button type="button" data-view="grid" aria-pressed="false"><i class="fa-solid fa-grip" aria-hidden="true"></i> Grid</button>
+<button type="button" data-view="big" aria-pressed="false"><i class="fa-solid fa-table" aria-hidden="true"></i> Big</button>
+</div>
+</div>
 <div class="filter-box"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="sys-filter" placeholder="Filter this list…" aria-label="Filter games"></div>
+<div class="fav-wrap" id="sys-fav-wrap" hidden>
+<h3 class="group-title">Favorites</h3>
+<div id="sys-fav-strip"></div>
+</div>
 <div class="card game-list" id="game-list"></div>
+<div class="game-grid" id="game-grid" hidden></div>
 <div class="card empty-state" id="sys-empty" hidden><i class="fa-solid fa-gamepad" aria-hidden="true"></i><p>No games match that filter.</p></div>
 </section>
 
@@ -84,9 +123,19 @@
 <a class="btn btn-ghost" id="play-back" href="#/"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back</a>
 <h2 id="play-title"></h2>
 <span id="play-badges"></span>
+<button class="btn btn-ghost" id="booklet-toggle" type="button" hidden><i class="fa-solid fa-book" aria-hidden="true"></i> Booklet</button>
 </div>
 <div id="player-mount"></div>
 <div id="play-card" hidden></div>
+<div class="booklet-panel" id="booklet" hidden>
+<div class="booklet-bar">
+<div><strong>Booklet</strong> <span class="count-note" id="booklet-name"></span></div>
+<div class="booklet-nav">
+<a class="btn btn-ghost" id="book-open" type="button" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Open booklet</a>
+</div>
+</div>
+<div class="booklet-frame" id="book-frame-mount"></div>
+</div>
 </section>
 </main>
 <footer class="status-line"><span><a href="../how-to-use.html">How to use this site</a></span><span data-media-state>Media pack: checking…</span><span>BreakGlass © <span data-year></span></span></footer>
@@ -107,7 +156,7 @@ var SYSTEMS=[
 var WEBGAME={pico8:1,picotron:1};
 var FILE_MODE=location.protocol==="file:";
 var ROMS=Array.isArray(window.BG_ROMS)?window.BG_ROMS:[];
-var currentSys=null;
+var curSys=null,curLetter="all",curQuery="",curView="list";
 function bySys(sys){return ROMS.filter(function(e){return e.sys===sys})}
 function findEntry(sys,file){return ROMS.find(function(e){return e.sys===sys&&e.file===file})}
 function humanSize(n){if(n>=1048576)return (n/1048576).toFixed(1)+" MB";if(n>=1024)return Math.round(n/1024)+" KB";return n+" B"}
@@ -119,12 +168,119 @@ function isFav(k){return getFavs().indexOf(k)!==-1}
 function toggleFav(k){var a=getFavs();var i=a.indexOf(k);if(i===-1)a.push(k);else a.splice(i,1);saveFavs(a);return i===-1}
 function favKey(e){return e.sys+"/"+e.file}
 function sysLabel(id){var s=SYSTEMS.find(function(x){return x.id===id});return s?s.label:id}
+var ALPHA="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+function firstLetter(title){var c=title.trim().charAt(0).toUpperCase();return(c>="A"&&c<="Z")?c:"#"}
+function boxartUrl(e){var base=e.file.replace(/\.(zip|p8|png)$/i,"");return "../media/roms/"+e.sys+"/images/"+encodeURIComponent(base)+"-image.png"}
+function manualUrl(e){var base=e.file.replace(/\.(zip|p8|png)$/i,"");return "../media/roms/"+e.sys+"/manuals/"+encodeURIComponent(base)+"-manual.pdf"}
+function getView(){try{return localStorage.getItem("bg.arcade.view")||"list"}catch(x){return "list"}}
+function setView(v){try{localStorage.setItem("bg.arcade.view",v)}catch(x){}}
+function gameStar(e){
+var star=el("button","star-btn");
+star.type="button";
+var on=isFav(favKey(e));
+star.setAttribute("aria-pressed",on?"true":"false");
+star.title=on?"Remove from favorites":"Add to favorites";
+star.setAttribute("aria-label",star.title+" — "+e.title);
+star.appendChild(icon("fa-star"));
+star.onclick=function(ev){if(ev)ev.stopPropagation();var isOn=toggleFav(favKey(e));star.setAttribute("aria-pressed",isOn?"true":"false");star.title=isOn?"Remove from favorites":"Add to favorites";if(!document.getElementById("view-sys").hidden)renderSysFavs();};
+return star;
+}
+function gameRow(e){
+var row=el("div","game-row");
+row.appendChild(gameStar(e));
+var main=el("button","row-main");
+main.type="button";
+main.appendChild(el("span","row-title",e.title));
+main.appendChild(el("span","badge",humanSize(e.size)));
+if(!e.playable)main.appendChild(el("span","badge badge-warn","Cart only — needs export"));
+else if(FILE_MODE&&!WEBGAME[e.sys])main.appendChild(el("span","badge badge-warn","Needs served kit"));
+main.onclick=function(){location.hash="#/play/"+e.sys+"/"+encodeURIComponent(e.file)};
+row.appendChild(main);
+return row;
+}
+function gameCard(e){
+var card=el("div","game-card");
+var link=document.createElement("a");
+link.className="gc-link";
+link.href="#/play/"+e.sys+"/"+encodeURIComponent(e.file);
+var art=el("div","gc-art");
+if(e.boxart){
+var img=document.createElement("img");
+img.alt="";img.loading="lazy";img.src=boxartUrl(e);
+img.addEventListener("error",function(){img.style.display="none";var fb=el("span","gc-fallback");fb.appendChild(icon("fa-gamepad"));art.appendChild(fb)});
+art.appendChild(img);
+}else{
+var fb=el("span","gc-fallback");fb.appendChild(icon("fa-gamepad"));art.appendChild(fb);
+}
+link.appendChild(art);
+link.appendChild(el("span","gc-name",e.title));
+var badges=el("div","gc-badges");
+badges.appendChild(el("span","badge",humanSize(e.size)));
+if(!e.playable)badges.appendChild(el("span","badge badge-warn","Cart"));
+else if(FILE_MODE&&!WEBGAME[e.sys])badges.appendChild(el("span","badge badge-warn","Served"));
+link.appendChild(badges);
+card.appendChild(link);
+card.appendChild(gameStar(e));
+return card;
+}
+function setupBooklet(entry){
+var panel=document.getElementById("booklet");
+var toggle=document.getElementById("booklet-toggle");
+var mount=document.getElementById("book-frame-mount");
+var nameEl=document.getElementById("booklet-name");
+var openBtn=document.getElementById("book-open");
+panel.hidden=true;mount.innerHTML="";
+if(!entry){toggle.hidden=true;return;}
+var hasBooklet=!!entry.booklet;
+nameEl.textContent=entry.title;
+toggle.hidden=false;
+toggle.disabled=!hasBooklet;
+toggle.title=hasBooklet?"View the game booklet":"No booklet is included for this game";
+toggle.setAttribute("aria-disabled",hasBooklet?"false":"true");
+if(!hasBooklet){openBtn.removeAttribute("href");toggle.onclick=null;return;}
+var url=manualUrl(entry);
+openBtn.href=url;
+toggle.onclick=function(){
+var showing=panel.hidden;
+panel.hidden=!showing;
+if(showing){
+mount.innerHTML="";
+var f=document.createElement("iframe");
+f.className="booklet-frame-inner";
+f.title="Game booklet — "+entry.title;
+f.setAttribute("allow","fullscreen");
+f.src=url;
+f.onload=function(){
+try{
+var doc=f.contentDocument;
+if(doc&&doc.body&&/404|not\s*found|error/i.test((doc.body.innerText||"")+" "+(doc.title||""))){
+mount.innerHTML='<div class="booklet-frame-fallback">This booklet isn’t available in your kit.</div>';
+}
+}catch(x){}
+};
+mount.appendChild(f);
+}else{
+mount.innerHTML="";
+}
+};
+}
 function teardownPlayer(){
+try{
+var em=window.EJS_emulator;
+if(em){
+if(typeof em.callEvent==="function")em.callEvent("exit");
+else if(em.EJS&&typeof em.EJS.emit==="function")em.EJS.emit("exit");
+}
+}catch(e){}
 window.EJS_player=undefined;window.EJS_core=undefined;window.EJS_gameUrl=undefined;
 window.EJS_gameName=undefined;window.EJS_pathtodata=undefined;window.EJS_startOnLoaded=undefined;
 window.EJS_emulator=undefined;
 var mount=document.getElementById("player-mount");
-mount.innerHTML="";
+if(mount)mount.innerHTML="";
+document.getElementById("booklet").hidden=true;
+document.getElementById("booklet-toggle").hidden=true;
+var mount=document.getElementById("book-frame-mount");
+if(mount)mount.innerHTML="";
 }
 function showView(name){
 document.getElementById("view-home").hidden=name!=="home";
@@ -158,63 +314,82 @@ note.appendChild(document.createTextNode("Emulators need the kit served over HTT
 }else{
 note.appendChild(document.createTextNode("Everything here runs locally on this machine — no internet needed once the kit is open."));
 }
-buildFavStrip();
 }
-function gameTile(entry){
-var a=document.createElement("a");
-a.className="tile";a.href="#/play/"+entry.sys+"/"+encodeURIComponent(entry.file);
-a.appendChild(el("span","tile-icon"));
-a.lastChild.appendChild(icon(SYSTEMS.find(function(x){return x.id===entry.sys}).icon));
-a.appendChild(el("span","tile-name",entry.title));
-var blurb=el("span","tile-blurb");
-blurb.appendChild(el("span","badge",humanSize(entry.size)));
-if(!entry.playable)blurb.appendChild(el("span","badge badge-warn","Cart only — needs export"));
-a.appendChild(blurb);
-return a;
+function buildAlpha(sys){
+var row=document.getElementById("alpha-row");
+row.innerHTML="";
+var list=bySys(sys);
+var present={};
+list.forEach(function(e){present[firstLetter(e.title)]=1});
+function mk(label,val){
+var b=el("button","alpha-btn",label);
+b.type="button";
+b.setAttribute("aria-pressed",curLetter===val?"true":"false");
+if(val!=="all"&&!present[val])b.disabled=true;
+b.onclick=function(){curLetter=val;buildAlpha(sys);renderGames()};
+return b;
 }
-function buildFavStrip(){
-var strip=document.getElementById("fav-strip");
+row.appendChild(mk("All","all"));
+ALPHA.forEach(function(L){row.appendChild(mk(L,L))});
+row.appendChild(mk("#","#"));
+}
+function syncCount(n){
+var total=bySys(curSys).length;
+var filtering=(curLetter!=="all")||(curQuery.trim()!=="");
+document.getElementById("sys-count").textContent=filtering?(n+" of "+total):(total+" games");
+}
+function renderGames(){
+var sys=curSys;
+var q=curQuery.trim().toLowerCase();
+var list=bySys(sys).filter(function(e){
+var tl=e.title.toLowerCase();
+if(q&&tl.indexOf(q)===-1)return false;
+if(curLetter!=="all"&&firstLetter(e.title)!==curLetter)return false;
+return true;
+});
+var grid=document.getElementById("game-grid");
+var wrap=document.getElementById("game-list");
+document.getElementById("sys-empty").hidden=list.length>0;
+if(curView==="grid"||curView==="big"){
+wrap.hidden=true;grid.hidden=false;grid.innerHTML="";
+grid.className="game-grid"+(curView==="big"?" game-grid-big":"");
+list.forEach(function(e){grid.appendChild(gameCard(e))});
+}else{
+grid.hidden=true;wrap.hidden=false;wrap.innerHTML="";
+list.forEach(function(e){wrap.appendChild(gameRow(e))});
+}
+syncCount(list.length);
+renderSysFavs();
+}
+function renderSysFavs(){
+var wrap=document.getElementById("sys-fav-wrap");
+var strip=document.getElementById("sys-fav-strip");
+var filtering=(curLetter!=="all")||(curQuery.trim()!=="");
+var favs=getFavs().map(function(k){var i=k.indexOf("/");return findEntry(k.slice(0,i),k.slice(i+1))}).filter(Boolean).filter(function(e){return e.sys===curSys});
+if(filtering||favs.length===0){wrap.hidden=true;return;}
+wrap.hidden=false;
+var isGrid=(curView==="grid"||curView==="big");
+strip.className=isGrid?("game-grid"+(curView==="big"?" game-grid-big":"")):"card game-list";
 strip.innerHTML="";
-var favs=getFavs().map(function(k){var i=k.indexOf("/");return findEntry(k.slice(0,i),k.slice(i+1))}).filter(Boolean);
-document.getElementById("fav-wrap").hidden=favs.length===0;
-favs.forEach(function(e){strip.appendChild(gameTile(e))});
+favs.forEach(function(e){strip.appendChild(isGrid?gameCard(e):gameRow(e))});
 }
 function renderSys(sys){
-currentSys=sys;
-var list=bySys(sys);
+curSys=sys;
+curQuery="";
+curLetter="all";
+curView=getView();
 document.getElementById("sys-title").textContent=sysLabel(sys);
-document.getElementById("sys-count").textContent=list.length+" games";
 var box=document.getElementById("sys-filter");
 box.value="";
-renderList(sys,"");
-showView("sys");
-box.oninput=function(){renderList(sys,box.value)};
-}
-function renderList(sys,query){
-var list=bySys(sys).filter(function(e){return e.title.toLowerCase().indexOf(query.toLowerCase())!==-1});
-var wrap=document.getElementById("game-list");
-wrap.innerHTML="";
-document.getElementById("sys-empty").hidden=list.length>0;
-list.forEach(function(e){
-var row=el("div","game-row");
-var star=el("button","star-btn");
-star.type="button";
-star.setAttribute("aria-pressed",isFav(favKey(e))?"true":"false");
-star.title=isFav(favKey(e))?"Remove from favorites":"Add to favorites";
-star.setAttribute("aria-label",star.title+" — "+e.title);
-star.appendChild(icon("fa-star"));
-star.onclick=function(){var on=toggleFav(favKey(e));star.setAttribute("aria-pressed",on?"true":"false");star.title=on?"Remove from favorites":"Add to favorites"};
-row.appendChild(star);
-var main=el("button","row-main");
-main.type="button";
-main.appendChild(el("span","row-title",e.title));
-main.appendChild(el("span","badge",humanSize(e.size)));
-if(!e.playable)main.appendChild(el("span","badge badge-warn","Cart only — needs export"));
-else if(FILE_MODE&&!WEBGAME[e.sys])main.appendChild(el("span","badge badge-warn","Needs served kit"));
-main.onclick=function(){location.hash="#/play/"+e.sys+"/"+encodeURIComponent(e.file)};
-row.appendChild(main);
-wrap.appendChild(row);
+buildAlpha(sys);
+var vt=document.querySelectorAll("#view-toggle button");
+vt.forEach(function(b){
+b.setAttribute("aria-pressed",b.dataset.view===curView?"true":"false");
+b.onclick=function(){curView=b.dataset.view;setView(curView);vt.forEach(function(x){x.setAttribute("aria-pressed",x.dataset.view===curView?"true":"false")});renderGames()};
 });
+box.oninput=function(){curQuery=box.value;renderGames()};
+renderGames();
+showView("sys");
 }
 function explainCard(kind,heading,body){
 var card=document.getElementById("play-card");
@@ -242,6 +417,7 @@ badges.appendChild(el("span","badge",sysLabel(sys)));
 badges.appendChild(el("span","badge",humanSize(entry.size)));
 if(!entry.playable){
 explainCard("callout-info","Cart file, not an export","This entry is a raw cart (.png/.p8). Raw carts need the native fantasy-console runtime; this kit plays exported HTML builds. Exported titles in these lists run right in the page.");
+setupBooklet(null);
 return;
 }
 if(WEBGAME[entry.sys]){
@@ -257,6 +433,7 @@ frame.allowFullscreen=true;
 wshell.appendChild(frame);
 wmount.appendChild(wshell);
 badges.appendChild(el("span","badge","Runs anywhere"));
+setupBooklet(entry);
 return;
 }
 if(FILE_MODE){
@@ -275,9 +452,14 @@ window.EJS_gameUrl=entry.path;
 window.EJS_gameName=entry.title;
 window.EJS_pathtodata="../assets/vendor/emulatorjs/data/";
 window.EJS_startOnLoaded=true;
+window.EJS_defaultOptions=window.EJS_defaultOptions||{};
+window.EJS_defaultOptions.vsync="disabled";
+window.EJS_volume=0.5;
+window.EJS_onGameStart=function(){try{if(window.EJS_emulator&&typeof window.EJS_emulator.setVolume==="function")window.EJS_emulator.setVolume(0.5);}catch(x){}};
 var loader=document.createElement("script");
 loader.src="../assets/vendor/emulatorjs/data/loader.js";
 mount.appendChild(loader);
+setupBooklet(entry);
 }
 function parseRoute(){
 var h=location.hash.replace(/^#/,"");

@@ -77,6 +77,10 @@ def rel_web_path(path):
     return "../" + "/".join(quote(part) for part in rel.parts)
 
 
+def has_asset(system, stem, subdir, suffix):
+    return (ROMS_ROOT / system / subdir / (stem + suffix)).is_file()
+
+
 def scan_console_system(system, extensions, zip_ok):
     entries = []
     skipped = 0
@@ -103,6 +107,8 @@ def scan_console_system(system, extensions, zip_ok):
                 "title": clean_title(stem),
                 "size": item.stat().st_size,
                 "playable": bool(zip_ok) if lower.endswith(".zip") else True,
+                "boxart": has_asset(system, stem, "images", "-image.png"),
+                "booklet": has_asset(system, stem, "manuals", "-manual.pdf"),
             }
         )
     return entries, skipped
@@ -131,6 +137,8 @@ def scan_fantasy_system(system, sid, extensions):
             "title": clean_title(stem),
             "size": item.stat().st_size,
             "playable": playable,
+            "boxart": has_asset(system, stem, "images", "-image.png"),
+            "booklet": has_asset(system, stem, "manuals", "-manual.pdf"),
         }
         key = (item.parent, stem.lower())
         existing = entries.get(key)

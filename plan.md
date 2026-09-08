@@ -320,9 +320,13 @@ deep content so the live URL shapes decisions.
 - System field-guide memory rules apply to any browser-heavy verification.
 
 ## Todo adds by Wash the server maintainer
+
+### Arcade Page
 - Arcade Page: I want filter and view options for the lists of games. List View: What we have now. Just a text listing. Grid View: A grid of boxart with the name, favotire stars and other info etc.
 - Add a row of alphabet buttons at the top that will filter allthe games that start with that letter.
 - I want to manual/booklet viewable under the game when you open a game to play it. That way you can pause the game, scroll down and flip through pages of the bookelt
+
+### Other
 - I want a clickable line of text in the footer called "How to use this site" that links to a page that describes how the site is designed and intended to be used.
   - Done 2026-08-25: root `how-to-use.html` authored (modes, finding things, phases, printing, data ownership, safety framing); footer link swept across all pages.
 - The iFixit repair guides ZIM has an error when loading
